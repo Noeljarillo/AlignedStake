@@ -14,6 +14,19 @@ AlignedStake is a tool designed to promote decentralization in Starknet's stakin
 - 🤝 Support emerging validators
 - 📊 Stake Positions Dashboard
 
+
+## 🚧 Project Status
+
+This project is currently under active development. We're working hard to bring you:
+
+- [X] Validator selection algorithm
+- [X] Stake distribution dashboard
+- [X] Easy delegation interface
+- [In Progress] Staking positions, rewards and unstake
+- [ ] Native RPC ETL 
+- [ ] Decentralization metric ratio bar
+- [ ] Validator performance metrics
+
 ## 🚀 Getting Started
 
 To set up the project, follow these steps:
@@ -40,18 +53,6 @@ To set up the project, follow these steps:
      ```
 
 Now, you should be able to access the application and explore its features.
-
-## 🚧 Project Status
-
-This project is currently under active development. We're working hard to bring you:
-
-- [X] Validator selection algorithm
-- [X] Stake distribution dashboard
-- [X] Easy delegation interface
-- [In Progress] Staking positions, rewards and unstake
-- [ ] Native RPC ETL 
-- [ ] Decentralization metric ratio bar
-- [ ] Validator performance metrics
 
 ## 💡 Why AlignedStake?
 
