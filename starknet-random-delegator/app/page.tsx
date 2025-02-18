@@ -8,7 +8,7 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Label } from "@/components/ui/label"
 import { Loader2, RefreshCw, Zap } from "lucide-react"
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell } from "recharts"
-import { Contract, AccountInterface } from "starknet"
+import { Contract, AccountInterface, RpcProvider } from "starknet"
 import { cairo } from "starknet"
 
 declare global {
@@ -17,12 +17,18 @@ declare global {
       enable: () => Promise<string[]>;
       isConnected: boolean;
       account: AccountInterface;
+      provider: any;
     }
   }
 }
 
 const STRK_TOKEN_ADDRESS = "0x04718f5a0fc34cc1af16a1cdee98ffb20c31f5cd61d6ab07201858f4287c938d"
 const STRK_DECIMALS = 18;
+const RPC_URL = "https://free-rpc.nethermind.io/mainnet-juno/v0_7";
+const ALLOWANCE_SELECTOR = "0x1e888a1026b19c8c0b57c72d63ed1737106aa10034105b980ba117bd0c29fe1";
+
+// Create a shared RPC provider instance
+const provider = new RpcProvider({ nodeUrl: RPC_URL });
 
 // ERC20 ABI for token approval
 const erc20Abi = [
@@ -59,6 +65,26 @@ const erc20Abi = [
       {
         name: "success",
         type: "felt",
+      },
+    ],
+    type: "function",
+  },
+  {
+    inputs: [
+      {
+        name: "owner",
+        type: "felt",
+      },
+      {
+        name: "spender",
+        type: "felt",
+      },
+    ],
+    name: "allowance",
+    outputs: [
+      {
+        name: "remaining",
+        type: "Uint256",
       },
     ],
     type: "function",
@@ -192,10 +218,64 @@ export default function Home() {
     }
   }
 
+  const checkAllowance = async (poolAddress: string, amount: string): Promise<boolean> => {
+    if (!account) return false;
+
+    try {
+      const amountBn = parseTokenAmount(amount);
+      
+      // Make direct RPC call for allowance
+      const response = await fetch(RPC_URL, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          jsonrpc: '2.0',
+          method: 'starknet_call',
+          params: [
+            {
+              contract_address: STRK_TOKEN_ADDRESS,
+              entry_point_selector: ALLOWANCE_SELECTOR,
+              calldata: [account.address, poolAddress]
+            },
+            'latest'
+          ],
+          id: 1
+        })
+      });
+
+      const result = await response.json();
+      
+      if (result.error) {
+        throw new Error(result.error.message);
+      }
+
+      // Parse the allowance result
+      const allowanceHex = result.result[0];
+      const allowanceBn = BigInt(allowanceHex);
+      
+      console.log('Current allowance:', allowanceBn.toString());
+      console.log('Required amount:', amountBn.toString());
+      
+      return allowanceBn >= amountBn;
+    } catch (error) {
+      console.error('Error checking allowance:', error);
+      return false;
+    }
+  }
+
   const approveTokens = async (poolAddress: string, amount: string) => {
     if (!account) return false;
 
     try {
+      // Check if we already have sufficient allowance
+      const hasAllowance = await checkAllowance(poolAddress, amount);
+      if (hasAllowance) {
+        console.log('Sufficient allowance already exists');
+        return true;
+      }
+
       const amountBn = cairo.uint256(parseTokenAmount(amount).toString());
       const tokenContract = new Contract(erc20Abi, STRK_TOKEN_ADDRESS, account);
       
@@ -499,4 +579,5 @@ function StatCard({ title, value }: StatCardProps) {
     </div>
   )
 }
+
 
