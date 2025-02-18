@@ -24,7 +24,11 @@ This project is currently under active development. We're working hard to bring 
 - [X] Validator selection algorithm
 - [X] Stake distribution dashboard
 - [X] Easy delegation interface
-- [In Progress] Staking positions, rewards and unstake
+- [x] Staking positions by validator
+- [X] Rewards metric
+- [In Progress] Unstake
+- [ ] Switch pool
+- [ ] Claim rewards
 - [ ] Native RPC ETL 
 - [ ] Decentralization metric ratio bar
 - [ ] Validator performance metrics

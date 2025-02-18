@@ -26,6 +26,8 @@ const STRK_TOKEN_ADDRESS = "0x04718f5a0fc34cc1af16a1cdee98ffb20c31f5cd61d6ab0720
 const STRK_DECIMALS = 18;
 const RPC_URL = "https://free-rpc.nethermind.io/mainnet-juno/v0_7";
 const ALLOWANCE_SELECTOR = "0x1e888a1026b19c8c0b57c72d63ed1737106aa10034105b980ba117bd0c29fe1";
+const TEST_ADDRESS = "0x07ffdeec4142172c63deb3b59b2f2b3e8efab889fecc0314d19db34ba0780027";
+const IS_TESTING = true; // Flag to easily disable test mode
 
 // Create a shared RPC provider instance
 const provider = new RpcProvider({ nodeUrl: RPC_URL });
@@ -108,6 +110,30 @@ const stakingPoolAbi = [
     ],
     outputs: [],
     state_mutability: "external"
+  },
+  {
+    name: "exit_delegation_pool_intent",
+    type: "function",
+    inputs: [
+      {
+        name: "amount",
+        type: "core::integer::u128"
+      }
+    ],
+    outputs: [],
+    state_mutability: "external"
+  },
+  {
+    name: "exit_delegation_pool_action",
+    type: "function",
+    inputs: [
+      {
+        name: "pool_member",
+        type: "core::starknet::contract_address::ContractAddress"
+      }
+    ],
+    outputs: [],
+    state_mutability: "external"
   }
 ]
 
@@ -138,10 +164,25 @@ interface StatCardProps {
   value: string | number;
 }
 
+interface UnstakeIntent {
+  amount: number;
+  poolAddress: string;
+  validatorName: string;
+  intentTimestamp: number;
+  canClaimAt: number;
+}
+
 interface UserStakeInfo {
   totalDelegated: number;
   availableRewards: number;
   lastClaimTime: string;
+  delegations: {
+    validatorName: string;
+    poolAddress: string;
+    delegatedStake: number;
+    pendingRewards: number;
+  }[];
+  unstakeIntents: UnstakeIntent[];
 }
 
 // Helper function to convert human readable amount to token amount with decimals
@@ -163,6 +204,94 @@ const parseTokenAmount = (amount: string): bigint => {
     return BigInt(0);
   }
 }
+
+const UNSTAKING_PERIOD = 21 * 24 * 60 * 60 * 1000; // 21 days in milliseconds
+
+// Add this helper function near the top of the file with other utility functions
+const normalizeAddress = (address: string): string => {
+  if (!address) return address;
+  
+  // If address starts with 0x and the next character isn't 0, add the 0
+  if (address.startsWith('0x') && address.length === 65) {
+    return `0x0${address.slice(2)}`;
+  }
+  return address;
+};
+
+const signalUnstakeIntent = async (delegation: UserStakeInfo['delegations'][0], amount: string) => {
+  if (!account) return;
+  
+  try {
+    const normalizedAddress = normalizeAddress(account.address);
+    const amountBn = parseTokenAmount(amount);
+    const poolContract = new Contract(stakingPoolAbi, delegation.poolAddress, account);
+    
+    const tx = await poolContract.exit_delegation_pool_intent(amountBn);
+    await account.waitForTransaction(tx.transaction_hash);
+    
+    // Add to unstake intents
+    const now = Date.now();
+    const newIntent: UnstakeIntent = {
+      amount: Number(amount),
+      poolAddress: delegation.poolAddress,
+      validatorName: delegation.validatorName,
+      intentTimestamp: now,
+      canClaimAt: now + UNSTAKING_PERIOD
+    };
+    
+    // Store intent in localStorage
+    const storedIntents = JSON.parse(localStorage.getItem(`unstakeIntents_${normalizedAddress}`) || '[]');
+    localStorage.setItem(
+      `unstakeIntents_${normalizedAddress}`,
+      JSON.stringify([...storedIntents, newIntent])
+    );
+    
+    // Update UI
+    setUserStakeInfo(prev => ({
+      ...prev,
+      unstakeIntents: [...prev.unstakeIntents, newIntent]
+    }));
+    
+    return true;
+  } catch (error) {
+    console.error('Error signaling unstake:', error);
+    return false;
+  }
+};
+
+const finalizeUnstake = async (intent: UnstakeIntent) => {
+  if (!account) return;
+  
+  try {
+    const normalizedAddress = normalizeAddress(account.address);
+    const now = Date.now();
+    if (now < intent.canClaimAt) {
+      throw new Error(`Cannot unstake yet. Available in ${Math.ceil((intent.canClaimAt - now) / (1000 * 60 * 60 * 24))} days`);
+    }
+    
+    const poolContract = new Contract(stakingPoolAbi, intent.poolAddress, account);
+    const tx = await poolContract.exit_delegation_pool_action(account.address);
+    await account.waitForTransaction(tx.transaction_hash);
+    
+    // Remove from localStorage
+    const storedIntents = JSON.parse(localStorage.getItem(`unstakeIntents_${normalizedAddress}`) || '[]');
+    const updatedIntents = storedIntents.filter((i: UnstakeIntent) => 
+      i.intentTimestamp !== intent.intentTimestamp
+    );
+    localStorage.setItem(`unstakeIntents_${normalizedAddress}`, JSON.stringify(updatedIntents));
+    
+    // Update UI
+    setUserStakeInfo(prev => ({
+      ...prev,
+      unstakeIntents: prev.unstakeIntents.filter(i => i.intentTimestamp !== intent.intentTimestamp)
+    }));
+    
+    return true;
+  } catch (error) {
+    console.error('Error finalizing unstake:', error);
+    throw error;
+  }
+};
 
 export default function Home() {
   const [selectedDelegator, setSelectedDelegator] = useState<Validator | null>(null)
@@ -189,7 +318,9 @@ export default function Home() {
   const [userStakeInfo, setUserStakeInfo] = useState<UserStakeInfo>({
     totalDelegated: 0,
     availableRewards: 0,
-    lastClaimTime: '-'
+    lastClaimTime: '-',
+    delegations: [],
+    unstakeIntents: []
   });
 
   useEffect(() => {
@@ -410,23 +541,38 @@ export default function Home() {
     return null;
   };
 
-  // Mock function to fetch user's staking info
   const fetchUserStakeInfo = async () => {
-    // TODO: Replace with actual API call
-    setUserStakeInfo({
-      totalDelegated: 1000.5,
-      availableRewards: 25.75,
-      lastClaimTime: new Date().toLocaleDateString()
-    });
+    if (!account) return;
+    
+    try {
+      const addressToUse = normalizeAddress(account.address);
+      const response = await fetch(`/api/delegations?address=${addressToUse}`);
+      if (!response.ok) throw new Error('Failed to fetch delegations');
+      
+      const data = await response.json();
+      
+      // Get stored intents from localStorage
+      const storedIntents = addressToUse ? 
+        JSON.parse(localStorage.getItem(`unstakeIntents_${addressToUse}`) || '[]') : 
+        [];
+      
+      setUserStakeInfo({
+        totalDelegated: data.totalDelegated,
+        availableRewards: data.totalPendingRewards,
+        lastClaimTime: new Date().toLocaleDateString(),
+        delegations: data.delegations,
+        unstakeIntents: storedIntents // Use stored intents from localStorage
+      });
+    } catch (error) {
+      console.error('Error fetching stake info:', error);
+    }
   };
 
-  // Mock function to claim rewards
   const claimRewards = async () => {
     // TODO: Implement actual claiming logic
     alert('Claiming rewards... (mock)');
   };
 
-  // Mock function to unstake tokens
   const unstakeTokens = async () => {
     // TODO: Implement actual unstaking logic
     alert('Unstaking tokens... (mock)');
@@ -494,21 +640,13 @@ export default function Home() {
                 
                 <motion.div
                   whileHover={{ scale: 1.02 }}
-                  className="bg-gray-800/50 backdrop-blur-sm p-6 rounded-xl border border-gray-700 shadow-lg"
-                >
-                  <h4 className="text-sm font-medium text-gray-400 mb-2">Available Rewards</h4>
-                  <p className="text-3xl font-bold text-green-400">
-                    {userStakeInfo.availableRewards.toLocaleString()} STRK
-                  </p>
-                </motion.div>
-                
-                <motion.div
-                  whileHover={{ scale: 1.02 }}
                   className="bg-gray-800/50 backdrop-blur-sm p-6 rounded-xl border border-gray-700 shadow-lg flex flex-col justify-between"
                 >
                   <div>
-                    <h4 className="text-sm font-medium text-gray-400 mb-2">Last Claim</h4>
-                    <p className="text-gray-300">{userStakeInfo.lastClaimTime}</p>
+                    <h4 className="text-sm font-medium text-gray-400 mb-2">Available Rewards</h4>
+                    <p className="text-3xl font-bold text-green-400">
+                      {userStakeInfo.availableRewards.toLocaleString()} STRK
+                    </p>
                   </div>
                   <Button
                     onClick={claimRewards}
@@ -519,6 +657,94 @@ export default function Home() {
                     Claim Rewards
                   </Button>
                 </motion.div>
+                
+                <motion.div
+                  whileHover={{ scale: 1.02 }}
+                  className="md:col-span-1 bg-gray-800/50 backdrop-blur-sm p-6 rounded-xl border border-gray-700 shadow-lg"
+                >
+                  <h4 className="text-sm font-medium text-gray-400 mb-2">Your Delegations</h4>
+                  <p className="text-3xl font-bold text-white">
+                    {userStakeInfo.delegations.length} Validators
+                  </p>
+                </motion.div>
+
+                {userStakeInfo.delegations.length > 0 && (
+                  <div className="md:col-span-3">
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                      {userStakeInfo.delegations.map((delegation, index) => (
+                        <motion.div
+                          key={index}
+                          whileHover={{ scale: 1.02 }}
+                          className="bg-gray-800/50 backdrop-blur-sm p-6 rounded-xl border border-gray-700 shadow-lg"
+                        >
+                          <div className="flex items-center gap-4 mb-4">
+                            <div className="relative w-12 h-12">
+                              {validators.find(v => v.poolAddress === delegation.poolAddress)?.imgSrc ? (
+                                <img
+                                  src={validators.find(v => v.poolAddress === delegation.poolAddress)?.imgSrc || ''}
+                                  alt={delegation.validatorName}
+                                  className="w-12 h-12 rounded-full"
+                                />
+                              ) : (
+                                <div className="w-12 h-12 rounded-full bg-blue-500/20 flex items-center justify-center">
+                                  <span className="text-blue-400 text-lg font-bold">
+                                    {delegation.validatorName.charAt(0)}
+                                  </span>
+                                </div>
+                              )}
+                              {validators.find(v => v.poolAddress === delegation.poolAddress)?.isVerified && (
+                                <div className="absolute -bottom-1 -right-1 bg-green-500 rounded-full p-1">
+                                  <svg className="w-3 h-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                                  </svg>
+                                </div>
+                              )}
+                            </div>
+                            <div>
+                              <h3 className="font-semibold text-white">{delegation.validatorName}</h3>
+                              <a
+                                href={`https://voyager.online/contract/${delegation.poolAddress}`}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="text-sm text-gray-400 hover:text-blue-400"
+                              >
+                                {delegation.poolAddress.slice(0, 6)}...{delegation.poolAddress.slice(-4)}
+                              </a>
+                            </div>
+                          </div>
+                          <div className="space-y-2">
+                            <div className="flex justify-between items-center">
+                              <span className="text-gray-400">Delegated</span>
+                              <span className="text-white font-medium">
+                                {delegation.delegatedStake.toLocaleString()} STRK
+                              </span>
+                            </div>
+                            <div className="flex justify-between items-center">
+                              <span className="text-gray-400">Pending Rewards</span>
+                              <span className="text-green-400 font-medium">
+                                {delegation.pendingRewards.toLocaleString()} STRK
+                              </span>
+                            </div>
+                          </div>
+                          <div className="mt-4 space-y-2">
+                            <Button
+                              onClick={() => {
+                                const amount = prompt(`Enter amount to unstake from ${delegation.validatorName}:`);
+                                if (amount && !isNaN(Number(amount)) && Number(amount) <= delegation.delegatedStake) {
+                                  signalUnstakeIntent(delegation, amount);
+                                }
+                              }}
+                              className="w-full bg-red-600 hover:bg-red-700 text-white text-sm"
+                              disabled={delegation.delegatedStake <= 0}
+                            >
+                              Start Unstake
+                            </Button>
+                          </div>
+                        </motion.div>
+                      ))}
+                    </div>
+                  </div>
+                )}
               </div>
             </motion.div>
           </motion.div>
@@ -769,6 +995,41 @@ export default function Home() {
           </CardFooter>
         </Card>
       </div>
+
+      {userStakeInfo.unstakeIntents.length > 0 && (
+        <div className="md:col-span-3 mt-6">
+          <h3 className="text-xl font-semibold text-blue-400 mb-4">Pending Unstakes</h3>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {userStakeInfo.unstakeIntents.map((intent, index) => (
+              <motion.div
+                key={index}
+                className="bg-gray-800/50 backdrop-blur-sm p-6 rounded-xl border border-gray-700 shadow-lg"
+              >
+                <h4 className="font-semibold text-white mb-2">{intent.validatorName}</h4>
+                <div className="space-y-2">
+                  <div className="flex justify-between">
+                    <span className="text-gray-400">Amount</span>
+                    <span className="text-white">{intent.amount.toLocaleString()} STRK</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-gray-400">Available in</span>
+                    <span className="text-white">
+                      {Math.max(0, Math.ceil((intent.canClaimAt - Date.now()) / (1000 * 60 * 60 * 24)))} days
+                    </span>
+                  </div>
+                  <Button
+                    onClick={() => finalizeUnstake(intent)}
+                    className="w-full mt-2"
+                    disabled={Date.now() < intent.canClaimAt}
+                  >
+                    {Date.now() < intent.canClaimAt ? 'Waiting Period' : 'Claim Unstaked Tokens'}
+                  </Button>
+                </div>
+              </motion.div>
+            ))}
+          </div>
+        </div>
+      )}
     </div>
   )
 }
