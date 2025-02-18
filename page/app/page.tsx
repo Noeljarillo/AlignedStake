@@ -899,10 +899,6 @@ export default function Home() {
       <div className="w-full max-w-7xl grid grid-cols-1 lg:grid-cols-4 gap-8 relative">
         <Card className="lg:col-span-3 bg-gray-800 border-gray-700">
           <CardHeader>
-            <CardTitle className="text-2xl font-bold text-blue-400">Network Statistics</CardTitle>
-            <NetworkStatsHeader />
-          </CardHeader>
-          <CardContent>
             <div className="space-y-8">
               <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
                 <div className="bg-gray-800/50 backdrop-blur-sm p-3 rounded-lg border border-gray-700/50">
@@ -930,7 +926,11 @@ export default function Home() {
                   </div>
                 </div>
               </div>
-
+              <NetworkStatsHeader />
+            </div>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-8">
               <ComparisonMetrics />
 
               <div>
