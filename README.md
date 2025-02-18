@@ -2,6 +2,8 @@
 
 > Making Starknet's staking more decentralized, one delegation at a time 🌱
 
+![AlignedStake](img.png)
+
 ## 🌟 What is AlignedStake?
 
 AlignedStake is a tool designed to promote decentralization in Starknet's staking ecosystem. By providing insights into staking distribution and encouraging delegations to smaller validators, we aim to create a more balanced and resilient network.

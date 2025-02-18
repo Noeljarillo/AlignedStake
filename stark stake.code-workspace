@@ -1,9 +1,7 @@
 {
-	"folders": [
-		{
-			"name": "stark stake",
-			"path": "."
-		}
-	],
-	"settings": {}
+    "folders": [
+        {
+            "path": "."
+        }
+    ]
 }
