@@ -9,7 +9,11 @@ const pool = new Pool({
   port: 5432,
 });
 
-export async function GET() {
+export async function GET(request: Request) {
+  const { searchParams } = new URL(request.url);
+  const verifiedOnly = searchParams.get('verified') === 'true';
+  const verifiedFilter = verifiedOnly ? 'AND isVerified = true' : '';
+
   try {
     const client = await pool.connect();
 
@@ -19,6 +23,7 @@ export async function GET() {
       FROM (
         SELECT delegatedStake 
         FROM validators 
+        WHERE 1=1 ${verifiedFilter}
         ORDER BY delegatedStake DESC
         LIMIT 10
       ) subquery;
@@ -101,6 +106,32 @@ export async function GET() {
       ) subquery;
     `;
 
+    // Query for top 20 validators' stake
+    const topTwentyStakeQuery = `
+      SELECT 
+        SUM(CAST(totalStake AS numeric)) / POWER(10, 18) as top_twenty_stake
+      FROM (
+        SELECT totalStake
+        FROM validators
+        WHERE totalStake > '0'
+        ORDER BY totalStake::numeric DESC
+        LIMIT 20
+      ) subquery;
+    `;
+
+    // Add these new queries
+    const validatorsWithTwoPlusQuery = `
+      SELECT COUNT(*)
+      FROM validators
+      WHERE totalDelegators >= 2;
+    `;
+
+    const totalActiveValidatorsQuery = `
+      SELECT COUNT(*)
+      FROM validators
+      WHERE totalStake > '0';
+    `;
+
     // Execute all queries
     const [
       avgDelegatorsResult,
@@ -111,7 +142,10 @@ export async function GET() {
       validatorsOver1MResult,
       avgDelegatorsTop10Result,
       avgDelegatorsBottom20Result,
-      totalNetworkStakeResult
+      totalNetworkStakeResult,
+      topTwentyStakeResult,
+      validatorsWithTwoPlusResult,
+      totalActiveValidatorsResult
     ] = await Promise.all([
       client.query(avgDelegatorsTopTenQuery),
       client.query(avgStakedPerStakerQuery),
@@ -121,7 +155,10 @@ export async function GET() {
       client.query(validatorsOver1MQuery),
       client.query(avgDelegatorsTop10Query),
       client.query(avgDelegatorsBottom20Query),
-      client.query(totalNetworkStakeQuery)
+      client.query(totalNetworkStakeQuery),
+      client.query(topTwentyStakeQuery),
+      client.query(validatorsWithTwoPlusQuery),
+      client.query(totalActiveValidatorsQuery)
     ]);
 
     client.release();
@@ -136,7 +173,10 @@ export async function GET() {
       validatorsOver1M: Number(validatorsOver1MResult.rows[0].count) || 0,
       avgNumDelegatorsTop10: Math.floor(Number(avgDelegatorsTop10Result.rows[0].avg)) || 0,
       avgNumDelegatorsBottom20: Math.floor(Number(avgDelegatorsBottom20Result.rows[0].avg)) || 0,
-      totalNetworkStake: Number(totalNetworkStakeResult.rows[0].total_stake) || 0
+      totalNetworkStake: Number(totalNetworkStakeResult.rows[0].total_stake) || 0,
+      topTwentyStake: Number(topTwentyStakeResult.rows[0].top_twenty_stake) || 0,
+      validatorsWithTwoPlus: Number(validatorsWithTwoPlusResult.rows[0].count) || 0,
+      totalActiveValidators: Number(totalActiveValidatorsResult.rows[0].count) || 0
     };
 
     return NextResponse.json(stats);

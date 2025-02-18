@@ -26,12 +26,13 @@ This project is currently under active development. We're working hard to bring 
 - [X] Easy delegation interface
 - [x] Staking positions by validator
 - [X] Rewards metric
-- [In Progress] Unstake
+- [X] Signal Unstake
+- [in progress] Unstake
 - [ ] Switch pool
 - [ ] Claim rewards
 - [ ] Native RPC ETL 
-- [ ] Decentralization metric ratio bar
-- [ ] Validator performance metrics
+- [X] Decentralization metric ratio bar
+- [ ] Validator performance metrics (v2)
 
 ## 🚀 Getting Started
 

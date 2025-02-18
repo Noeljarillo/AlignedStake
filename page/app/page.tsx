@@ -157,6 +157,9 @@ interface Stats {
   avgNumDelegatorsTop10: number;
   avgNumDelegatorsBottom20: number;
   totalNetworkStake: number;
+  topTwentyStake: number;
+  validatorsWithTwoPlus: number;
+  totalActiveValidators: number;
 }
 
 interface StatCardProps {
@@ -218,81 +221,6 @@ const normalizeAddress = (address: string): string => {
   return address;
 };
 
-const signalUnstakeIntent = async (delegation: UserStakeInfo['delegations'][0], amount: string) => {
-  if (!account) return;
-  
-  try {
-    const normalizedAddress = normalizeAddress(account.address);
-    const amountBn = parseTokenAmount(amount);
-    const poolContract = new Contract(stakingPoolAbi, delegation.poolAddress, account);
-    
-    const tx = await poolContract.exit_delegation_pool_intent(amountBn);
-    await account.waitForTransaction(tx.transaction_hash);
-    
-    // Add to unstake intents
-    const now = Date.now();
-    const newIntent: UnstakeIntent = {
-      amount: Number(amount),
-      poolAddress: delegation.poolAddress,
-      validatorName: delegation.validatorName,
-      intentTimestamp: now,
-      canClaimAt: now + UNSTAKING_PERIOD
-    };
-    
-    // Store intent in localStorage
-    const storedIntents = JSON.parse(localStorage.getItem(`unstakeIntents_${normalizedAddress}`) || '[]');
-    localStorage.setItem(
-      `unstakeIntents_${normalizedAddress}`,
-      JSON.stringify([...storedIntents, newIntent])
-    );
-    
-    // Update UI
-    setUserStakeInfo(prev => ({
-      ...prev,
-      unstakeIntents: [...prev.unstakeIntents, newIntent]
-    }));
-    
-    return true;
-  } catch (error) {
-    console.error('Error signaling unstake:', error);
-    return false;
-  }
-};
-
-const finalizeUnstake = async (intent: UnstakeIntent) => {
-  if (!account) return;
-  
-  try {
-    const normalizedAddress = normalizeAddress(account.address);
-    const now = Date.now();
-    if (now < intent.canClaimAt) {
-      throw new Error(`Cannot unstake yet. Available in ${Math.ceil((intent.canClaimAt - now) / (1000 * 60 * 60 * 24))} days`);
-    }
-    
-    const poolContract = new Contract(stakingPoolAbi, intent.poolAddress, account);
-    const tx = await poolContract.exit_delegation_pool_action(account.address);
-    await account.waitForTransaction(tx.transaction_hash);
-    
-    // Remove from localStorage
-    const storedIntents = JSON.parse(localStorage.getItem(`unstakeIntents_${normalizedAddress}`) || '[]');
-    const updatedIntents = storedIntents.filter((i: UnstakeIntent) => 
-      i.intentTimestamp !== intent.intentTimestamp
-    );
-    localStorage.setItem(`unstakeIntents_${normalizedAddress}`, JSON.stringify(updatedIntents));
-    
-    // Update UI
-    setUserStakeInfo(prev => ({
-      ...prev,
-      unstakeIntents: prev.unstakeIntents.filter(i => i.intentTimestamp !== intent.intentTimestamp)
-    }));
-    
-    return true;
-  } catch (error) {
-    console.error('Error finalizing unstake:', error);
-    throw error;
-  }
-};
-
 export default function Home() {
   const [selectedDelegator, setSelectedDelegator] = useState<Validator | null>(null)
   const [stakeAmount, setStakeAmount] = useState("")
@@ -313,6 +241,9 @@ export default function Home() {
     avgNumDelegatorsTop10: 0,
     avgNumDelegatorsBottom20: 0,
     totalNetworkStake: 0,
+    topTwentyStake: 0,
+    validatorsWithTwoPlus: 0,
+    totalActiveValidators: 0
   })
   const [isStakeInfoOpen, setIsStakeInfoOpen] = useState(false);
   const [userStakeInfo, setUserStakeInfo] = useState<UserStakeInfo>({
@@ -327,7 +258,7 @@ export default function Home() {
     const fetchData = async () => {
       try {
         const [statsResponse, topValidatorsResponse, bottomValidatorsResponse] = await Promise.all([
-          fetch('/api/stats'),
+          fetch(`/api/stats?verified=${verifiedOnly}`),
           fetch('/api/validators?mode=top&limit=20'),
           fetch(`/api/validators?mode=bottom&limit=20${verifiedOnly ? '&verified=true' : ''}`)
         ]);
@@ -552,16 +483,14 @@ export default function Home() {
       const data = await response.json();
       
       // Get stored intents from localStorage
-      const storedIntents = addressToUse ? 
-        JSON.parse(localStorage.getItem(`unstakeIntents_${addressToUse}`) || '[]') : 
-        [];
+      const storedIntents = JSON.parse(localStorage.getItem(`unstakeIntents_${addressToUse}`) || '[]');
       
       setUserStakeInfo({
         totalDelegated: data.totalDelegated,
         availableRewards: data.totalPendingRewards,
         lastClaimTime: new Date().toLocaleDateString(),
         delegations: data.delegations,
-        unstakeIntents: storedIntents // Use stored intents from localStorage
+        unstakeIntents: storedIntents
       });
     } catch (error) {
       console.error('Error fetching stake info:', error);
@@ -578,11 +507,227 @@ export default function Home() {
     alert('Unstaking tokens... (mock)');
   };
 
+  const signalUnstakeIntent = async (delegation: UserStakeInfo['delegations'][0], amount: string) => {
+    if (!account) return;
+    
+    try {
+      const normalizedAddress = normalizeAddress(account.address);
+      const amountBn = parseTokenAmount(amount);
+      const poolContract = new Contract(stakingPoolAbi, delegation.poolAddress, account);
+      
+      const tx = await poolContract.exit_delegation_pool_intent(amountBn);
+      await account.waitForTransaction(tx.transaction_hash);
+      
+      // Add to unstake intents
+      const now = Date.now();
+      const newIntent: UnstakeIntent = {
+        amount: Number(amount),
+        poolAddress: delegation.poolAddress,
+        validatorName: delegation.validatorName,
+        intentTimestamp: now,
+        canClaimAt: now + UNSTAKING_PERIOD
+      };
+      
+      // Store intent in localStorage
+      const storedIntents = JSON.parse(localStorage.getItem(`unstakeIntents_${normalizedAddress}`) || '[]');
+      localStorage.setItem(
+        `unstakeIntents_${normalizedAddress}`,
+        JSON.stringify([...storedIntents, newIntent])
+      );
+      
+      // Update UI
+      setUserStakeInfo(prev => ({
+        ...prev,
+        unstakeIntents: [...prev.unstakeIntents, newIntent]
+      }));
+      
+      return true;
+    } catch (error) {
+      console.error('Error signaling unstake:', error);
+      return false;
+    }
+  };
+
+  const finalizeUnstake = async (intent: UnstakeIntent) => {
+    if (!account) return;
+    
+    try {
+      const normalizedAddress = normalizeAddress(account.address);
+      const now = Date.now();
+      if (now < intent.canClaimAt) {
+        throw new Error(`Cannot unstake yet. Available in ${Math.ceil((intent.canClaimAt - now) / (1000 * 60 * 60 * 24))} days`);
+      }
+      
+      const poolContract = new Contract(stakingPoolAbi, intent.poolAddress, account);
+      const tx = await poolContract.exit_delegation_pool_action(account.address);
+      await account.waitForTransaction(tx.transaction_hash);
+      
+      // Remove from localStorage
+      const storedIntents = JSON.parse(localStorage.getItem(`unstakeIntents_${normalizedAddress}`) || '[]');
+      const updatedIntents = storedIntents.filter((i: UnstakeIntent) => 
+        i.intentTimestamp !== intent.intentTimestamp
+      );
+      localStorage.setItem(`unstakeIntents_${normalizedAddress}`, JSON.stringify(updatedIntents));
+      
+      // Update UI
+      setUserStakeInfo(prev => ({
+        ...prev,
+        unstakeIntents: prev.unstakeIntents.filter(i => i.intentTimestamp !== intent.intentTimestamp)
+      }));
+      
+      return true;
+    } catch (error) {
+      console.error('Error finalizing unstake:', error);
+      throw error;
+    }
+  };
+
   useEffect(() => {
     if (account) {
       fetchUserStakeInfo();
     }
   }, [account]);
+
+  const NetworkStatsHeader = () => {
+    const totalStake = stats.totalNetworkStake;
+    const topTwentyStake = stats.topTwentyStake;
+    const restStake = totalStake - topTwentyStake;
+    
+    return (
+      <div className="w-full bg-gray-900 rounded-xl p-6 mb-8">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <div className="col-span-1">
+            <h3 className="text-lg font-semibold text-gray-400 mb-2">Total Network Stake</h3>
+            <p className="text-4xl font-bold text-white mb-1">
+              {Math.round(totalStake).toLocaleString()} STRK
+            </p>
+            <p className="text-sm text-gray-500">
+              Across all validators
+            </p>
+          </div>
+          
+          <div className="md:col-span-2">
+            <div className="flex justify-between items-center mb-2">
+              <h3 className="text-lg font-semibold text-gray-400">Stake Distribution</h3>
+              <span className="text-lg font-semibold text-blue-400">
+                {Math.round(topTwentyStake/totalStake * 100)}% Concentration
+              </span>
+            </div>
+            
+            <div className="space-y-4">
+              <div>
+                <div className="flex justify-between text-sm text-gray-400 mb-1">
+                  <span>Top 20 Validators</span>
+                  <span>{Math.round(topTwentyStake).toLocaleString()} STRK</span>
+                </div>
+                <div className="h-4 bg-gray-800 rounded-full overflow-hidden">
+                  <div 
+                    className="h-full bg-gradient-to-r from-blue-500 to-blue-600 rounded-full"
+                    style={{ width: `${(topTwentyStake/totalStake) * 100}%` }}
+                  />
+                </div>
+              </div>
+              
+              <div>
+                <div className="flex justify-between text-sm text-gray-400 mb-1">
+                  <span>Other Validators</span>
+                  <span>{Math.round(restStake).toLocaleString()} STRK</span>
+                </div>
+                <div className="h-4 bg-gray-800 rounded-full overflow-hidden">
+                  <div 
+                    className="h-full bg-gradient-to-r from-purple-500 to-purple-600 rounded-full"
+                    style={{ width: `${(restStake/totalStake) * 100}%` }}
+                  />
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  };
+
+  // Update the ComparisonMetrics component
+  const ComparisonMetrics = () => {
+    return (
+      <div className="mt-8 bg-gray-900 rounded-xl p-6">
+        <h3 className="text-xl font-semibold text-blue-400 mb-6">Top 10 vs Bottom 20 Comparison</h3>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+          <div className="space-y-4">
+            <div className="flex items-center justify-between p-4 bg-gray-800 rounded-lg">
+              <div>
+                <h4 className="text-sm font-medium text-gray-400">Average Delegated Stake</h4>
+                <p className="text-2xl font-bold text-white mt-1">
+                  {stats.avgDelegatorsTopTen.toLocaleString()} STRK
+                </p>
+                <span className="text-blue-400 text-sm">Top 10</span>
+              </div>
+              <div className="text-right">
+                <p className="text-2xl font-bold text-white">
+                  {stats.avgDelegatedBottom20.toLocaleString()} STRK
+                </p>
+                <span className="text-purple-400 text-sm">Bottom 20</span>
+              </div>
+            </div>
+
+            <div className="flex items-center justify-between p-4 bg-gray-800 rounded-lg">
+              <div>
+                <h4 className="text-sm font-medium text-gray-400">Average Total Stake</h4>
+                <p className="text-2xl font-bold text-white mt-1">
+                  {stats.avgStakedPerStaker.toLocaleString()} STRK
+                </p>
+                <span className="text-blue-400 text-sm">Top 10</span>
+              </div>
+              <div className="text-right">
+                <p className="text-2xl font-bold text-white">
+                  {stats.avgStakedBottom20.toLocaleString()} STRK
+                </p>
+                <span className="text-purple-400 text-sm">Bottom 20</span>
+              </div>
+            </div>
+
+            <div className="flex items-center justify-between p-4 bg-gray-800 rounded-lg">
+              <div>
+                <h4 className="text-sm font-medium text-gray-400">Average Delegators</h4>
+                <p className="text-2xl font-bold text-white mt-1">
+                  {stats.avgNumDelegatorsTop10.toLocaleString()}
+                </p>
+                <span className="text-blue-400 text-sm">Top 10</span>
+              </div>
+              <div className="text-right">
+                <p className="text-2xl font-bold text-white">
+                  {stats.avgNumDelegatorsBottom20.toLocaleString()}
+                </p>
+                <span className="text-purple-400 text-sm">Bottom 20</span>
+              </div>
+            </div>
+          </div>
+
+          <div className="space-y-4">
+            <div className="p-4 bg-gray-800 rounded-lg">
+              <h4 className="text-sm font-medium text-gray-400 mb-2">Stake Ratio (Top 10 : Bottom 20)</h4>
+              <p className="text-3xl font-bold text-white">
+                {(stats.avgDelegatorsTopTen / stats.avgDelegatedBottom20).toFixed(1)}x
+              </p>
+              <p className="text-sm text-gray-400 mt-1">
+                Top 10 validators have {(stats.avgDelegatorsTopTen / stats.avgDelegatedBottom20).toFixed(1)}x more stake
+              </p>
+            </div>
+
+            <div className="p-4 bg-gray-800 rounded-lg">
+              <h4 className="text-sm font-medium text-gray-400 mb-2">Delegator Ratio (Top 10 : Bottom 20)</h4>
+              <p className="text-3xl font-bold text-white">
+                {(stats.avgNumDelegatorsTop10 / stats.avgNumDelegatorsBottom20).toFixed(1)}x
+              </p>
+              <p className="text-sm text-gray-400 mt-1">
+                Top 10 validators have {(stats.avgNumDelegatorsTop10 / stats.avgNumDelegatorsBottom20).toFixed(1)}x more delegators
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-900 to-gray-800 flex flex-col items-center pt-0 px-4 pb-4">
@@ -755,33 +900,39 @@ export default function Home() {
         <Card className="lg:col-span-3 bg-gray-800 border-gray-700">
           <CardHeader>
             <CardTitle className="text-2xl font-bold text-blue-400">Network Statistics</CardTitle>
-            <div className="mt-4 p-4 bg-gradient-to-r from-blue-500/10 to-purple-500/10 rounded-xl border border-blue-500/20">
-              <div className="flex items-baseline justify-between">
-                <h3 className="text-lg font-medium text-blue-400">Total Network Stake</h3>
-                <p className="text-3xl font-bold text-white">
-                  {(stats.totalNetworkStake / 1000000).toFixed(2)}M STRK
-                </p>
-              </div>
-              <div className="mt-2 flex justify-end">
-                <span className="text-sm text-gray-400">(Delegated + Staked)</span>
-              </div>
-            </div>
+            <NetworkStatsHeader />
           </CardHeader>
           <CardContent>
             <div className="space-y-8">
-              <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-                <StatCard title="Avg. Delegated (Top 10)" value={stats.avgDelegatorsTopTen.toLocaleString()} />
-                <StatCard
-                  title="Avg. Staked per validator"
-                  value={`${stats.avgStakedPerStaker.toLocaleString()}   strk`}
-                />
-                <StatCard title="Validators with 0 Delegators" value={stats.validatorsWithZeroStake} />
-                <StatCard title="Avg. Delegators (Top 10)" value={stats.avgNumDelegatorsTop10.toLocaleString()} />
-                <StatCard title="Avg. Delegated (Bottom 20)" value={`${stats.avgDelegatedBottom20.toLocaleString()}   strk`} />
-                <StatCard title="Avg. Staked (Bottom 20)" value={`${stats.avgStakedBottom20.toLocaleString()}   strk`} />
-                <StatCard title="Validators > 1M STARK" value={stats.validatorsOver1M} />
-                <StatCard title="Avg. Delegators (Bottom 20)" value={stats.avgNumDelegatorsBottom20.toLocaleString()} />
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                <div className="bg-gray-800/50 backdrop-blur-sm p-3 rounded-lg border border-gray-700/50">
+                  <div className="flex items-center justify-between">
+                    <h4 className="text-sm font-medium text-gray-400">Zero Delegators</h4>
+                    <span className="text-xl font-bold text-white">{stats.validatorsWithZeroStake}</span>
+                  </div>
+                </div>
+                <div className="bg-gray-800/50 backdrop-blur-sm p-3 rounded-lg border border-gray-700/50">
+                  <div className="flex items-center justify-between">
+                    <h4 className="text-sm font-medium text-gray-400">>1M STRK Delegated</h4>
+                    <span className="text-xl font-bold text-white">{stats.validatorsOver1M}</span>
+                  </div>
+                </div>
+                <div className="bg-gray-800/50 backdrop-blur-sm p-3 rounded-lg border border-gray-700/50">
+                  <div className="flex items-center justify-between">
+                    <h4 className="text-sm font-medium text-gray-400">2+ Delegators</h4>
+                    <span className="text-xl font-bold text-white">{stats.validatorsWithTwoPlus}</span>
+                  </div>
+                </div>
+                <div className="bg-gray-800/50 backdrop-blur-sm p-3 rounded-lg border border-gray-700/50">
+                  <div className="flex items-center justify-between">
+                    <h4 className="text-sm font-medium text-gray-400">Active Validators</h4>
+                    <span className="text-xl font-bold text-white">{stats.totalActiveValidators}</span>
+                  </div>
+                </div>
               </div>
+
+              <ComparisonMetrics />
+
               <div>
                 <h3 className="text-xl font-semibold text-blue-400 mb-4">Top 20 Validators by Delegated Stake</h3>
                 <div className="h-80 w-full">
@@ -823,6 +974,7 @@ export default function Home() {
                   </ResponsiveContainer>
                 </div>
               </div>
+
               <div>
                 <h3 className="text-xl font-semibold text-blue-400 mb-4">Bottom 20 Validators by Delegated Stake</h3>
                 <div className="h-80 w-full">
@@ -844,14 +996,17 @@ export default function Home() {
                       />
                       <YAxis 
                         tick={{ fill: "#9CA3AF" }}
-                        tickFormatter={(value) => `${(value / 1000).toFixed(0)}k`}
+                        tickFormatter={(value) => {
+                          if (value >= 1000000) {
+                            return `${(value / 1000000).toFixed(1)}M`;
+                          } else if (value >= 1000) {
+                            return `${(value / 1000).toFixed(1)}K`;
+                          }
+                          return value.toFixed(0);
+                        }}
                       />
-                      <Tooltip content={<CustomTooltip />} />
-                      <Bar 
-                        dataKey="delegatedStake" 
-                        fill="#9333EA"
-                        radius={[4, 4, 0, 0]}
-                      >
+                      <Tooltip content={CustomTooltip} />
+                      <Bar dataKey="delegatedStake" fill="#9333EA">
                         {bottomValidators.map((entry, index) => (
                           <Cell 
                             key={`cell-${index}`}
