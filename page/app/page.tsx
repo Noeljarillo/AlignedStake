@@ -913,7 +913,7 @@ export default function Home() {
                 </div>
                 <div className="bg-gray-800/50 backdrop-blur-sm p-3 rounded-lg border border-gray-700/50">
                   <div className="flex items-center justify-between">
-                    <h4 className="text-sm font-medium text-gray-400">>1M STRK Delegated</h4>
+                    <h4 className="text-sm font-medium text-gray-400">{'>'}1M STRK Delegated</h4>
                     <span className="text-xl font-bold text-white">{stats.validatorsOver1M}</span>
                   </div>
                 </div>
