@@ -1,13 +1,8 @@
 import { NextResponse } from 'next/server';
-import { Pool } from 'pg';
+import { neon } from '@neondatabase/serverless';
 
-const pool = new Pool({
-  user: 'user',
-  host: 'localhost',
-  database: 'mydatabase',
-  password: 'password',
-  port: 5432,
-});
+// Create a single neon connection
+const sql = neon(process.env.DATABASE_URL || '');
 
 export async function GET(request: Request) {
   try {
@@ -15,8 +10,6 @@ export async function GET(request: Request) {
     const mode = searchParams.get('mode') || 'top'; // 'top' or 'bottom'
     const verifiedOnly = searchParams.get('verified') === 'true';
     const limit = parseInt(searchParams.get('limit') || '20');
-
-    const client = await pool.connect();
 
     // Base query with verification filter
     const baseQuery = `
@@ -40,11 +33,10 @@ export async function GET(request: Request) {
       LIMIT $1;
     `;
 
-    const result = await client.query(query, [limit]);
-    client.release();
+    const result = await sql(query, [limit]);
 
     // Format the results
-    const validators = result.rows.map(validator => ({
+    const validators = result.map(validator => ({
       address: validator.address,
       name: validator.name || validator.address.slice(0, 8) + '...',
       delegatedStake: Math.floor(Number(validator.delegatedstake) / Math.pow(10, 18)),

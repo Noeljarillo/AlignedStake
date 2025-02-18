@@ -1,13 +1,7 @@
 import { NextResponse } from 'next/server';
-import { Pool } from 'pg';
+import { neon } from '@neondatabase/serverless';
 
-const pool = new Pool({
-  user: 'user',
-  host: 'localhost',
-  database: 'mydatabase',
-  password: 'password',
-  port: 5432,
-});
+const sql = neon(process.env.DATABASE_URL || '');
 
 const RPC_URL = "https://free-rpc.nethermind.io/mainnet-juno/v0_7";
 const REWARDS_SELECTOR = "0xcf37a862e5bf34bd0e858865ea02d4ba6db9cc722f3424eb452c94d4ea567f";
@@ -56,8 +50,6 @@ export async function GET(request: Request) {
       );
     }
 
-    const client = await pool.connect();
-
     // Get all delegations for the address
     const query = `
       SELECT 
@@ -70,12 +62,11 @@ export async function GET(request: Request) {
       WHERE d.address = $1
     `;
 
-    const result = await client.query(query, [address]);
-    client.release();
+    const result = await sql(query, [address]);
 
     // Fetch rewards for each delegation
     const delegationsWithRewards = await Promise.all(
-      result.rows.map(async (row) => {
+      result.map(async (row) => {
         const rewards = await getRewards(row.pooladdress, address);
         return {
           validatorName: row.validator_name || row.pooladdress.slice(0, 8) + '...',

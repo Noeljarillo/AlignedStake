@@ -1,13 +1,7 @@
 import { NextResponse } from 'next/server';
-import { Pool } from 'pg';
+import { neon } from '@neondatabase/serverless';
 
-const pool = new Pool({
-  user: 'user',
-  host: 'localhost',
-  database: 'mydatabase',
-  password: 'password',
-  port: 5432,
-});
+const sql = neon(process.env.DATABASE_URL || '');
 
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
@@ -15,8 +9,6 @@ export async function GET(request: Request) {
   const verifiedFilter = verifiedOnly ? 'AND isVerified = true' : '';
 
   try {
-    const client = await pool.connect();
-
     // Query for average delegated stake of top 10 validators
     const avgDelegatorsTopTenQuery = `
       SELECT AVG(delegatedStake::numeric) 
@@ -147,36 +139,34 @@ export async function GET(request: Request) {
       validatorsWithTwoPlusResult,
       totalActiveValidatorsResult
     ] = await Promise.all([
-      client.query(avgDelegatorsTopTenQuery),
-      client.query(avgStakedPerStakerQuery),
-      client.query(validatorsWithZeroStakeQuery),
-      client.query(avgDelegatedBottom20Query),
-      client.query(avgStakedBottom20Query),
-      client.query(validatorsOver1MQuery),
-      client.query(avgDelegatorsTop10Query),
-      client.query(avgDelegatorsBottom20Query),
-      client.query(totalNetworkStakeQuery),
-      client.query(topTwentyStakeQuery),
-      client.query(validatorsWithTwoPlusQuery),
-      client.query(totalActiveValidatorsQuery)
+      sql(avgDelegatorsTopTenQuery),
+      sql(avgStakedPerStakerQuery),
+      sql(validatorsWithZeroStakeQuery),
+      sql(avgDelegatedBottom20Query),
+      sql(avgStakedBottom20Query),
+      sql(validatorsOver1MQuery),
+      sql(avgDelegatorsTop10Query),
+      sql(avgDelegatorsBottom20Query),
+      sql(totalNetworkStakeQuery),
+      sql(topTwentyStakeQuery),
+      sql(validatorsWithTwoPlusQuery),
+      sql(totalActiveValidatorsQuery)
     ]);
-
-    client.release();
 
     // Format the results
     const stats = {
-      avgDelegatorsTopTen: Math.floor(Number(avgDelegatorsResult.rows[0].avg) / Math.pow(10, 18)) || 0,
-      avgStakedPerStaker: Math.floor(Number(avgStakedResult.rows[0].avg) / Math.pow(10, 18)) || 0,
-      validatorsWithZeroStake: Number(zeroStakeResult.rows[0].count) || 0,
-      avgDelegatedBottom20: Math.floor(Number(avgDelegatedBottom20Result.rows[0].avg) / Math.pow(10, 18)) || 0,
-      avgStakedBottom20: Math.floor(Number(avgStakedBottom20Result.rows[0].avg) / Math.pow(10, 18)) || 0,
-      validatorsOver1M: Number(validatorsOver1MResult.rows[0].count) || 0,
-      avgNumDelegatorsTop10: Math.floor(Number(avgDelegatorsTop10Result.rows[0].avg)) || 0,
-      avgNumDelegatorsBottom20: Math.floor(Number(avgDelegatorsBottom20Result.rows[0].avg)) || 0,
-      totalNetworkStake: Number(totalNetworkStakeResult.rows[0].total_stake) || 0,
-      topTwentyStake: Number(topTwentyStakeResult.rows[0].top_twenty_stake) || 0,
-      validatorsWithTwoPlus: Number(validatorsWithTwoPlusResult.rows[0].count) || 0,
-      totalActiveValidators: Number(totalActiveValidatorsResult.rows[0].count) || 0
+      avgDelegatorsTopTen: Math.floor(Number(avgDelegatorsResult[0]?.avg) / Math.pow(10, 18)) || 0,
+      avgStakedPerStaker: Math.floor(Number(avgStakedResult[0]?.avg) / Math.pow(10, 18)) || 0,
+      validatorsWithZeroStake: Number(zeroStakeResult[0]?.count) || 0,
+      avgDelegatedBottom20: Math.floor(Number(avgDelegatedBottom20Result[0]?.avg) / Math.pow(10, 18)) || 0,
+      avgStakedBottom20: Math.floor(Number(avgStakedBottom20Result[0]?.avg) / Math.pow(10, 18)) || 0,
+      validatorsOver1M: Number(validatorsOver1MResult[0]?.count) || 0,
+      avgNumDelegatorsTop10: Math.floor(Number(avgDelegatorsTop10Result[0]?.avg)) || 0,
+      avgNumDelegatorsBottom20: Math.floor(Number(avgDelegatorsBottom20Result[0]?.avg)) || 0,
+      totalNetworkStake: Number(totalNetworkStakeResult[0]?.total_stake) || 0,
+      topTwentyStake: Number(topTwentyStakeResult[0]?.top_twenty_stake) || 0,
+      validatorsWithTwoPlus: Number(validatorsWithTwoPlusResult[0]?.count) || 0,
+      totalActiveValidators: Number(totalActiveValidatorsResult[0]?.count) || 0
     };
 
     return NextResponse.json(stats);
