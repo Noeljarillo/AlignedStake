@@ -4,6 +4,8 @@
 
 ![AlignedStake](img.png)
 
+🌐 **[Live Demo](https://aligned-stake.vercel.app/)**
+
 ## 🌟 What is AlignedStake?
 
 AlignedStake is a tool designed to promote decentralization in Starknet's staking ecosystem. By providing insights into staking distribution and encouraging delegations to smaller validators, we aim to create a more balanced and resilient network.
