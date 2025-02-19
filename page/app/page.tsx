@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { Label } from "@/components/ui/label"
-import { Loader2, RefreshCw, Zap, ChevronDown, ChevronUp, Gift } from "lucide-react"
+import { Loader2, RefreshCw, Zap, ChevronDown, ChevronUp, Gift, Users, Landmark, Users2, Activity } from "lucide-react"
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell } from "recharts"
 import { Contract, AccountInterface, RpcProvider } from "starknet"
 import { cairo } from "starknet"
@@ -157,7 +157,7 @@ interface Stats {
   avgNumDelegatorsTop10: number;
   avgNumDelegatorsBottom20: number;
   totalNetworkStake: number;
-  topTwentyStake: number;
+  topTenStake: number;
   validatorsWithTwoPlus: number;
   totalActiveValidators: number;
 }
@@ -186,6 +186,15 @@ interface UserStakeInfo {
     pendingRewards: number;
   }[];
   unstakeIntents: UnstakeIntent[];
+}
+
+// Add this interface near your other interfaces
+interface StatMetric {
+  title: string;
+  value: number;
+  tooltip: string;
+  icon: React.ReactNode;
+  color: string;
 }
 
 // Helper function to convert human readable amount to token amount with decimals
@@ -221,6 +230,45 @@ const normalizeAddress = (address: string): string => {
   return address;
 };
 
+// Add this new component near your other component definitions
+const CallToAction = () => {
+  return (
+    <div className="w-full bg-gradient-to-r from-blue-600/10 to-purple-600/10 backdrop-blur-sm border-b border-blue-500/20 p-4">
+      <div className="max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-between gap-4">
+        <div className="flex items-center gap-3">
+          <div className="p-2 rounded-lg bg-blue-500/20">
+            <svg 
+              className="w-6 h-6 text-blue-400" 
+              fill="none" 
+              viewBox="0 0 24 24" 
+              stroke="currentColor"
+            >
+              <path 
+                strokeLinecap="round" 
+                strokeLinejoin="round" 
+                strokeWidth={2} 
+                d="M12 6v6m0 0v6m0-6h6m-6 0H6"
+              />
+            </svg>
+          </div>
+          <div>
+            <h2 className="text-xl font-semibold text-white">Shape Starknet's Future</h2>
+            <p className="text-gray-400">
+              Every delegation strengthens the network. Be part of Starknet's decentralized foundation.
+            </p>
+          </div>
+        </div>
+        <Button 
+          className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-lg transition-all duration-300 transform hover:scale-105"
+          onClick={() => window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' })}
+        >
+          Start Delegating
+        </Button>
+      </div>
+    </div>
+  );
+};
+
 export default function Home() {
   const [selectedDelegator, setSelectedDelegator] = useState<Validator | null>(null)
   const [stakeAmount, setStakeAmount] = useState("")
@@ -228,7 +276,7 @@ export default function Home() {
   const [stakeResult, setStakeResult] = useState("")
   const [validators, setValidators] = useState<Validator[]>([])
   const [bottomValidators, setBottomValidators] = useState<Validator[]>([])
-  const [verifiedOnly, setVerifiedOnly] = useState(false)
+  const [verifiedOnly, setVerifiedOnly] = useState(true)
   const [walletConnected, setWalletConnected] = useState(false)
   const [account, setAccount] = useState<AccountInterface | null>(null)
   const [stats, setStats] = useState<Stats>({
@@ -241,7 +289,7 @@ export default function Home() {
     avgNumDelegatorsTop10: 0,
     avgNumDelegatorsBottom20: 0,
     totalNetworkStake: 0,
-    topTwentyStake: 0,
+    topTenStake: 0,
     validatorsWithTwoPlus: 0,
     totalActiveValidators: 0
   })
@@ -590,8 +638,8 @@ export default function Home() {
 
   const NetworkStatsHeader = () => {
     const totalStake = stats.totalNetworkStake;
-    const topTwentyStake = stats.topTwentyStake;
-    const restStake = totalStake - topTwentyStake;
+    const topTenStake = stats.topTenStake;
+    const restStake = totalStake - topTenStake;
     
     return (
       <div className="w-full bg-gray-900 rounded-xl p-6 mb-8">
@@ -610,20 +658,20 @@ export default function Home() {
             <div className="flex justify-between items-center mb-2">
               <h3 className="text-lg font-semibold text-gray-400">Stake Distribution</h3>
               <span className="text-lg font-semibold text-blue-400">
-                {Math.round(topTwentyStake/totalStake * 100)}% Concentration
+                {Math.round(topTenStake/totalStake * 100)}% Concentration
               </span>
             </div>
             
             <div className="space-y-4">
               <div>
                 <div className="flex justify-between text-sm text-gray-400 mb-1">
-                  <span>Top 20 Validators</span>
-                  <span>{Math.round(topTwentyStake).toLocaleString()} STRK</span>
+                  <span>Top 10 Validators</span>
+                  <span>{Math.round(topTenStake).toLocaleString()} STRK</span>
                 </div>
                 <div className="h-4 bg-gray-800 rounded-full overflow-hidden">
                   <div 
                     className="h-full bg-gradient-to-r from-blue-500 to-blue-600 rounded-full"
-                    style={{ width: `${(topTwentyStake/totalStake) * 100}%` }}
+                    style={{ width: `${(topTenStake/totalStake) * 100}%` }}
                   />
                 </div>
               </div>
@@ -729,8 +777,38 @@ export default function Home() {
     );
   };
 
+  // Update the MetricCard component
+  const MetricCard = ({ metric }: { metric: StatMetric }) => {
+    return (
+      <div 
+        className="group relative bg-gray-800/50 backdrop-blur-sm p-4 rounded-xl border border-gray-700/50 transition-all duration-300 hover:bg-gray-700/50 hover:border-gray-600"
+      >
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <div className={`p-2 rounded-lg ${metric.color}`}>
+              {metric.icon}
+            </div>
+            <div>
+              <h4 className="text-sm font-medium text-gray-400">{metric.title}</h4>
+              <p className="text-2xl font-bold text-white mt-1">{metric.value.toLocaleString()}</p>
+            </div>
+          </div>
+        </div>
+        
+        {/* Updated Tooltip to appear below */}
+        <div className="absolute top-full left-1/2 -translate-x-1/2 mt-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none z-50">
+          <div className="w-3 h-3 bg-gray-900 border-gray-700 border-l border-t rotate-45 absolute -top-1.5 left-1/2 -translate-x-1/2"></div>
+          <div className="bg-gray-900 text-gray-300 px-4 py-2 rounded-lg shadow-xl border border-gray-700 w-64">
+            <p className="text-sm">{metric.tooltip}</p>
+          </div>
+        </div>
+      </div>
+    );
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-900 to-gray-800 flex flex-col items-center pt-0 px-4 pb-4">
+      <CallToAction />
       <div className="w-full sticky top-0 z-50">
         <AnimatePresence>
           <motion.div
@@ -901,30 +979,38 @@ export default function Home() {
           <CardHeader>
             <div className="space-y-8">
               <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-                <div className="bg-gray-800/50 backdrop-blur-sm p-3 rounded-lg border border-gray-700/50">
-                  <div className="flex items-center justify-between">
-                    <h4 className="text-sm font-medium text-gray-400">Zero Delegators</h4>
-                    <span className="text-xl font-bold text-white">{stats.validatorsWithZeroStake}</span>
-                  </div>
-                </div>
-                <div className="bg-gray-800/50 backdrop-blur-sm p-3 rounded-lg border border-gray-700/50">
-                  <div className="flex items-center justify-between">
-                    <h4 className="text-sm font-medium text-gray-400">{'>'}1M STRK Delegated</h4>
-                    <span className="text-xl font-bold text-white">{stats.validatorsOver1M}</span>
-                  </div>
-                </div>
-                <div className="bg-gray-800/50 backdrop-blur-sm p-3 rounded-lg border border-gray-700/50">
-                  <div className="flex items-center justify-between">
-                    <h4 className="text-sm font-medium text-gray-400">2+ Delegators</h4>
-                    <span className="text-xl font-bold text-white">{stats.validatorsWithTwoPlus}</span>
-                  </div>
-                </div>
-                <div className="bg-gray-800/50 backdrop-blur-sm p-3 rounded-lg border border-gray-700/50">
-                  <div className="flex items-center justify-between">
-                    <h4 className="text-sm font-medium text-gray-400">Active Validators</h4>
-                    <span className="text-xl font-bold text-white">{stats.totalActiveValidators}</span>
-                  </div>
-                </div>
+                {[
+                  {
+                    title: "Zero Delegators",
+                    value: stats.validatorsWithZeroStake,
+                    tooltip: "Number of validators that have not received any delegations yet. These validators are waiting for their first delegators to join.",
+                    icon: <Users className="w-5 h-5 text-red-400" />,
+                    color: "bg-red-500/20"
+                  },
+                  {
+                    title: ">1M STRK Delegated",
+                    value: stats.validatorsOver1M,
+                    tooltip: "Number of validators that have received more than 1 million STRK in delegations. These are the largest validators by stake.",
+                    icon: <Landmark className="w-5 h-5 text-green-400" />,
+                    color: "bg-green-500/20"
+                  },
+                  {
+                    title: "2+ Delegators",
+                    value: stats.validatorsWithTwoPlus,
+                    tooltip: "Number of validators that have two or more unique delegators. This indicates validators with a diverse delegation base.",
+                    icon: <Users2 className="w-5 h-5 text-blue-400" />,
+                    color: "bg-blue-500/20"
+                  },
+                  {
+                    title: "Active Validators",
+                    value: stats.totalActiveValidators,
+                    tooltip: "Total number of validators currently active in the network with non-zero stake. This represents the size of the validator network.",
+                    icon: <Activity className="w-5 h-5 text-purple-400" />,
+                    color: "bg-purple-500/20"
+                  }
+                ].map((metric, index) => (
+                  <MetricCard key={index} metric={metric} />
+                ))}
               </div>
               <NetworkStatsHeader />
             </div>
@@ -937,7 +1023,19 @@ export default function Home() {
                 <h3 className="text-xl font-semibold text-blue-400 mb-4">Top 20 Validators by Delegated Stake</h3>
                 <div className="h-80 w-full">
                   <ResponsiveContainer width="100%" height="100%">
-                    <BarChart data={validators}>
+                    <BarChart 
+                      data={validators}
+                      onClick={(data) => {
+                        if (data && data.activePayload && data.activePayload[0]) {
+                          const validator = data.activePayload[0].payload;
+                          setSelectedDelegator(validator);
+                          const stakingElement = document.getElementById('staking-component');
+                          if (stakingElement) {
+                            stakingElement.scrollIntoView({ behavior: 'smooth' });
+                          }
+                        }
+                      }}
+                    >
                       <XAxis 
                         dataKey={(data) => {
                           const words = data.name.split(' ');
@@ -979,7 +1077,19 @@ export default function Home() {
                 <h3 className="text-xl font-semibold text-blue-400 mb-4">Bottom 20 Validators by Delegated Stake</h3>
                 <div className="h-80 w-full">
                   <ResponsiveContainer width="100%" height="100%">
-                    <BarChart data={bottomValidators}>
+                    <BarChart 
+                      data={bottomValidators}
+                      onClick={(data) => {
+                        if (data && data.activePayload && data.activePayload[0]) {
+                          const validator = data.activePayload[0].payload;
+                          setSelectedDelegator(validator);
+                          const stakingElement = document.getElementById('staking-component');
+                          if (stakingElement) {
+                            stakingElement.scrollIntoView({ behavior: 'smooth' });
+                          }
+                        }
+                      }}
+                    >
                       <XAxis 
                         dataKey={(data) => {
                           const words = data.name.split(' ');
@@ -1005,8 +1115,11 @@ export default function Home() {
                           return value.toFixed(0);
                         }}
                       />
-                      <Tooltip content={CustomTooltip} />
-                      <Bar dataKey="delegatedStake" fill="#9333EA">
+                      <Tooltip content={<CustomTooltip />} />
+                      <Bar 
+                        dataKey="delegatedStake" 
+                        fill="#9333EA"
+                      >
                         {bottomValidators.map((entry, index) => (
                           <Cell 
                             key={`cell-${index}`}
@@ -1022,10 +1135,10 @@ export default function Home() {
           </CardContent>
         </Card>
 
-        <Card className="lg:col-span-1 bg-gray-800 border-gray-700">
-          <CardHeader className="text-center">
-            <CardTitle className="text-2xl font-bold text-blue-400">Stake   strk</CardTitle>
-            <CardDescription className="text-gray-400">Choose a validator and stake your   strk</CardDescription>
+        <Card className="lg:col-span-1 bg-gray-800 border-gray-700 lg:sticky lg:top-24 h-fit">
+          <CardHeader className="text-center" id="staking-component">
+            <CardTitle className="text-2xl font-bold text-blue-400">Stake STRK</CardTitle>
+            <CardDescription className="text-gray-400">Choose a validator and stake your STRK</CardDescription>
           </CardHeader>
           <CardContent>
             <div className="space-y-6">

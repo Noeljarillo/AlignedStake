@@ -98,16 +98,16 @@ export async function GET(request: Request) {
       ) subquery;
     `;
 
-    // Query for top 20 validators' stake
-    const topTwentyStakeQuery = `
+    // Query for top 10 validators' stake
+    const topTenStakeQuery = `
       SELECT 
-        SUM(CAST(totalStake AS numeric)) / POWER(10, 18) as top_twenty_stake
+        SUM(CAST(totalStake AS numeric)) / POWER(10, 18) as top_ten_stake
       FROM (
         SELECT totalStake
         FROM validators
         WHERE totalStake > '0'
         ORDER BY totalStake::numeric DESC
-        LIMIT 20
+        LIMIT 10
       ) subquery;
     `;
 
@@ -135,7 +135,7 @@ export async function GET(request: Request) {
       avgDelegatorsTop10Result,
       avgDelegatorsBottom20Result,
       totalNetworkStakeResult,
-      topTwentyStakeResult,
+      topTenStakeResult,
       validatorsWithTwoPlusResult,
       totalActiveValidatorsResult
     ] = await Promise.all([
@@ -148,7 +148,7 @@ export async function GET(request: Request) {
       sql(avgDelegatorsTop10Query),
       sql(avgDelegatorsBottom20Query),
       sql(totalNetworkStakeQuery),
-      sql(topTwentyStakeQuery),
+      sql(topTenStakeQuery),
       sql(validatorsWithTwoPlusQuery),
       sql(totalActiveValidatorsQuery)
     ]);
@@ -164,7 +164,7 @@ export async function GET(request: Request) {
       avgNumDelegatorsTop10: Math.floor(Number(avgDelegatorsTop10Result[0]?.avg)) || 0,
       avgNumDelegatorsBottom20: Math.floor(Number(avgDelegatorsBottom20Result[0]?.avg)) || 0,
       totalNetworkStake: Number(totalNetworkStakeResult[0]?.total_stake) || 0,
-      topTwentyStake: Number(topTwentyStakeResult[0]?.top_twenty_stake) || 0,
+      topTenStake: Number(topTenStakeResult[0]?.top_ten_stake) || 0,
       validatorsWithTwoPlus: Number(validatorsWithTwoPlusResult[0]?.count) || 0,
       totalActiveValidators: Number(totalActiveValidatorsResult[0]?.count) || 0
     };
