@@ -254,7 +254,7 @@ const CallToAction = () => {
           <div>
             <h2 className="text-xl font-semibold text-white">Shape Starknet's Future</h2>
             <p className="text-gray-400">
-              Every delegation strengthens the network. Be part of Starknet's decentralized foundation.
+              Every delegation strengthens the network. Be part of Starknet's decentralized future.
             </p>
           </div>
         </div>
