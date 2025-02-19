@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { Label } from "@/components/ui/label"
-import { Loader2, RefreshCw, Zap, ChevronDown, ChevronUp, Gift, Users, Landmark, Users2, Activity } from "lucide-react"
+import { Loader2, RefreshCw, Zap, ChevronDown, ChevronUp, Gift, Users, Landmark, Users2, Activity, Mail, MessageCircle, Twitter } from "lucide-react"
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell } from "recharts"
 import { Contract, AccountInterface, RpcProvider } from "starknet"
 import { cairo } from "starknet"
@@ -264,6 +264,46 @@ const CallToAction = () => {
         >
           Start Delegating
         </Button>
+      </div>
+    </div>
+  );
+};
+
+const ContactInfo = () => {
+  return (
+    <div className="w-full bg-gray-800/80 backdrop-blur-sm border-t border-gray-700/50 py-3 mt-8">
+      <div className="max-w-7xl mx-auto px-4 flex items-center justify-center gap-6 text-sm">
+        <span className="text-blue-400 font-semibold">Talk with the Dev:</span>
+        <a
+          href="mailto:noel.jarillo@gmail.com"
+          className="flex items-center gap-2 text-gray-400 hover:text-blue-400 transition-colors duration-200"
+          title="Email"
+        >
+          <Mail className="h-4 w-4" />
+          <span>noel.jarillo@gmail.com</span>
+        </a>
+        
+        <a
+          href="https://t.me/satoshinakamoto420"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="flex items-center gap-2 text-gray-400 hover:text-blue-400 transition-colors duration-200"
+          title="Telegram"
+        >
+          <MessageCircle className="h-4 w-4" />
+          <span>@satoshinakamoto420</span>
+        </a>
+        
+        <a
+          href="https://twitter.com/0xN0el"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="flex items-center gap-2 text-gray-400 hover:text-blue-400 transition-colors duration-200"
+          title="X (Twitter)"
+        >
+          <Twitter className="h-4 w-4" />
+          <span>@0xN0el</span>
+        </a>
       </div>
     </div>
   );
@@ -1298,6 +1338,7 @@ export default function Home() {
           </div>
         </div>
       )}
+      <ContactInfo />
     </div>
   )
 }
