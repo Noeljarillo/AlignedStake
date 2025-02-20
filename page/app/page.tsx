@@ -309,6 +309,29 @@ const ContactInfo = () => {
   );
 };
 
+// Add this new component near your other component definitions
+const VoyagerBanner = () => {
+  return (
+    <a 
+      href="https://voyager.online/"
+      target="_blank"
+      rel="noopener noreferrer"
+      className="w-full bg-gray-900/80 backdrop-blur-sm border-b border-gray-700/50 py-2 block hover:bg-gray-800/80 transition-colors duration-200"
+    >
+      <div className="max-w-7xl mx-auto px-4 flex items-center justify-center gap-3">
+        <img 
+          src="/default.png" 
+          alt="Voyager Logo" 
+          className="w-6 h-6 rounded"
+        />
+        <span className="text-sm text-gray-300">
+          Data powered by <span className="text-blue-400 font-semibold">Voyager</span>
+        </span>
+      </div>
+    </a>
+  );
+};
+
 export default function Home() {
   const [selectedDelegator, setSelectedDelegator] = useState<Validator | null>(null)
   const [stakeAmount, setStakeAmount] = useState("")
@@ -848,6 +871,7 @@ export default function Home() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-900 to-gray-800 flex flex-col items-center pt-0 px-4 pb-4">
+      <VoyagerBanner />
       <CallToAction />
       <div className="w-full sticky top-0 z-50">
         <AnimatePresence>
