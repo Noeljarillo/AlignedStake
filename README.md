@@ -31,6 +31,7 @@ This project is currently under active development. We're working hard to bring 
 - [X] Signal Unstake
 - [in progress] Unstake
 - [ ] Switch pool
+- [ ] Historical metrics
 - [ ] Claim rewards
 - [ ] Native RPC ETL 
 - [X] Decentralization metric ratio bar
