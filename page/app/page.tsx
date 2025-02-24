@@ -188,7 +188,6 @@ interface UserStakeInfo {
   unstakeIntents: UnstakeIntent[];
 }
 
-// Add this interface near your other interfaces
 interface StatMetric {
   title: string;
   value: number;
@@ -230,8 +229,13 @@ const normalizeAddress = (address: string): string => {
   return address;
 };
 
-// Add this new component near your other component definitions
-const CallToAction = () => {
+// Update the CallToAction component with improved styling and feedback
+const CallToAction = ({ connectWallet, walletConnected, account, isConnecting }: { 
+  connectWallet: () => Promise<any>, 
+  walletConnected: boolean,
+  account: AccountInterface | null,
+  isConnecting: boolean
+}) => {
   return (
     <div className="w-full bg-gradient-to-r from-blue-600/10 to-purple-600/10 backdrop-blur-sm border-b border-blue-500/20 p-4">
       <div className="max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-between gap-4">
@@ -258,12 +262,47 @@ const CallToAction = () => {
             </p>
           </div>
         </div>
-        <Button 
-          className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-lg transition-all duration-300 transform hover:scale-105"
-          onClick={() => window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' })}
-        >
-          Start Delegating
-        </Button>
+        
+        <div className="flex items-center gap-3">
+          {walletConnected && account && (
+            <div className="hidden md:flex items-center gap-2 bg-gray-800/70 px-3 py-1.5 rounded-lg border border-gray-700">
+              <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+              <span className="text-sm text-gray-300">
+                {account.address.slice(0, 6)}...{account.address.slice(-4)}
+              </span>
+            </div>
+          )}
+          
+          <Button 
+            className={`px-6 py-2 rounded-lg transition-all duration-300 transform hover:scale-105 ${
+              walletConnected 
+                ? 'bg-blue-600 hover:bg-blue-700 text-white' 
+                : 'bg-gradient-to-r from-blue-600 to-purple-600 text-white'
+            }`}
+            onClick={walletConnected ? 
+              () => window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' }) : 
+              connectWallet
+            }
+            disabled={isConnecting}
+          >
+            {isConnecting ? (
+              <div className="flex items-center gap-2">
+                <Loader2 className="h-4 w-4 animate-spin" />
+                <span>Connecting...</span>
+              </div>
+            ) : walletConnected ? (
+              <div className="flex items-center gap-2">
+                <Zap className="h-4 w-4" />
+                <span>Start Delegating</span>
+              </div>
+            ) : (
+              <div className="flex items-center gap-2">
+                <Landmark className="h-4 w-4" />
+                <span>Connect Wallet</span>
+              </div>
+            )}
+          </Button>
+        </div>
       </div>
     </div>
   );
@@ -364,6 +403,7 @@ export default function Home() {
     delegations: [],
     unstakeIntents: []
   });
+  const [isConnecting, setIsConnecting] = useState(false);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -394,6 +434,8 @@ export default function Home() {
 
   const connectWallet = async () => {
     try {
+      setIsConnecting(true);
+      
       if (!window.starknet) {
         throw new Error("Please install ArgentX, Braavos, or another Starknet wallet");
       }
@@ -412,6 +454,8 @@ export default function Home() {
       console.error('Error connecting wallet:', error);
       setStakeResult('Failed to connect wallet');
       return null;
+    } finally {
+      setIsConnecting(false);
     }
   }
 
@@ -872,7 +916,12 @@ export default function Home() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-900 to-gray-800 flex flex-col items-center pt-0 px-4 pb-4">
       <VoyagerBanner />
-      <CallToAction />
+      <CallToAction 
+        connectWallet={connectWallet} 
+        walletConnected={walletConnected} 
+        account={account}
+        isConnecting={isConnecting}
+      />
       <div className="w-full sticky top-0 z-50">
         <AnimatePresence>
           <motion.div
