@@ -10,6 +10,7 @@ import { Loader2, RefreshCw, Zap, ChevronDown, ChevronUp, Gift, Users, Landmark,
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell } from "recharts"
 import { Contract, AccountInterface, RpcProvider } from "starknet"
 import { cairo } from "starknet"
+import CountUp from "react-countup"
 
 declare global {
   interface Window {
@@ -371,6 +372,175 @@ const VoyagerBanner = () => {
   );
 };
 
+// Add this component somewhere in your file after other component definitions
+const DelegationStats = () => {
+  const [stats, setStats] = useState({
+    totalUsers: 0,
+    totalStaked: 0,
+    recentDelegations: []
+  });
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchStats = async () => {
+      try {
+        setIsLoading(true);
+        const response = await fetch('/api/delegation-stats');
+        if (response.ok) {
+          const data = await response.json();
+          setStats(data);
+        }
+      } catch (error) {
+        console.error('Error fetching delegation stats:', error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchStats();
+    // Refresh every 60 seconds
+    const interval = setInterval(fetchStats, 60000);
+    return () => clearInterval(interval);
+  }, []);
+
+  return (
+    <div className="mt-12 w-full bg-gradient-to-r from-gray-900 to-gray-800 rounded-xl border border-blue-500/20 overflow-hidden">
+      <div className="p-6">
+        <h2 className="text-2xl font-bold text-blue-400 mb-6">Community Delegation Stats</h2>
+        
+        {isLoading ? (
+          <div className="flex justify-center py-8">
+            <Loader2 className="w-10 h-10 text-blue-400 animate-spin" />
+          </div>
+        ) : (
+          <div className="space-y-8">
+            {/* Stats Counters */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <motion.div 
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.1 }}
+                className="bg-gray-800/50 backdrop-blur-sm p-6 rounded-xl border border-gray-700"
+              >
+                <div className="flex items-center gap-4">
+                  <div className="p-3 rounded-lg bg-blue-500/20">
+                    <Users className="w-8 h-8 text-blue-400" />
+                  </div>
+                  <div>
+                    <h3 className="text-lg font-medium text-gray-400">Total Delegators</h3>
+                    <p className="text-3xl font-bold text-white">
+                      <CountUp 
+                        end={stats.totalUsers} 
+                        duration={2} 
+                        separator="," 
+                      />
+                    </p>
+                  </div>
+                </div>
+              </motion.div>
+              
+              <motion.div 
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.2 }}
+                className="bg-gray-800/50 backdrop-blur-sm p-6 rounded-xl border border-gray-700"
+              >
+                <div className="flex items-center gap-4">
+                  <div className="p-3 rounded-lg bg-green-500/20">
+                    <Landmark className="w-8 h-8 text-green-400" />
+                  </div>
+                  <div>
+                    <h3 className="text-lg font-medium text-gray-400">Total STRK Delegated</h3>
+                    <p className="text-3xl font-bold text-white">
+                      <CountUp 
+                        end={stats.totalStaked} 
+                        duration={2} 
+                        decimals={2}
+                        decimal="."
+                        separator="," 
+                        suffix=" STRK"
+                      />
+                    </p>
+                  </div>
+                </div>
+              </motion.div>
+            </div>
+            
+            {/* Recent Delegations */}
+            {stats.recentDelegations.length > 0 ? (
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ delay: 0.3 }}
+              >
+                <h3 className="text-xl font-semibold text-blue-400 mb-4">Recent Delegations</h3>
+                <div className="overflow-hidden rounded-xl border border-gray-700">
+                  <div className="overflow-x-auto">
+                    <table className="w-full">
+                      <thead className="bg-gray-800">
+                        <tr>
+                          <th className="px-4 py-3 text-left text-sm font-medium text-gray-400">Time</th>
+                          <th className="px-4 py-3 text-left text-sm font-medium text-gray-400">Delegator</th>
+                          <th className="px-4 py-3 text-left text-sm font-medium text-gray-400">Amount</th>
+                          <th className="px-4 py-3 text-left text-sm font-medium text-gray-400">Tx Hash</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-gray-700">
+                        {stats.recentDelegations.map((delegation, index) => (
+                          <motion.tr 
+                            key={delegation.txHash}
+                            initial={{ opacity: 0, y: 10 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            transition={{ delay: 0.1 * index }}
+                            className="bg-gray-900/50 hover:bg-gray-800/50 transition-colors"
+                          >
+                            <td className="px-4 py-3 text-sm text-gray-300">
+                              {new Date(delegation.timestamp).toLocaleString()}
+                            </td>
+                            <td className="px-4 py-3 text-sm">
+                              <a 
+                                href={`https://voyager.online/contract/${delegation.senderAddress}`}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="text-blue-400 hover:underline"
+                              >
+                                {delegation.senderAddress.slice(0, 6)}...{delegation.senderAddress.slice(-4)}
+                              </a>
+                            </td>
+                            <td className="px-4 py-3 text-sm text-green-400 font-medium">
+                              {delegation.amountStaked.toFixed(2)} STRK
+                            </td>
+                            <td className="px-4 py-3 text-sm">
+                              <a 
+                                href={`https://voyager.online/tx/${delegation.txHash}`}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="text-blue-400 hover:underline"
+                              >
+                                {delegation.txHash.slice(0, 8)}...
+                              </a>
+                            </td>
+                          </motion.tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              </motion.div>
+            ) : (
+              <div className="text-center py-12 bg-gray-800/50 rounded-xl border border-gray-700">
+                <Landmark className="w-12 h-12 text-gray-500 mx-auto mb-4" />
+                <h3 className="text-xl font-medium text-gray-400">No delegations yet</h3>
+                <p className="text-gray-500 mt-2">Be the first to delegate and support the network!</p>
+              </div>
+            )}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+};
+
 export default function Home() {
   const [selectedDelegator, setSelectedDelegator] = useState<Validator | null>(null)
   const [stakeAmount, setStakeAmount] = useState("")
@@ -543,10 +713,29 @@ export default function Home() {
       );
       
       await account.waitForTransaction(stakeTx.transaction_hash);
+
+      // Record the transaction in the database
+      const response = await fetch('/api/record-stake', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          txHash: stakeTx.transaction_hash,
+          senderAddress: account.address,
+          contractAddress: poolAddress,
+          amountStaked: amount,
+        }),
+      });
+
+      if (!response.ok) {
+        console.error('Failed to record stake transaction');
+      }
+
       return true;
     } catch (error) {
       console.error('Error staking:', error);
-      setStakeResult('Failed to stake   strk');
+      setStakeResult('Failed to stake STRK');
       return false;
     }
   }
@@ -1131,6 +1320,8 @@ export default function Home() {
           <CardContent>
             <div className="space-y-8">
               <ComparisonMetrics />
+              
+              <DelegationStats />
 
               <div>
                 <h3 className="text-xl font-semibold text-blue-400 mb-4">Top 20 Validators by Delegated Stake</h3>

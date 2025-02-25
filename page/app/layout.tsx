@@ -22,7 +22,6 @@ export default function RootLayout({
     <html lang="en" className="dark">
       <body className={inter.className}>
         <div className="relative min-h-screen bg-gradient-to-br from-gray-900 via-gray-900 to-gray-800">
-          <div className="absolute inset-0 bg-[url('/grid.svg')] bg-center [mask-image:linear-gradient(180deg,white,rgba(255,255,255,0))]"></div>
           <div className="relative">
             {children}
           </div>
