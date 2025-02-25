@@ -197,6 +197,14 @@ interface StatMetric {
   color: string;
 }
 
+// Add this interface before the DelegationStats component
+interface DelegationRecord {
+  txHash: string;
+  timestamp: number;
+  senderAddress: string;
+  amountStaked: number;
+}
+
 // Helper function to convert human readable amount to token amount with decimals
 const parseTokenAmount = (amount: string): bigint => {
   try {
@@ -377,7 +385,7 @@ const DelegationStats = () => {
   const [stats, setStats] = useState({
     totalUsers: 0,
     totalStaked: 0,
-    recentDelegations: []
+    recentDelegations: [] as DelegationRecord[]
   });
   const [isLoading, setIsLoading] = useState(true);
 
@@ -1104,6 +1112,7 @@ export default function Home() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-900 to-gray-800 flex flex-col items-center pt-0 px-4 pb-4">
+      <meta name="google-site-verification" content="BioBqMAm54m_zMizQ_YtbyFCgVe_BY9KGhn8j6K9KWg" />
       <VoyagerBanner />
       <CallToAction 
         connectWallet={connectWallet} 
