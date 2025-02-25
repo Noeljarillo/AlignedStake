@@ -406,7 +406,7 @@ const DelegationStats = () => {
   return (
     <div className="mt-12 w-full bg-gradient-to-r from-gray-900 to-gray-800 rounded-xl border border-blue-500/20 overflow-hidden">
       <div className="p-6">
-        <h2 className="text-2xl font-bold text-blue-400 mb-6">Community Delegation Stats</h2>
+        <h2 className="text-2xl font-bold text-blue-400 mb-6">Aligned Delegation Stats</h2>
         
         {isLoading ? (
           <div className="flex justify-center py-8">
@@ -427,7 +427,7 @@ const DelegationStats = () => {
                     <Users className="w-8 h-8 text-blue-400" />
                   </div>
                   <div>
-                    <h3 className="text-lg font-medium text-gray-400">Total Delegators</h3>
+                    <h3 className="text-lg font-medium text-gray-400">Aligned Delegators</h3>
                     <p className="text-3xl font-bold text-white">
                       <CountUp 
                         end={stats.totalUsers} 
@@ -995,7 +995,7 @@ export default function Home() {
   const ComparisonMetrics = () => {
     return (
       <div className="mt-8 bg-gray-900 rounded-xl p-6">
-        <h3 className="text-xl font-semibold text-blue-400 mb-6">Top 10 vs Bottom 20 Comparison</h3>
+        <h3 className="text-xl font-semibold text-blue-400 mb-6">Top 10 vs Bottom 20</h3>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
           <div className="space-y-4">
             <div className="flex items-center justify-between p-4 bg-gray-800 rounded-lg">
@@ -1324,7 +1324,7 @@ export default function Home() {
               <DelegationStats />
 
               <div>
-                <h3 className="text-xl font-semibold text-blue-400 mb-4">Top 20 Validators by Delegated Stake</h3>
+                <h3 className="text-xl font-semibold text-blue-400 mb-4">Top 20 Validators</h3>
                 <div className="h-80 w-full">
                   <ResponsiveContainer width="100%" height="100%">
                     <BarChart 
@@ -1378,7 +1378,7 @@ export default function Home() {
               </div>
 
               <div>
-                <h3 className="text-xl font-semibold text-blue-400 mb-4">Bottom 20 Validators by Delegated Stake</h3>
+                <h3 className="text-xl font-semibold text-blue-400 mb-4">Bottom 20 Validators</h3>
                 <div className="h-80 w-full">
                   <ResponsiveContainer width="100%" height="100%">
                     <BarChart 
