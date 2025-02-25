@@ -249,12 +249,9 @@ const normalizeAddress = (address: string): string => {
   return address;
 };
 
-// Update the CallToAction component with improved styling and feedback
-const CallToAction = ({ connectWallet, walletConnected, account, isConnecting }: { 
-  connectWallet: () => Promise<any>, 
-  walletConnected: boolean,
-  account: AccountInterface | null,
-  isConnecting: boolean
+// Update the CallToAction component to remove the wallet address display
+const CallToAction = ({ walletConnected }: { 
+  walletConnected: boolean
 }) => {
   return (
     <div className="w-full bg-gradient-to-r from-blue-600/10 to-purple-600/10 backdrop-blur-sm border-b border-blue-500/20 p-4">
@@ -284,44 +281,17 @@ const CallToAction = ({ connectWallet, walletConnected, account, isConnecting }:
         </div>
         
         <div className="flex items-center gap-3">
-          {walletConnected && account && (
-            <div className="hidden md:flex items-center gap-2 bg-gray-800/70 px-3 py-1.5 rounded-lg border border-gray-700">
-              <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-              <span className="text-sm text-gray-300">
-                {account.address.slice(0, 6)}...{account.address.slice(-4)}
-              </span>
-            </div>
-          )}
-          
-          <Button 
-            className={`px-6 py-2 rounded-lg transition-all duration-300 transform hover:scale-105 ${
-              walletConnected 
-                ? 'bg-blue-600 hover:bg-blue-700 text-white' 
-                : 'bg-gradient-to-r from-blue-600 to-purple-600 text-white'
-            }`}
-            onClick={walletConnected ? 
-              () => window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' }) : 
-              connectWallet
-            }
-            disabled={isConnecting}
-          >
-            {isConnecting ? (
-              <div className="flex items-center gap-2">
-                <Loader2 className="h-4 w-4 animate-spin" />
-                <span>Connecting...</span>
-              </div>
-            ) : walletConnected ? (
+          {walletConnected && (
+            <Button 
+              className="px-6 py-2 rounded-lg transition-all duration-300 transform hover:scale-105 bg-blue-600 hover:bg-blue-700 text-white"
+              onClick={() => window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' })}
+            >
               <div className="flex items-center gap-2">
                 <Zap className="h-4 w-4" />
                 <span>Start Delegating</span>
               </div>
-            ) : (
-              <div className="flex items-center gap-2">
-                <Landmark className="h-4 w-4" />
-                <span>Connect Wallet</span>
-              </div>
-            )}
-          </Button>
+            </Button>
+          )}
         </div>
       </div>
     </div>
@@ -1297,10 +1267,7 @@ export default function Home() {
       <meta name="google-site-verification" content="BioBqMAm54m_zMizQ_YtbyFCgVe_BY9KGhn8j6K9KWg" />
       <VoyagerBanner />
       <CallToAction 
-        connectWallet={connectWallet} 
-        walletConnected={walletConnected} 
-        account={account}
-        isConnecting={isConnecting}
+        walletConnected={walletConnected}
       />
       <div className="w-full sticky top-0 z-50">
         <AnimatePresence>
@@ -1309,23 +1276,65 @@ export default function Home() {
             animate={{ height: isStakeInfoOpen ? 'auto' : '64px' }}
             className="w-full bg-gray-800/50 backdrop-blur-sm border-b border-gray-700 mb-8 overflow-hidden"
           >
-            <div className="max-w-7xl mx-auto flex items-center justify-end h-16">
+            <div className="max-w-7xl mx-auto flex items-center justify-between h-16 px-4">
+              <div className="flex-1"></div> {/* Empty div for spacing */}
+              
               <div 
-                className="flex items-center gap-2 cursor-pointer"
+                className="flex-1 flex justify-center cursor-pointer group"
                 onClick={() => setIsStakeInfoOpen(!isStakeInfoOpen)}
               >
-                <span className="text-xl font-semibold text-blue-400">Staking Dashboard</span>
-                {isStakeInfoOpen ? (
-                  <ChevronUp className="h-5 w-5 text-gray-400" />
+                <div className="flex items-center gap-2">
+                  <span className="text-xl font-semibold text-blue-400 group-hover:text-blue-300 transition-colors">
+                    Staking Dashboard
+                  </span>
+                  {/* Small indicator icon next to title */}
+                  <div className="text-gray-400 group-hover:text-blue-300 transition-colors">
+                    {isStakeInfoOpen ? (
+                      <ChevronUp className="h-4 w-4" />
+                    ) : (
+                      <ChevronDown className="h-4 w-4" />
+                    )}
+                  </div>
+                </div>
+              </div>
+              
+              <div className="flex-1 flex justify-end items-center gap-3">
+                {walletConnected && account ? (
+                  <div className="flex items-center gap-2">
+                    <span className="text-sm text-gray-400 bg-gray-800 px-3 py-1 rounded-full border border-gray-700">
+                      {account.address.slice(0, 6)}...{account.address.slice(-4)}
+                    </span>
+                    <div 
+                      className="cursor-pointer hover:bg-gray-700/50 p-1 rounded-full transition-colors"
+                      onClick={() => setIsStakeInfoOpen(!isStakeInfoOpen)}
+                    >
+                      {isStakeInfoOpen ? (
+                        <ChevronUp className="h-5 w-5 text-gray-400" />
+                      ) : (
+                        <ChevronDown className="h-5 w-5 text-gray-400" />
+                      )}
+                    </div>
+                  </div>
                 ) : (
-                  <ChevronDown className="h-5 w-5 text-gray-400" />
+                  <Button 
+                    className="px-6 py-2 rounded-lg transition-all duration-300 transform hover:scale-105 bg-gradient-to-r from-blue-600 to-purple-600 text-white"
+                    onClick={connectWallet}
+                    disabled={isConnecting}
+                  >
+                    {isConnecting ? (
+                      <div className="flex items-center gap-2">
+                        <Loader2 className="h-4 w-4 animate-spin" />
+                        <span>Connecting...</span>
+                      </div>
+                    ) : (
+                      <div className="flex items-center gap-2">
+                        <Landmark className="h-4 w-4" />
+                        <span>Connect Wallet</span>
+                      </div>
+                    )}
+                  </Button>
                 )}
               </div>
-              {account && (
-                <span className="text-sm text-gray-400 bg-gray-800 px-3 py-1 rounded-full border border-gray-700 ml-4">
-                  {account.address.slice(0, 6)}...{account.address.slice(-4)}
-                </span>
-              )}
             </div>
             
             <motion.div
