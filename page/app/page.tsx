@@ -665,8 +665,12 @@ const ValidatorList = ({ onSelectValidator }: ValidatorListProps) => {
     // Check if date is valid
     if (isNaN(date.getTime())) return 'N/A';
     
-    // Format date as YYYY-MM-DD
-    return date.toLocaleDateString();
+    // Format date explicitly as DD/MM/YYYY
+    const day = date.getDate().toString().padStart(2, '0');
+    const month = (date.getMonth() + 1).toString().padStart(2, '0');
+    const year = date.getFullYear();
+    
+    return `${day}/${month}/${year}`;
   };
   
   // Add a helper function to format fee percentage correctly

@@ -19,7 +19,7 @@ export async function GET(request: Request) {
     const offset = (page - 1) * pageSize;
     
     // Validate sort column to prevent SQL injection
-    const validSortColumns = ['delegatedstake', 'totaldelegators', 'rank', 'name', 'revenueshare'];
+    const validSortColumns = ['delegatedstake', 'totaldelegators', 'rank', 'name', 'revenueshare', 'starttime'];
     const sanitizedSortBy = validSortColumns.includes(sortBy.toLowerCase()) 
       ? sortBy.toLowerCase() 
       : 'delegatedstake';
@@ -67,7 +67,9 @@ export async function GET(request: Request) {
     // Add sorting and pagination
     const query = `
       ${baseQuery}
-      ORDER BY ${sanitizedSortBy}::numeric ${sanitizedSortOrder === 'asc' ? 'ASC' : 'DESC'}
+      ORDER BY ${sanitizedSortBy === 'starttime' 
+        ? `${sanitizedSortBy}::bigint ${sanitizedSortOrder === 'asc' ? 'ASC' : 'DESC'}`
+        : `${sanitizedSortBy}::numeric ${sanitizedSortOrder === 'asc' ? 'ASC' : 'DESC'}`}
       LIMIT ${pageSize} OFFSET ${offset};
     `;
     
