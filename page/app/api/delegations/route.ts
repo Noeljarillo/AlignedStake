@@ -50,11 +50,12 @@ export async function GET(request: Request) {
       );
     }
 
-    // Get all delegations for the address
+    // Get all delegations for the address, including unpooltime
     const query = `
       SELECT 
         d.address,
         d.delegatedstake,
+        d.unpooltime,
         v.pooladdress,
         v.name as validator_name
       FROM delegators d
@@ -72,7 +73,8 @@ export async function GET(request: Request) {
           validatorName: row.validator_name || row.pooladdress.slice(0, 8) + '...',
           poolAddress: row.pooladdress,
           delegatedStake: Number(row.delegatedstake) / Math.pow(10, 18),
-          pendingRewards: rewards
+          pendingRewards: rewards,
+          unpoolTime: row.unpooltime ? Number(row.unpooltime) : undefined
         };
       })
     );

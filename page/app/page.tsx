@@ -28,8 +28,8 @@ const STRK_TOKEN_ADDRESS = "0x04718f5a0fc34cc1af16a1cdee98ffb20c31f5cd61d6ab0720
 const STRK_DECIMALS = 18;
 const RPC_URL = "https://free-rpc.nethermind.io/mainnet-juno/v0_7";
 const ALLOWANCE_SELECTOR = "0x1e888a1026b19c8c0b57c72d63ed1737106aa10034105b980ba117bd0c29fe1";
-const TEST_ADDRESS = "0x07ffdeec4142172c63deb3b59b2f2b3e8efab889fecc0314d19db34ba0780027";
-const IS_TESTING = true; // Flag to easily disable test mode
+//const TEST_ADDRESS = "0x07ffdeec4142172c63deb3b59b2f2b3e8efab889fecc0314d19db34ba0780027";
+//const IS_TESTING = true; // Flag to easily disable test mode
 
 // Create a shared RPC provider instance
 const provider = new RpcProvider({ nodeUrl: RPC_URL });
@@ -177,16 +177,20 @@ interface UnstakeIntent {
   canClaimAt: number;
 }
 
+// Add this new interface to include unpooltime
+interface DelegationWithUnpoolTime {
+  validatorName: string;
+  poolAddress: string;
+  delegatedStake: number;
+  pendingRewards: number;
+  unpoolTime?: number; // Optional field for unpooltime
+}
+
 interface UserStakeInfo {
   totalDelegated: number;
   availableRewards: number;
   lastClaimTime: string;
-  delegations: {
-    validatorName: string;
-    poolAddress: string;
-    delegatedStake: number;
-    pendingRewards: number;
-  }[];
+  delegations: DelegationWithUnpoolTime[]; // Updated type
   unstakeIntents: UnstakeIntent[];
 }
 
@@ -893,7 +897,7 @@ export default function Home() {
     alert('Unstaking tokens... (mock)');
   };
 
-  const signalUnstakeIntent = async (delegation: UserStakeInfo['delegations'][0], amount: string) => {
+  const signalUnstakeIntent = async (delegation: DelegationWithUnpoolTime, amount: string) => {
     if (!account) return;
     
     try {
@@ -1169,6 +1173,125 @@ export default function Home() {
     );
   };
 
+  // Update the UnstakeCountdownButton component with better styling
+  const UnstakeCountdownButton = ({ 
+    delegation, 
+    onUnstake 
+  }: { 
+    delegation: DelegationWithUnpoolTime, 
+    onUnstake: (delegation: DelegationWithUnpoolTime, amount: string) => Promise<boolean | undefined> 
+  }) => {
+    const [timeLeft, setTimeLeft] = useState<{ days: number, hours: number, minutes: number, seconds: number } | null>(null);
+    const [progress, setProgress] = useState(0);
+    const [isUnpooling, setIsUnpooling] = useState(false);
+    
+    useEffect(() => {
+      // Check if there's an unpoolTime
+      if (!delegation.unpoolTime) {
+        setIsUnpooling(false);
+        return;
+      }
+      
+      setIsUnpooling(true);
+      
+      const calculateTimeLeft = () => {
+        const now = Math.floor(Date.now() / 1000);
+        // Use non-null assertion since we've already checked above
+        const unpoolTime = delegation.unpoolTime!;
+        
+        // If unpoolTime has passed
+        if (now >= unpoolTime) {
+          setTimeLeft(null);
+          setProgress(100);
+          return;
+        }
+        
+        // Calculate time difference
+        const difference = unpoolTime - now;
+        const totalDuration = 21 * 24 * 60 * 60; // 21 days in seconds
+        const elapsed = totalDuration - difference;
+        const progressPercent = Math.min(100, Math.max(0, (elapsed / totalDuration) * 100));
+        
+        setProgress(progressPercent);
+        
+        // Calculate days, hours, minutes, seconds
+        const days = Math.floor(difference / (60 * 60 * 24));
+        const hours = Math.floor((difference % (60 * 60 * 24)) / (60 * 60));
+        const minutes = Math.floor((difference % (60 * 60)) / 60);
+        const seconds = difference % 60;
+        
+        setTimeLeft({ days, hours, minutes, seconds });
+      };
+      
+      // Calculate immediately
+      calculateTimeLeft();
+      
+      // Update every second
+      const timer = setInterval(calculateTimeLeft, 1000);
+      
+      return () => clearInterval(timer);
+    }, [delegation.unpoolTime]);
+    
+    const handleClick = async () => {
+      if (!isUnpooling) {
+        // If not unpooling, start the unstake process
+        const amount = prompt(`Enter amount to unstake from ${delegation.validatorName}:`);
+        if (amount && !isNaN(Number(amount)) && Number(amount) <= delegation.delegatedStake) {
+          await onUnstake(delegation, amount);
+        }
+      } else if (timeLeft === null) {
+        // If countdown is complete, finalize unstake
+        try {
+          // Mock the unstake call
+          alert(`Unstaking from ${delegation.validatorName} complete!`);
+        } catch (error) {
+          console.error('Error finalizing unstake:', error);
+        }
+      }
+    };
+    
+    return (
+      <Button
+        onClick={handleClick}
+        className={`w-full relative overflow-hidden ${
+          isUnpooling 
+            ? timeLeft === null 
+              ? 'bg-green-600 hover:bg-green-700' 
+              : 'bg-blue-600 hover:bg-blue-700'
+            : 'bg-red-600 hover:bg-red-700'
+        } text-white text-sm`}
+        disabled={delegation.delegatedStake <= 0}
+      >
+        {/* Full button progress overlay */}
+        {isUnpooling && (
+          <div 
+            className="absolute inset-0 bg-gradient-to-r from-blue-500 to-indigo-600 z-0"
+            style={{ width: `${progress}%` }}
+          />
+        )}
+        
+        {/* Content with higher z-index to appear above the progress bar */}
+        <div className="relative z-10">
+          {isUnpooling ? (
+            timeLeft === null ? (
+              <span>Claim Unstaked Tokens</span>
+            ) : (
+              <div className="flex items-center justify-center gap-1">
+                <span>Unstaking:</span>
+                <span>{timeLeft.days}d</span>
+                <span>{timeLeft.hours}h</span>
+                <span>{timeLeft.minutes}m</span>
+                <span>{timeLeft.seconds}s</span>
+              </div>
+            )
+          ) : (
+            <span>Start Unstake</span>
+          )}
+        </div>
+      </Button>
+    );
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-900 to-gray-800 flex flex-col items-center pt-0 px-4 pb-4">
       <meta name="google-site-verification" content="BioBqMAm54m_zMizQ_YtbyFCgVe_BY9KGhn8j6K9KWg" />
@@ -1320,18 +1443,10 @@ export default function Home() {
                             </div>
                           </div>
                           <div className="mt-4 space-y-2">
-                            <Button
-                              onClick={() => {
-                                const amount = prompt(`Enter amount to unstake from ${delegation.validatorName}:`);
-                                if (amount && !isNaN(Number(amount)) && Number(amount) <= delegation.delegatedStake) {
-                                  signalUnstakeIntent(delegation, amount);
-                                }
-                              }}
-                              className="w-full bg-red-600 hover:bg-red-700 text-white text-sm"
-                              disabled={delegation.delegatedStake <= 0}
-                            >
-                              Start Unstake
-                            </Button>
+                            <UnstakeCountdownButton 
+                              delegation={delegation}
+                              onUnstake={signalUnstakeIntent}
+                            />
                           </div>
                         </motion.div>
                       ))}
@@ -1527,15 +1642,6 @@ export default function Home() {
                     Show only verified validators
                   </Label>
                 </div>
-                <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
-                  <Button 
-                    onClick={() => selectRandomDelegator(false)} 
-                    className="w-full bg-blue-600 hover:bg-blue-700 text-white mb-2"
-                  >
-                    <RefreshCw className="mr-2 h-5 w-5" />
-                    Random from Top 20
-                  </Button>
-                </motion.div>
                 <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
                   <Button 
                     onClick={() => selectRandomDelegator(true)} 
