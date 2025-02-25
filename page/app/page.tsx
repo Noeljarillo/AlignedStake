@@ -206,6 +206,12 @@ interface DelegationRecord {
   amountStaked: number;
 }
 
+// Add these interfaces near other interface definitions
+interface PriceData {
+  usdPrice: number;
+  circulatingSupply: number;
+}
+
 // Helper function to convert human readable amount to token amount with decimals
 const parseTokenAmount = (amount: string): bigint => {
   try {
@@ -583,6 +589,7 @@ export default function Home() {
     unstakeIntents: []
   });
   const [isConnecting, setIsConnecting] = useState(false);
+  const [priceData, setPriceData] = useState<PriceData | null>(null);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -610,6 +617,32 @@ export default function Home() {
     }
     fetchData();
   }, [verifiedOnly])
+
+  // Add this useEffect to fetch price data once on component load
+  useEffect(() => {
+    const fetchPriceData = async () => {
+      try {
+        const response = await fetch(
+          'https://api.coingecko.com/api/v3/coins/starknet?localization=false&tickers=false&market_data=true&community_data=false&developer_data=false&sparkline=false'
+        );
+        
+        if (!response.ok) {
+          throw new Error('Failed to fetch price data');
+        }
+        
+        const data = await response.json();
+        
+        setPriceData({
+          usdPrice: data.market_data.current_price.usd,
+          circulatingSupply: data.market_data.circulating_supply
+        });
+      } catch (error) {
+        console.error('Error fetching price data:', error);
+      }
+    };
+    
+    fetchPriceData();
+  }, []);
 
   const connectWallet = async () => {
     try {
@@ -941,6 +974,7 @@ export default function Home() {
     }
   }, [account]);
 
+  // Update the NetworkStatsHeader component to include price information
   const NetworkStatsHeader = () => {
     const totalStake = stats.totalNetworkStake;
     const topTenStake = stats.topTenStake;
@@ -957,6 +991,11 @@ export default function Home() {
             <p className="text-sm text-gray-500">
               Across all validators
             </p>
+            {priceData && (
+              <p className="text-lg font-medium text-green-400 mt-2">
+                ${((totalStake * priceData.usdPrice) / 1000000).toFixed(2)}M
+              </p>
+            )}
           </div>
           
           <div className="md:col-span-2">
@@ -993,6 +1032,25 @@ export default function Home() {
                   />
                 </div>
               </div>
+              
+              {priceData && (
+                <div className="mt-5">
+                  <div className="flex justify-between text-sm text-gray-400 mb-1">
+                    <span>Staked vs Circulating Supply</span>
+                    <span>{((totalStake / priceData.circulatingSupply) * 100).toFixed(2)}%</span>
+                  </div>
+                  <div className="h-4 bg-gray-800 rounded-full overflow-hidden">
+                    <div 
+                      className="h-full bg-gradient-to-r from-green-500 to-green-600 rounded-full"
+                      style={{ width: `${(totalStake / priceData.circulatingSupply) * 100}%` }}
+                    />
+                  </div>
+                  <div className="flex justify-between text-xs text-gray-500 mt-1">
+                    <span>Staked: {Math.round(totalStake).toLocaleString()} STRK</span>
+                    <span>Total: {Math.round(priceData.circulatingSupply).toLocaleString()} STRK</span>
+                  </div>
+                </div>
+              )}
             </div>
           </div>
         </div>
