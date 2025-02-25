@@ -11,6 +11,7 @@ import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell } from 
 import { Contract, AccountInterface, RpcProvider } from "starknet"
 import { cairo } from "starknet"
 import CountUp from "react-countup"
+import { SpeedInsights } from "@vercel/speed-insights/next"
 
 declare global {
   interface Window {
@@ -1612,6 +1613,7 @@ export default function Home() {
         </div>
       )}
       <ContactInfo />
+      <SpeedInsights />
     </div>
   )
 }
