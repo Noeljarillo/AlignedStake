@@ -6,12 +6,25 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { Label } from "@/components/ui/label"
-import { Loader2, RefreshCw, Zap, ChevronDown, ChevronUp, Gift, Users, Landmark, Users2, Activity, Mail, MessageCircle, Twitter } from "lucide-react"
+import { Loader2, RefreshCw, Zap, ChevronDown, ChevronUp, Gift, Users, Landmark, Users2, Activity, Mail, MessageCircle, Twitter, ChevronLeft, ChevronRight, Search, Filter, ArrowUpDown, Check } from "lucide-react"
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell } from "recharts"
 import { Contract, AccountInterface, RpcProvider } from "starknet"
 import { cairo } from "starknet"
 import CountUp from "react-countup"
 import { SpeedInsights } from "@vercel/speed-insights/next"
+import { 
+  Select, 
+  SelectContent, 
+  SelectItem, 
+  SelectTrigger, 
+  SelectValue 
+} from "@/components/ui/select"
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
 
 declare global {
   interface Window {
@@ -147,6 +160,9 @@ interface Validator {
   isVerified: boolean;
   imgSrc: string | null;
   poolAddress: string;
+  revenueShare?: number;
+  startTime?: number;
+  rank?: number; // Add the rank property as optional
 }
 
 interface Stats {
@@ -526,6 +542,406 @@ const DelegationStats = () => {
           </div>
         )}
       </div>
+    </div>
+  );
+};
+
+// Add this interface with your other interfaces
+interface ValidatorListProps {
+  onSelectValidator: (validator: Validator) => void;
+}
+
+// Add this component definition before the Home component
+const ValidatorList = ({ onSelectValidator }: ValidatorListProps) => {
+  const [validators, setValidators] = useState<Validator[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [page, setPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [sortBy, setSortBy] = useState('delegatedStake');
+  const [sortOrder, setSortOrder] = useState('desc');
+  const [verifiedOnly, setVerifiedOnly] = useState(false);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [pageSize, setPageSize] = useState(20);
+  const [showBottom20, setShowBottom20] = useState(false);
+  const [maxFee, setMaxFee] = useState<number | null>(null);
+  
+  // Add a new state variable for tracking sort/filter operations
+  const [isSorting, setIsSorting] = useState(false);
+  
+  const fetchValidators = async () => {
+    try {
+      setIsLoading(true);
+      // For subsequent loads (sorting/filtering), use the sorting indicator instead of full loading
+      if (validators.length > 0) {
+        setIsSorting(true);
+        setIsLoading(false);
+      }
+      
+      let url = `/api/validators/all?page=${page}&pageSize=${pageSize}&sortBy=${sortBy}&sortOrder=${sortOrder}&verified=${verifiedOnly}&search=${encodeURIComponent(searchTerm)}`;
+      
+      // If showing bottom 20, override sort settings
+      if (showBottom20) {
+        url = `/api/validators/all?page=1&pageSize=20&sortBy=delegatedStake&sortOrder=asc&verified=${verifiedOnly}&search=${encodeURIComponent(searchTerm)}`;
+      }
+      
+      // Add max fee filter if set
+      if (maxFee !== null) {
+        url += `&maxFee=${maxFee}`;
+      }
+      
+      const response = await fetch(url);
+      
+      if (!response.ok) {
+        throw new Error('Failed to fetch validators');
+      }
+      
+      const data = await response.json();
+      setValidators(data.validators);
+      setTotalPages(data.pagination.totalPages);
+      
+      // If showing bottom 20, we only have 1 page
+      if (showBottom20) {
+        setTotalPages(1);
+      }
+    } catch (error) {
+      console.error('Error fetching validators:', error);
+    } finally {
+      setIsLoading(false);
+      setIsSorting(false);
+    }
+  };
+  
+  useEffect(() => {
+    fetchValidators();
+  }, [page, sortBy, sortOrder, verifiedOnly, searchTerm, pageSize, showBottom20, maxFee]);
+  
+  const handleSort = (column: string) => {
+    if (showBottom20) {
+      // Don't change sort when in bottom 20 mode
+      return;
+    }
+    
+    if (sortBy === column) {
+      setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc');
+    } else {
+      setSortBy(column);
+      setSortOrder('desc');
+    }
+    setPage(1);
+    // No need to call fetchValidators here as the useEffect will handle it
+  };
+  
+  const handleSearch = (e: React.FormEvent) => {
+    e.preventDefault();
+    setPage(1);
+    fetchValidators();
+  };
+  
+  const handlePageChange = (newPage: number) => {
+    if (newPage > 0 && newPage <= totalPages) {
+      setPage(newPage);
+    }
+  };
+  
+  const toggleBottom20 = () => {
+    setShowBottom20(!showBottom20);
+    setPage(1);
+  };
+  
+  const handleMaxFeeChange = (value: string | null) => {
+    setMaxFee(value ? parseInt(value) : null);
+    setPage(1);
+  };
+  
+  // Add a helper function to format the Unix timestamp to a readable date
+  const formatStartTime = (unixTimestamp: number | string | undefined): string => {
+    if (!unixTimestamp) return 'N/A';
+    
+    const timestamp = typeof unixTimestamp === 'string' ? parseInt(unixTimestamp) : unixTimestamp;
+    
+    // Check if timestamp is in seconds (Unix standard) or milliseconds
+    const date = new Date(timestamp * 1000); // Convert seconds to milliseconds
+    
+    // Check if date is valid
+    if (isNaN(date.getTime())) return 'N/A';
+    
+    // Format date as YYYY-MM-DD
+    return date.toLocaleDateString();
+  };
+  
+  // Add a helper function to format fee percentage correctly
+  const formatFeePercentage = (fee: string | number | undefined): string => {
+    if (fee === undefined || fee === null) return '0%';
+    
+    // Convert to number if it's a string
+    const feeNumber = typeof fee === 'string' ? parseFloat(fee) : fee;
+    
+    // Check if fee is already in percentage format (0-100) or needs conversion (0-10000)
+    if (feeNumber > 100) {
+      return `${(feeNumber / 100).toFixed(2)}%`;
+    }
+    
+    return `${feeNumber}%`;
+  };
+  
+  return (
+    <div className="w-full bg-gray-900 rounded-xl border border-gray-700 overflow-hidden">
+      <div className="p-6 border-b border-gray-700">
+        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+          <h3 className="text-xl font-semibold text-blue-400">
+            {showBottom20 ? "Bottom 20 Validators" : "All Validators"}
+          </h3>
+          
+          <div className="flex flex-col sm:flex-row gap-3 w-full md:w-auto">
+            <form onSubmit={handleSearch} className="relative flex-1 sm:w-64">
+              <input
+                type="text"
+                placeholder="Search validators..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="w-full bg-gray-800 border border-gray-700 rounded-lg py-2 pl-10 pr-4 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              />
+              <Search className="absolute left-3 top-2.5 h-4 w-4 text-gray-400" />
+              <button type="submit" className="sr-only">Search</button>
+            </form>
+            
+            <div className="flex items-center gap-2">
+              <Select
+                value={pageSize.toString()}
+                onValueChange={(value) => {
+                  setPageSize(parseInt(value));
+                  setPage(1);
+                }}
+                disabled={showBottom20}
+              >
+                <SelectTrigger className="w-[100px] bg-gray-800 border-gray-700 text-white">
+                  <SelectValue placeholder="20 per page" />
+                </SelectTrigger>
+                <SelectContent className="bg-gray-800 border-gray-700 text-white">
+                  <SelectItem value="10">10 per page</SelectItem>
+                  <SelectItem value="20">20 per page</SelectItem>
+                  <SelectItem value="50">50 per page</SelectItem>
+                  <SelectItem value="100">100 per page</SelectItem>
+                </SelectContent>
+              </Select>
+              
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="outline" className="bg-gray-800 border-gray-700 text-white">
+                    <Filter className="h-4 w-4 mr-2" />
+                    Filters
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent className="bg-gray-800 border-gray-700 text-white p-4 space-y-4 w-64">
+                  <div className="flex items-center gap-2 cursor-pointer" onClick={() => setVerifiedOnly(!verifiedOnly)}>
+                    <div className="w-4 h-4 flex items-center justify-center border border-gray-600 rounded">
+                      {verifiedOnly && <Check className="h-3 w-3 text-blue-400" />}
+                    </div>
+                    <span>Verified Only</span>
+                  </div>
+                  
+                  <div className="flex items-center gap-2 cursor-pointer" onClick={toggleBottom20}>
+                    <div className="w-4 h-4 flex items-center justify-center border border-gray-600 rounded">
+                      {showBottom20 && <Check className="h-3 w-3 text-blue-400" />}
+                    </div>
+                    <span>Show Bottom 20</span>
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <label className="text-sm text-gray-400">Max Fee (%)</label>
+                    <Select
+                      value={maxFee?.toString() || ""}
+                      onValueChange={handleMaxFeeChange}
+                    >
+                      <SelectTrigger className="w-full bg-gray-800 border-gray-700 text-white">
+                        <SelectValue placeholder="Any fee" />
+                      </SelectTrigger>
+                      <SelectContent className="bg-gray-800 border-gray-700 text-white">
+                        <SelectItem value="">Any fee</SelectItem>
+                        <SelectItem value="0">0% (No fee)</SelectItem>
+                        <SelectItem value="5">Max 5%</SelectItem>
+                        <SelectItem value="10">Max 10%</SelectItem>
+                        <SelectItem value="15">Max 15%</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      {isLoading ? (
+        <div className="flex justify-center items-center py-20">
+          <Loader2 className="h-10 w-10 text-blue-400 animate-spin" />
+        </div>
+      ) : validators.length === 0 ? (
+        <div className="text-center py-20">
+          <Users className="h-12 w-12 text-gray-500 mx-auto mb-4" />
+          <h3 className="text-xl font-medium text-gray-400">No validators found</h3>
+          <p className="text-gray-500 mt-2">Try adjusting your search or filters</p>
+        </div>
+      ) : (
+        <>
+          <div className="overflow-x-auto relative">
+            {/* Add overlay with spinner when sorting/filtering */}
+            {isSorting && (
+              <div className="absolute inset-0 bg-gray-900/70 flex items-center justify-center z-10">
+                <Loader2 className="h-8 w-8 text-blue-400 animate-spin" />
+              </div>
+            )}
+            <table className="w-full">
+              <thead className="bg-gray-800/50">
+                <tr>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">
+                    <button 
+                      className={`flex items-center gap-1 ${!showBottom20 ? 'hover:text-blue-400' : 'cursor-default'} transition-colors`}
+                      onClick={() => handleSort('rank')}
+                    >
+                      Rank
+                      {!showBottom20 && <ArrowUpDown className="h-3 w-3" />}
+                    </button>
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">
+                    Validator
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">
+                    <button 
+                      className={`flex items-center gap-1 ${!showBottom20 ? 'hover:text-blue-400' : 'cursor-default'} transition-colors`}
+                      onClick={() => handleSort('delegatedStake')}
+                    >
+                      Delegated Stake
+                      {!showBottom20 && <ArrowUpDown className="h-3 w-3" />}
+                    </button>
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">
+                    <button 
+                      className={`flex items-center gap-1 ${!showBottom20 ? 'hover:text-blue-400' : 'cursor-default'} transition-colors`}
+                      onClick={() => handleSort('totalDelegators')}
+                    >
+                      Delegators
+                      {!showBottom20 && <ArrowUpDown className="h-3 w-3" />}
+                    </button>
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">
+                    <button 
+                      className={`flex items-center gap-1 ${!showBottom20 ? 'hover:text-blue-400' : 'cursor-default'} transition-colors`}
+                      onClick={() => handleSort('revenueShare')}
+                    >
+                      Fee
+                      {!showBottom20 && <ArrowUpDown className="h-3 w-3" />}
+                    </button>
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">
+                    <button 
+                      className={`flex items-center gap-1 ${!showBottom20 ? 'hover:text-blue-400' : 'cursor-default'} transition-colors`}
+                      onClick={() => handleSort('startTime')}
+                    >
+                      Start Date
+                      {!showBottom20 && <ArrowUpDown className="h-3 w-3" />}
+                    </button>
+                  </th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-gray-700 bg-gray-900/30">
+                {validators.map((validator) => (
+                  <tr 
+                    key={validator.address}
+                    className="hover:bg-gray-800/50 transition-colors cursor-pointer"
+                    onClick={() => {
+                      onSelectValidator(validator);
+                      const stakingElement = document.getElementById('staking-component');
+                      if (stakingElement) {
+                        stakingElement.scrollIntoView({ behavior: 'smooth' });
+                      }
+                    }}
+                  >
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-300">
+                      {validator.rank || '-'}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <div className="flex items-center gap-3">
+                        <div className="flex-shrink-0 h-10 w-10 relative">
+                          {validator.imgSrc ? (
+                            <img 
+                              src={validator.imgSrc} 
+                              alt={validator.name} 
+                              className="h-10 w-10 rounded-full object-contain bg-gray-800"
+                            />
+                          ) : (
+                            <div className="h-10 w-10 rounded-full bg-blue-500/20 flex items-center justify-center">
+                              <span className="text-blue-400 text-lg font-bold">
+                                {validator.name.charAt(0)}
+                              </span>
+                            </div>
+                          )}
+                          {validator.isVerified && (
+                            <div className="absolute -bottom-1 -right-1 bg-green-500 rounded-full p-1">
+                              <svg className="w-3 h-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                              </svg>
+                            </div>
+                          )}
+                        </div>
+                        <div>
+                          <div className="text-sm font-medium text-white">
+                            {validator.name}
+                          </div>
+                          <div className="text-xs text-gray-400">
+                            {validator.address.slice(0, 6)}...{validator.address.slice(-4)}
+                          </div>
+                        </div>
+                      </div>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-white">
+                      {validator.delegatedStake.toLocaleString()} STRK
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-white">
+                      {validator.totalDelegators.toLocaleString()}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-white">
+                      {formatFeePercentage(validator.revenueShare)}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-white">
+                      {formatStartTime(validator.startTime)}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+          
+          <div className="px-6 py-4 flex items-center justify-between border-t border-gray-700">
+            <div className="text-sm text-gray-400">
+              Showing <span className="font-medium text-white">{validators.length}</span> of{' '}
+              <span className="font-medium text-white">many</span> validators
+            </div>
+            {!showBottom20 && (
+              <div className="flex items-center gap-2">
+                <Button
+                  onClick={() => handlePageChange(page - 1)}
+                  disabled={page === 1}
+                  className="p-2 bg-gray-800 border border-gray-700 rounded-md text-gray-400 hover:text-white disabled:opacity-50"
+                >
+                  <ChevronLeft className="h-4 w-4" />
+                </Button>
+                <span className="text-sm text-gray-400">
+                  Page <span className="font-medium text-white">{page}</span> of{' '}
+                  <span className="font-medium text-white">{totalPages}</span>
+                </span>
+                <Button
+                  onClick={() => handlePageChange(page + 1)}
+                  disabled={page === totalPages}
+                  className="p-2 bg-gray-800 border border-gray-700 rounded-md text-gray-400 hover:text-white disabled:opacity-50"
+                >
+                  <ChevronRight className="h-4 w-4" />
+                </Button>
+              </div>
+            )}
+          </div>
+        </>
+      )}
     </div>
   );
 };
@@ -966,9 +1382,14 @@ export default function Home() {
               Across all validators
             </p>
             {priceData && (
-              <p className="text-lg font-medium text-green-400 mt-2">
-                ${((totalStake * priceData.usdPrice) / 1000000).toFixed(2)}M
-              </p>
+              <>
+                <p className="text-lg font-medium text-green-400 mt-2">
+                  ${((totalStake * priceData.usdPrice) / 1000000).toFixed(2)}M
+                </p>
+                <p className="text-sm text-gray-400">
+                  STRK Price: ${priceData.usdPrice.toFixed(2)}
+                </p>
+              </>
             )}
           </div>
           
@@ -1220,6 +1641,9 @@ export default function Home() {
       }
     };
     
+    // Determine if button should be disabled
+    const isButtonDisabled = delegation.delegatedStake <= 0 || (isUnpooling && timeLeft !== null);
+    
     return (
       <Button
         onClick={handleClick}
@@ -1230,7 +1654,7 @@ export default function Home() {
               : 'bg-blue-600 hover:bg-blue-700'
             : 'bg-red-600 hover:bg-red-700'
         } text-white text-sm`}
-        disabled={delegation.delegatedStake <= 0}
+        disabled={isButtonDisabled}
       >
         {/* Full button progress overlay */}
         {isUnpooling && (
@@ -1627,6 +2051,10 @@ export default function Home() {
                   </ResponsiveContainer>
                 </div>
               </div>
+              
+              {/* Add the ValidatorList component here */}
+              <ValidatorList onSelectValidator={setSelectedDelegator} />
+              
             </div>
           </CardContent>
         </Card>
