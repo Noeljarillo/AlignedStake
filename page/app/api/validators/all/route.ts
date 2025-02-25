@@ -67,9 +67,12 @@ export async function GET(request: Request) {
     // Add sorting and pagination
     const query = `
       ${baseQuery}
-      ORDER BY ${sanitizedSortBy === 'starttime' 
+      ORDER BY 
+      ${sanitizedSortBy === 'starttime' 
         ? `${sanitizedSortBy}::bigint ${sanitizedSortOrder === 'asc' ? 'ASC' : 'DESC'}`
-        : `${sanitizedSortBy}::numeric ${sanitizedSortOrder === 'asc' ? 'ASC' : 'DESC'}`}
+        : sanitizedSortBy === 'revenueshare' 
+          ? `${sanitizedSortBy}::numeric ${sanitizedSortOrder === 'asc' ? 'ASC' : 'DESC'} NULLS ${sanitizedSortOrder === 'asc' ? 'FIRST' : 'LAST'}`
+          : `${sanitizedSortBy}::numeric ${sanitizedSortOrder === 'asc' ? 'ASC' : 'DESC'}`}
       LIMIT ${pageSize} OFFSET ${offset};
     `;
     

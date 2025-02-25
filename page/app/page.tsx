@@ -625,7 +625,8 @@ const ValidatorList = ({ onSelectValidator }: ValidatorListProps) => {
       setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc');
     } else {
       setSortBy(column);
-      setSortOrder('desc');
+      // For fees specifically, default to ascending (low fees first) as that's usually what users want to see
+      setSortOrder(column === 'revenueShare' ? 'asc' : 'desc');
     }
     setPage(1);
     // No need to call fetchValidators here as the useEffect will handle it
@@ -649,7 +650,7 @@ const ValidatorList = ({ onSelectValidator }: ValidatorListProps) => {
   };
   
   const handleMaxFeeChange = (value: string | null) => {
-    setMaxFee(value ? parseInt(value) : null);
+    setMaxFee(value === "any" ? null : value ? parseInt(value) : null);
     setPage(1);
   };
   
@@ -680,12 +681,9 @@ const ValidatorList = ({ onSelectValidator }: ValidatorListProps) => {
     // Convert to number if it's a string
     const feeNumber = typeof fee === 'string' ? parseFloat(fee) : fee;
     
-    // Check if fee is already in percentage format (0-100) or needs conversion (0-10000)
-    if (feeNumber > 100) {
-      return `${(feeNumber / 100).toFixed(2)}%`;
-    }
-    
-    return `${feeNumber}%`;
+    // The fee is in basis points (1/100 of a percent)
+    // So 10 = 0.1%, 1000 = 10%
+    return `${(feeNumber / 100).toFixed(2)}%`;
   };
   
   return (
@@ -761,7 +759,7 @@ const ValidatorList = ({ onSelectValidator }: ValidatorListProps) => {
                         <SelectValue placeholder="Any fee" />
                       </SelectTrigger>
                       <SelectContent className="bg-gray-800 border-gray-700 text-white">
-                        <SelectItem value="">Any fee</SelectItem>
+                        <SelectItem value="any">Any fee</SelectItem>
                         <SelectItem value="0">0% (No fee)</SelectItem>
                         <SelectItem value="5">Max 5%</SelectItem>
                         <SelectItem value="10">Max 10%</SelectItem>
