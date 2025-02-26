@@ -22,7 +22,7 @@ export default function RootLayout({
     <html lang="en" className="dark">
       <body className={inter.className}>
         <div className="relative min-h-screen bg-gradient-to-br from-gray-900 via-gray-900 to-gray-800">
-          <div className="relative">
+          <div className="relative w-full">
             {children}
           </div>
         </div>

@@ -1689,12 +1689,14 @@ export default function Home() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-900 to-gray-800 flex flex-col items-center pt-0 px-4 pb-4">
+    <div className="min-h-screen bg-gradient-to-br from-gray-900 to-gray-800 flex flex-col items-center pt-0 px-0 pb-4">
       <meta name="google-site-verification" content="BioBqMAm54m_zMizQ_YtbyFCgVe_BY9KGhn8j6K9KWg" />
-      <VoyagerBanner />
-      <CallToAction 
-        walletConnected={walletConnected}
-      />
+      <div className="w-full">
+        <VoyagerBanner />
+        <CallToAction 
+          walletConnected={walletConnected}
+        />
+      </div>
       <div className="w-full sticky top-0 z-50">
         <AnimatePresence>
           <motion.div
@@ -1702,7 +1704,7 @@ export default function Home() {
             animate={{ height: isStakeInfoOpen ? 'auto' : '64px' }}
             className="w-full bg-gray-800/50 backdrop-blur-sm border-b border-gray-700 mb-8 overflow-hidden"
           >
-            <div className="max-w-7xl mx-auto flex items-center justify-between h-16 px-4">
+            <div className="w-full flex items-center justify-between h-16 px-4">
               <div className="flex-1"></div> {/* Empty div for spacing */}
               
               <div 
@@ -1894,7 +1896,7 @@ export default function Home() {
         </AnimatePresence>
       </div>
 
-      <div className="w-full max-w-7xl grid grid-cols-1 lg:grid-cols-4 gap-8 relative">
+      <div className="w-full max-w-[98%] grid grid-cols-1 lg:grid-cols-4 gap-8 relative">
         <Card className="lg:col-span-3 bg-gray-800 border-gray-700">
           <CardHeader>
             <div className="space-y-8">
@@ -2061,13 +2063,13 @@ export default function Home() {
           </CardContent>
         </Card>
 
-        <Card className="lg:col-span-1 bg-gray-800 border-gray-700 lg:sticky lg:top-24 h-fit">
+        <Card className="lg:col-span-1 bg-gradient-to-b from-blue-900/50 to-gray-800 border-blue-700/30 lg:sticky lg:top-24 h-fit shadow-xl shadow-blue-500/10">
           <CardHeader className="text-center" id="staking-component">
-            <CardTitle className="text-2xl font-bold text-blue-400">Stake STRK</CardTitle>
-            <CardDescription className="text-gray-400">Choose a validator and stake your STRK</CardDescription>
+            <CardTitle className="text-3xl font-bold text-blue-400">Stake STRK</CardTitle>
+            <CardDescription className="text-lg text-gray-300">Choose a validator and stake your STRK</CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="space-y-6">
+            <div className="space-y-8">
               <div className="flex flex-col gap-4">
                 <div className="flex items-center space-x-2">
                   <input
@@ -2128,9 +2130,9 @@ export default function Home() {
                   </div>
                 </motion.div>
               )}
-              <form onSubmit={handleStake} className="space-y-4">
+              <form onSubmit={handleStake} className="space-y-6">
                 <div>
-                  <Label htmlFor="stakeAmount" className="text-gray-300">
+                  <Label htmlFor="stakeAmount" className="text-lg text-gray-300 font-medium">
                     Stake Amount (STRK)
                   </Label>
                   <Input
@@ -2142,23 +2144,23 @@ export default function Home() {
                     value={stakeAmount}
                     onChange={(e) => setStakeAmount(e.target.value)}
                     required
-                    className="bg-gray-700 border-gray-600 text-white placeholder-gray-400"
+                    className="bg-gray-700 border-gray-600 text-white placeholder-gray-400 text-lg mt-2 h-12"
                   />
                 </div>
                 <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
                   <Button
                     type="submit"
-                    className="w-full bg-green-600 hover:bg-green-700 text-white"
+                    className="w-full bg-green-600 hover:bg-green-700 text-white py-6 text-lg"
                     disabled={!selectedDelegator || isStaking}
                   >
                     {isStaking ? (
                       <>
-                        <Loader2 className="mr-2 h-5 w-5 animate-spin" />
+                        <Loader2 className="mr-2 h-6 w-6 animate-spin" />
                         Staking...
                       </>
                     ) : (
                       <>
-                        <Zap className="mr-2 h-5 w-5" />
+                        <Zap className="mr-2 h-6 w-6" />
                         Stake Now
                       </>
                     )}
