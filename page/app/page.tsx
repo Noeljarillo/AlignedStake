@@ -1688,6 +1688,29 @@ export default function Home() {
     );
   };
 
+  // First, let's add a disconnectWallet function to the Home component
+
+  const disconnectWallet = () => {
+    // Reset wallet-related state
+    setWalletConnected(false);
+    setAccount(null);
+    setUserStakeInfo({
+      totalDelegated: 0,
+      availableRewards: 0,
+      lastClaimTime: '-',
+      delegations: [],
+      unstakeIntents: []
+    });
+    setIsStakeInfoOpen(false);
+    
+    // You can't actually disconnect from StarkNet wallets via API
+    // So we just reset the app state to simulate disconnection
+    console.log('Wallet disconnected (app state reset)');
+  };
+
+  // Then, let's modify the wallet display area to include a disconnect button
+  // This would replace the current wallet display in the header
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-900 to-gray-800 flex flex-col items-center pt-0 px-0 pb-4">
       <meta name="google-site-verification" content="BioBqMAm54m_zMizQ_YtbyFCgVe_BY9KGhn8j6K9KWg" />
@@ -1732,6 +1755,30 @@ export default function Home() {
                     <span className="text-sm text-gray-400 bg-gray-800 px-3 py-1 rounded-full border border-gray-700">
                       {account.address.slice(0, 6)}...{account.address.slice(-4)}
                     </span>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={disconnectWallet}
+                      className="text-gray-400 hover:text-red-400 hover:bg-gray-800/50"
+                    >
+                      <svg 
+                        xmlns="http://www.w3.org/2000/svg" 
+                        width="16" 
+                        height="16" 
+                        viewBox="0 0 24 24" 
+                        fill="none" 
+                        stroke="currentColor" 
+                        strokeWidth="2" 
+                        strokeLinecap="round" 
+                        strokeLinejoin="round" 
+                        className="mr-1"
+                      >
+                        <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
+                        <polyline points="16 17 21 12 16 7"></polyline>
+                        <line x1="21" y1="12" x2="9" y2="12"></line>
+                      </svg>
+                      Disconnect
+                    </Button>
                     <div 
                       className="cursor-pointer hover:bg-gray-700/50 p-1 rounded-full transition-colors"
                       onClick={() => setIsStakeInfoOpen(!isStakeInfoOpen)}

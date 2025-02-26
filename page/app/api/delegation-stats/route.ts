@@ -3,17 +3,18 @@ import { neon } from '@neondatabase/serverless';
 
 const sql = neon(process.env.DATABASE_URL || '');
 
-export async function GET(request: Request) {
+export async function GET() {
   try {
-    // Query total users, total amount staked, and recent delegations
+    // Get total stats
     const statsQuery = `
       SELECT 
         COUNT(DISTINCT sender_address) as total_users,
-        SUM(amount_staked) as total_staked
+        SUM(amount_staked::numeric) as total_staked
       FROM users;
     `;
-
-    const recentDelegationsQuery = `
+    
+    // Get recent delegations - most recent first, limit to 10
+    const delegationsQuery = `
       SELECT 
         tx_hash,
         sender_address,
@@ -24,32 +25,32 @@ export async function GET(request: Request) {
       ORDER BY timestamp DESC
       LIMIT 10;
     `;
-
-    // Execute both queries in parallel
+    
     const [statsResult, delegationsResult] = await Promise.all([
       sql(statsQuery),
-      sql(recentDelegationsQuery)
+      sql(delegationsQuery)
     ]);
-
-    // Format recent delegations
-    const recentDelegations = delegationsResult.map(row => ({
-      txHash: row.tx_hash,
-      senderAddress: row.sender_address,
-      contractAddress: row.contract_address,
-      amountStaked: Number(row.amount_staked) / Math.pow(10, 18),
-      timestamp: row.timestamp
+    
+    // Format the delegations to ensure consistent display
+    const formattedDelegations = delegationsResult.map(record => ({
+      txHash: record.tx_hash,
+      senderAddress: record.sender_address,
+      contractAddress: record.contract_address,
+      // Convert amount_staked to a number to ensure consistent formatting
+      amountStaked: parseFloat(record.amount_staked),
+      timestamp: new Date(record.timestamp).getTime()
     }));
-
-    // Return stats and recent delegations
+    
     return NextResponse.json({
-      totalUsers: Number(statsResult[0]?.total_users || 0),
-      totalStaked: Number(statsResult[0]?.total_staked || 0) / Math.pow(10, 18),
-      recentDelegations
+      totalUsers: parseInt(statsResult[0].total_users) || 0,
+      totalStaked: parseFloat(statsResult[0].total_staked) || 0,
+      recentDelegations: formattedDelegations
     });
+    
   } catch (error) {
     console.error('Error fetching delegation stats:', error);
     return NextResponse.json(
-      { error: 'Failed to fetch delegation statistics' },
+      { error: 'Failed to fetch delegation stats' },
       { status: 500 }
     );
   }

@@ -15,8 +15,9 @@ export async function POST(request: Request) {
       );
     }
 
-    // Convert amount to numeric value with 18 decimals
-    const amountInWei = BigInt(parseFloat(amountStaked) * Math.pow(10, 18)).toString();
+    // Store the amount as is, without multiplying by 10^18
+    // We'll handle the conversion in the frontend when displaying
+    const amount = parseFloat(amountStaked).toString();
 
     // Insert the stake record
     const query = `
@@ -33,7 +34,7 @@ export async function POST(request: Request) {
       txHash,
       senderAddress,
       contractAddress,
-      amountInWei
+      amount
     ]);
 
     return NextResponse.json({
@@ -44,11 +45,19 @@ export async function POST(request: Request) {
   } catch (error) {
     console.error('Error recording stake:', error);
     
-    // Check for unique constraint violation
-    if (error.code === '23505') {
+    // Check for unique constraint violation - properly type check the error
+    if (typeof error === 'object' && error !== null && 'code' in error && error.code === '23505') {
       return NextResponse.json(
         { error: 'Transaction hash already exists' },
         { status: 409 }
+      );
+    }
+
+    // Add more specific error handling for numeric overflow
+    if (typeof error === 'object' && error !== null && 'code' in error && error.code === '22003') {
+      return NextResponse.json(
+        { error: 'Amount too large for storage format' },
+        { status: 400 }
       );
     }
 
