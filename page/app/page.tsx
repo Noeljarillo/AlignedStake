@@ -129,6 +129,26 @@ const stakingPoolAbi = [
     state_mutability: "external"
   },
   {
+    name: "add_to_delegation_pool",
+    type: "function",
+    inputs: [
+      {
+        name: "pool_member",
+        type: "core::starknet::contract_address::ContractAddress"
+      },
+      {
+        name: "amount",
+        type: "core::integer::u128"
+      }
+    ],
+    outputs: [
+      {
+        type: "core::integer::u128"
+      }
+    ],
+    state_mutability: "external"
+  },
+  {
     name: "exit_delegation_pool_intent",
     type: "function",
     inputs: [
@@ -1144,6 +1164,7 @@ export default function Home() {
     }
   }
 
+  // Update the existing stake function to handle already delegated pools
   const stake = async (poolAddress: string, amount: string) => {
     if (!account) return false;
 
@@ -1151,10 +1172,28 @@ export default function Home() {
       const amountBn = parseTokenAmount(amount);
       const poolContract = new Contract(stakingPoolAbi, poolAddress, account);
       
-      const stakeTx = await poolContract.enter_delegation_pool(
-        account.address,
-        amountBn
+      // Check if user already has a delegation to this pool
+      const hasExistingDelegation = userStakeInfo.delegations.some(
+        delegation => delegation.poolAddress.toLowerCase() === poolAddress.toLowerCase()
       );
+      
+      let stakeTx;
+      
+      if (hasExistingDelegation) {
+        // If already delegated, use add_to_delegation_pool with both parameters
+        console.log('Using add_to_delegation_pool for existing delegation');
+        stakeTx = await poolContract.add_to_delegation_pool(
+          account.address,  // pool_member parameter
+          amountBn          // amount parameter
+        );
+      } else {
+        // For first-time delegation, use enter_delegation_pool
+        console.log('Using enter_delegation_pool for new delegation');
+        stakeTx = await poolContract.enter_delegation_pool(
+          account.address,
+          amountBn
+        );
+      }
       
       await account.waitForTransaction(stakeTx.transaction_hash);
 
@@ -1175,16 +1214,63 @@ export default function Home() {
       if (!response.ok) {
         console.error('Failed to record stake transaction');
       }
-
+      
+      // Refresh user stake info after successful staking
+      await fetchUserStakeInfo();
+      
       return true;
     } catch (error) {
       console.error('Error staking:', error);
+      // Check if error is about using wrong function
+      if (error instanceof Error && 
+          error.message.includes("use add_to_delegation_pool instead")) {
+        console.log('Retrying with add_to_delegation_pool...');
+        // Retry with add_to_delegation_pool with both parameters
+        try {
+          const amountBn = parseTokenAmount(amount);
+          const poolContract = new Contract(stakingPoolAbi, poolAddress, account);
+          
+          const stakeTx = await poolContract.add_to_delegation_pool(
+            account.address,  // pool_member parameter
+            amountBn          // amount parameter
+          );
+          await account.waitForTransaction(stakeTx.transaction_hash);
+          
+          // Record the transaction in the database
+          const response = await fetch('/api/record-stake', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              txHash: stakeTx.transaction_hash,
+              senderAddress: account.address,
+              contractAddress: poolAddress,
+              amountStaked: amount,
+            }),
+          });
+          
+          await fetchUserStakeInfo();
+          return true;
+        } catch (retryError) {
+          console.error('Error in retry staking:', retryError);
+          setStakeResult('Failed to stake STRK');
+          return false;
+        }
+      }
+      
       setStakeResult('Failed to stake STRK');
       return false;
     }
   }
 
-  // Add this function to calculate split amounts
+  // Add this helper function to strip trailing zeros from decimal numbers
+  const formatAmount = (amount: string): string => {
+    // Convert to a number to handle scientific notation and then back to string
+    return Number(amount).toString();
+  };
+
+  // Update the calculateSplitAmounts function to use the helper
   const calculateSplitAmounts = (totalAmount: string) => {
     if (!totalAmount || isNaN(Number(totalAmount)) || Number(totalAmount) <= 0) {
       return { mainAmount: "0", bottomAmount: "0" };
@@ -1194,7 +1280,10 @@ export default function Home() {
     const bottomAmount = (total * 0.1).toFixed(6); // 10% to bottom validator
     const mainAmount = (total - Number(bottomAmount)).toFixed(6); // 90% to main validator
     
-    return { mainAmount, bottomAmount };
+    return { 
+      mainAmount: formatAmount(mainAmount), 
+      bottomAmount: formatAmount(bottomAmount)
+    };
   };
 
   // Update the existing handleStake function to handle split delegation
@@ -1331,11 +1420,8 @@ export default function Home() {
     if (validatorList.length === 0) return;
     const randomIndex = Math.floor(Math.random() * validatorList.length);
     
-    if (fromBottom && isSplitDelegation) {
-      setRandomBottomValidator(validatorList[randomIndex]);
-    } else {
-      setSelectedDelegator(validatorList[randomIndex]);
-    }
+    // Always update the main validator when clicking "Random Bottom 20"
+    setSelectedDelegator(validatorList[randomIndex]);
   }
 
   const CustomTooltip = ({ active, payload }: any) => {
@@ -2219,12 +2305,12 @@ export default function Home() {
         </Card>
 
         <Card className="lg:col-span-1 bg-gradient-to-b from-blue-900/50 to-gray-800 border-blue-700/30 lg:sticky lg:top-24 h-fit shadow-xl shadow-blue-500/10">
-          <CardHeader className="text-center" id="staking-component">
-            <CardTitle className="text-3xl font-bold text-blue-400">Stake STRK</CardTitle>
+          <CardHeader className="text-center py-3" id="staking-component">
+            <CardTitle className="text-2xl font-bold text-blue-400">Stake STRK</CardTitle>
           </CardHeader>
-          <CardContent>
-            <div className="space-y-8">
-              <div className="flex flex-col gap-4">
+          <CardContent className="pb-3 pt-0">
+            <div className="space-y-4">
+              <div className="flex flex-row items-center justify-between gap-2">
                 <div className="flex items-center space-x-2">
                   <input
                     type="checkbox"
@@ -2233,60 +2319,53 @@ export default function Home() {
                     onChange={(e) => setVerifiedOnly(e.target.checked)}
                     className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
                   />
-                  <Label htmlFor="verifiedOnly" className="text-gray-300">
-                    Show only verified validators
+                  <Label htmlFor="verifiedOnly" className="text-gray-300 text-sm">
+                    Show verified only
                   </Label>
                 </div>
-                <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
-                  <Button 
-                    onClick={() => selectRandomDelegator(true)} 
-                    className="w-full bg-purple-600 hover:bg-purple-700 text-white"
-                  >
-                    <RefreshCw className="mr-2 h-5 w-5" />
-                    Random from Bottom 20
-                  </Button>
-                </motion.div>
+                <Button 
+                  onClick={() => selectRandomDelegator(true)} 
+                  className="bg-purple-600 hover:bg-purple-700 text-white text-sm py-1 h-8"
+                  size="sm"
+                >
+                  <RefreshCw className="mr-1 h-4 w-4" />
+                  Random Bottom 20
+                </Button>
               </div>
+              
               {selectedDelegator && (
                 <motion.div
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
-                  className="p-4 border border-gray-700 rounded-md bg-gray-900"
+                  className="p-2 border border-gray-700 rounded-md bg-gray-900"
                 >
-                  <div className="flex items-center gap-2 mb-2">
+                  <div className="flex items-center gap-2">
                     {selectedDelegator.imgSrc && (
                       <img 
                         src={selectedDelegator.imgSrc} 
                         alt={selectedDelegator.name} 
-                        className="w-8 h-8 rounded-full"
+                        className="w-6 h-6 rounded-full"
                       />
                     )}
                     <div>
-                      <p className="font-semibold text-blue-400">
+                      <p className="font-semibold text-blue-400 text-sm">
                         {selectedDelegator.name}
                         {selectedDelegator.isVerified && (
                           <span className="ml-1 text-green-400">✓</span>
                         )}
                       </p>
-                      <a 
-                        href={`https://voyager.online/validator/${selectedDelegator.address}`}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="text-sm text-gray-400 hover:text-blue-400"
-                      >
-                        {selectedDelegator.address.slice(0, 8)}...{selectedDelegator.address.slice(-6)}
-                      </a>
+                      <p className="text-xs text-gray-400">
+                        Stake: {selectedDelegator.delegatedStake.toLocaleString()} | 
+                        Delegators: {selectedDelegator.totalDelegators?.toLocaleString() || 'N/A'}
+                      </p>
                     </div>
-                  </div>
-                  <div className="mt-2 space-y-1">
-                    <p className="text-sm text-gray-400">Delegated Stake: {selectedDelegator.delegatedStake.toLocaleString()} STRK</p>
-                    <p className="text-sm text-gray-400">Total Delegators: {selectedDelegator.totalDelegators?.toLocaleString() || 'N/A'}</p>
                   </div>
                 </motion.div>
               )}
-              <form onSubmit={handleStake} className="space-y-4">
+              
+              <form onSubmit={handleStake} className="space-y-3">
                 <div>
-                  <Label htmlFor="stakeAmount" className="text-lg text-gray-300 font-medium">
+                  <Label htmlFor="stakeAmount" className="text-sm text-gray-300 font-medium">
                     Stake Amount (STRK)
                   </Label>
                   <Input
@@ -2294,23 +2373,22 @@ export default function Home() {
                     type="number"
                     step="0.000000000000000001"
                     min="0"
-                    placeholder="Enter amount to stake (e.g. 0.1)"
+                    placeholder="Enter amount to stake"
                     value={stakeAmount}
                     onChange={handleStakeAmountChange}
                     required
-                    className="bg-gray-700 border-gray-600 text-white placeholder-gray-400 text-lg mt-2 h-12"
+                    className="bg-gray-700 border-gray-600 text-white placeholder-gray-400 text-md mt-1 h-9"
                   />
                 </div>
                 
-                {/* Replace the checkbox with a more visually appealing toggle */}
-                <div className="flex items-center justify-between bg-gray-800/60 p-2 rounded-md border border-gray-700">
-                  <div className="flex items-center gap-2">
-                    <div className="bg-purple-500/20 p-1 rounded">
-                      <Zap className="h-4 w-4 text-purple-400" />
+                <div className="flex items-center justify-between bg-gray-800/60 p-1.5 rounded-md border border-gray-700">
+                  <div className="flex items-center gap-1.5">
+                    <div className="bg-purple-500/20 p-0.5 rounded">
+                      <Zap className="h-3 w-3 text-purple-400" />
                     </div>
-                    <span className="text-sm text-gray-300">Split delegation</span>
+                    <span className="text-xs text-gray-300">Split delegation</span>
                   </div>
-                  <div className="relative inline-block w-10 h-5 transition duration-200 ease-in-out">
+                  <div className="relative inline-block w-8 h-4 transition duration-200 ease-in-out">
                     <input
                       type="checkbox"
                       id="splitDelegation"
@@ -2330,8 +2408,8 @@ export default function Home() {
                       }`}
                     >
                       <span 
-                        className={`absolute left-0.5 bottom-0.5 bg-white w-4 h-4 rounded-full transition-transform duration-200 ${
-                          isSplitDelegation ? 'transform translate-x-5' : ''
+                        className={`absolute left-0.5 bottom-0.5 bg-white w-3 h-3 rounded-full transition-transform duration-200 ${
+                          isSplitDelegation ? 'transform translate-x-4' : ''
                         }`}
                       />
                     </label>
@@ -2343,37 +2421,37 @@ export default function Home() {
                     initial={{ opacity: 0, height: 0 }}
                     animate={{ opacity: 1, height: 'auto' }}
                     exit={{ opacity: 0, height: 0 }}
-                    className="p-3 border border-blue-700/30 rounded-md bg-blue-900/20"
+                    className="p-2 border border-blue-700/30 rounded-md bg-blue-900/20"
                   >
-                    <div className="space-y-2 text-sm">
+                    <div className="space-y-1 text-xs">
                       <div className="flex justify-between items-center">
                         <div className="flex items-center gap-1">
-                          <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
-                          <span className="text-gray-300 truncate max-w-[120px]">{selectedDelegator?.name}</span>
+                          <div className="w-1.5 h-1.5 bg-blue-500 rounded-full"></div>
+                          <span className="text-gray-300 truncate max-w-[100px]">{selectedDelegator?.name}</span>
                         </div>
-                        <span className="text-white font-medium">{splitDelegationPreview.mainAmount} (90%)</span>
+                        <span className="text-white">{splitDelegationPreview.mainAmount} (90%)</span>
                       </div>
                       
                       <div className="flex justify-between items-center">
                         <div className="flex items-center gap-1">
-                          <div className="w-2 h-2 bg-purple-500 rounded-full"></div>
-                          <span className="text-gray-300 truncate max-w-[120px]">
+                          <div className="w-1.5 h-1.5 bg-purple-500 rounded-full"></div>
+                          <span className="text-gray-300 truncate max-w-[100px]">
                             {randomBottomValidator?.name || 'Selecting...'}
                           </span>
                         </div>
-                        <span className="text-white font-medium">{splitDelegationPreview.bottomAmount} (10%)</span>
+                        <span className="text-white">{splitDelegationPreview.bottomAmount} (10%)</span>
                       </div>
                     </div>
                     
                     {randomBottomValidator && (
-                      <div className="mt-2 pt-2 border-t border-gray-700">
+                      <div className="mt-1 pt-1 border-t border-gray-700">
                         <Button
                           type="button"
                           onClick={selectRandomBottomValidatorForSplit}
-                          className="w-full mt-1 bg-purple-600/50 hover:bg-purple-600 text-white text-xs py-1"
+                          className="w-full mt-0.5 bg-purple-600/50 hover:bg-purple-600 text-white text-xs py-0.5 h-6"
                           size="sm"
                         >
-                          <RefreshCw className="mr-1 h-3 w-3" />
+                          <RefreshCw className="mr-1 h-2.5 w-2.5" />
                           Change bottom validator
                         </Button>
                       </div>
@@ -2381,39 +2459,36 @@ export default function Home() {
                   </motion.div>
                 )}
                 
-                <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
-                  <Button
-                    type="submit"
-                    className="w-full bg-green-600 hover:bg-green-700 text-white py-6 text-lg"
-                    disabled={!selectedDelegator || isStaking || (isSplitDelegation && !randomBottomValidator)}
-                  >
-                    {isStaking ? (
-                      <>
-                        <Loader2 className="mr-2 h-6 w-6 animate-spin" />
-                        {isSplitDelegation ? 'Processing Split Stake...' : 'Staking...'}
-                      </>
-                    ) : (
-                      <>
-                        <Zap className="mr-2 h-6 w-6" />
-                        {isSplitDelegation ? 'Split Stake Now' : 'Stake Now'}
-                      </>
-                    )}
-                  </Button>
-                </motion.div>
+                <Button
+                  type="submit"
+                  className="w-full bg-green-600 hover:bg-green-700 text-white py-1.5 h-10 text-md"
+                  disabled={!selectedDelegator || isStaking || (isSplitDelegation && !randomBottomValidator)}
+                >
+                  {isStaking ? (
+                    <>
+                      <Loader2 className="mr-1.5 h-4 w-4 animate-spin" />
+                      {isSplitDelegation ? 'Processing Split...' : 'Staking...'}
+                    </>
+                  ) : (
+                    <>
+                      <Zap className="mr-1.5 h-4 w-4" />
+                      {isSplitDelegation ? 'Split Stake' : 'Stake Now'}
+                    </>
+                  )}
+                </Button>
               </form>
+              
+              {stakeResult && (
+                <motion.p
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  className="text-xs text-green-400 w-full text-center mt-1"
+                >
+                  {stakeResult}
+                </motion.p>
+              )}
             </div>
           </CardContent>
-          <CardFooter>
-            {stakeResult && (
-              <motion.p
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                className="text-sm text-green-400 w-full text-center"
-              >
-                {stakeResult}
-              </motion.p>
-            )}
-          </CardFooter>
         </Card>
       </div>
 
