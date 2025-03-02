@@ -25,6 +25,8 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
+import Link from "next/link"
+import { Info } from "lucide-react"
 
 declare global {
   interface Window {
@@ -254,7 +256,6 @@ const parseTokenAmount = (amount: string): bigint => {
 
 const UNSTAKING_PERIOD = 21 * 24 * 60 * 60 * 1000; // 21 days in milliseconds
 
-// Add this helper function near the top of the file with other utility functions
 const normalizeAddress = (address: string): string => {
   if (!address) return address;
   
@@ -265,7 +266,6 @@ const normalizeAddress = (address: string): string => {
   return address;
 };
 
-// Update the CallToAction component to remove the wallet address display
 const CallToAction = ({ walletConnected }: { 
   walletConnected: boolean
 }) => {
@@ -297,6 +297,14 @@ const CallToAction = ({ walletConnected }: {
         </div>
         
         <div className="flex items-center gap-3">
+          <Link
+            href="/guide"
+            className="px-6 py-2 rounded-lg transition-all duration-300 transform hover:scale-105 bg-gradient-to-r from-purple-600 to-indigo-600 text-white flex items-center gap-2"
+          >
+            <Info className="h-4 w-4" />
+            <span>Staking Guide</span>
+          </Link>
+          
           {walletConnected && (
             <Button 
               className="px-6 py-2 rounded-lg transition-all duration-300 transform hover:scale-105 bg-blue-600 hover:bg-blue-700 text-white"
@@ -354,7 +362,7 @@ const ContactInfo = () => {
   );
 };
 
-// Add this new component near your other component definitions
+
 const VoyagerBanner = () => {
   return (
     <a 
@@ -377,7 +385,7 @@ const VoyagerBanner = () => {
   );
 };
 
-// Add this component somewhere in your file after other component definitions
+
 const DelegationStats = () => {
   const [stats, setStats] = useState({
     totalUsers: 0,
@@ -546,12 +554,12 @@ const DelegationStats = () => {
   );
 };
 
-// Add this interface with your other interfaces
+
 interface ValidatorListProps {
   onSelectValidator: (validator: Validator) => void;
 }
 
-// Add this component definition before the Home component
+
 const ValidatorList = ({ onSelectValidator }: ValidatorListProps) => {
   const [validators, setValidators] = useState<Validator[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -561,11 +569,11 @@ const ValidatorList = ({ onSelectValidator }: ValidatorListProps) => {
   const [sortOrder, setSortOrder] = useState('desc');
   const [verifiedOnly, setVerifiedOnly] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
-  const [pageSize, setPageSize] = useState(20);
+  const [pageSize, setPageSize] = useState(10); 
   const [showBottom20, setShowBottom20] = useState(false);
   const [maxFee, setMaxFee] = useState<number | null>(null);
   
-  // Add a new state variable for tracking sort/filter operations
+
   const [isSorting, setIsSorting] = useState(false);
   
   const fetchValidators = async () => {
@@ -617,7 +625,7 @@ const ValidatorList = ({ onSelectValidator }: ValidatorListProps) => {
   
   const handleSort = (column: string) => {
     if (showBottom20) {
-      // Don't change sort when in bottom 20 mode
+
       return;
     }
     
@@ -625,7 +633,7 @@ const ValidatorList = ({ onSelectValidator }: ValidatorListProps) => {
       setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc');
     } else {
       setSortBy(column);
-      // For fees specifically, default to ascending (low fees first) as that's usually what users want to see
+      
       setSortOrder(column === 'revenueShare' ? 'asc' : 'desc');
     }
     setPage(1);
@@ -674,7 +682,6 @@ const ValidatorList = ({ onSelectValidator }: ValidatorListProps) => {
     return `${day}/${month}/${year}`;
   };
   
-  // Add a helper function to format fee percentage correctly
   const formatFeePercentage = (fee: string | number | undefined): string => {
     if (fee === undefined || fee === null) return '0%';
     
@@ -853,10 +860,6 @@ const ValidatorList = ({ onSelectValidator }: ValidatorListProps) => {
                     className="hover:bg-gray-800/50 transition-colors cursor-pointer"
                     onClick={() => {
                       onSelectValidator(validator);
-                      const stakingElement = document.getElementById('staking-component');
-                      if (stakingElement) {
-                        stakingElement.scrollIntoView({ behavior: 'smooth' });
-                      }
                     }}
                   >
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-300">
@@ -1010,7 +1013,6 @@ export default function Home() {
     fetchData();
   }, [verifiedOnly])
 
-  // Add this useEffect to fetch price data once on component load
   useEffect(() => {
     const fetchPriceData = async () => {
       try {
@@ -1366,7 +1368,6 @@ export default function Home() {
     }
   }, [account]);
 
-  // Update the NetworkStatsHeader component to include price information
   const NetworkStatsHeader = () => {
     const totalStake = stats.totalNetworkStake;
     const topTenStake = stats.topTenStake;
@@ -1455,7 +1456,6 @@ export default function Home() {
     );
   };
 
-  // Update the ComparisonMetrics component
   const ComparisonMetrics = () => {
     return (
       <div className="mt-8 bg-gray-900 rounded-xl p-6">
@@ -1537,7 +1537,6 @@ export default function Home() {
     );
   };
 
-  // Update the MetricCard component
   const MetricCard = ({ metric }: { metric: StatMetric }) => {
     return (
       <div 
@@ -1566,7 +1565,7 @@ export default function Home() {
     );
   };
 
-  // Update the UnstakeCountdownButton component with better styling
+
   const UnstakeCountdownButton = ({ 
     delegation, 
     onUnstake 
@@ -1703,13 +1702,10 @@ export default function Home() {
     });
     setIsStakeInfoOpen(false);
     
-    // You can't actually disconnect from StarkNet wallets via API
-    // So we just reset the app state to simulate disconnection
+
     console.log('Wallet disconnected (app state reset)');
   };
 
-  // Then, let's modify the wallet display area to include a disconnect button
-  // This would replace the current wallet display in the header
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-900 to-gray-800 flex flex-col items-center pt-0 px-0 pb-4">
@@ -1982,6 +1978,9 @@ export default function Home() {
                 ))}
               </div>
               <NetworkStatsHeader />
+              
+              {/* Move the ValidatorList component here - right after NetworkStatsHeader */}
+              <ValidatorList onSelectValidator={setSelectedDelegator} />
             </div>
           </CardHeader>
           <CardContent>
@@ -2000,10 +1999,6 @@ export default function Home() {
                         if (data && data.activePayload && data.activePayload[0]) {
                           const validator = data.activePayload[0].payload;
                           setSelectedDelegator(validator);
-                          const stakingElement = document.getElementById('staking-component');
-                          if (stakingElement) {
-                            stakingElement.scrollIntoView({ behavior: 'smooth' });
-                          }
                         }
                       }}
                     >
@@ -2054,10 +2049,6 @@ export default function Home() {
                         if (data && data.activePayload && data.activePayload[0]) {
                           const validator = data.activePayload[0].payload;
                           setSelectedDelegator(validator);
-                          const stakingElement = document.getElementById('staking-component');
-                          if (stakingElement) {
-                            stakingElement.scrollIntoView({ behavior: 'smooth' });
-                          }
                         }
                       }}
                     >
@@ -2103,8 +2094,8 @@ export default function Home() {
                 </div>
               </div>
               
-              {/* Add the ValidatorList component here */}
-              <ValidatorList onSelectValidator={setSelectedDelegator} />
+              {/* Remove the ValidatorList from here */}
+              {/* <ValidatorList onSelectValidator={setSelectedDelegator} /> */}
               
             </div>
           </CardContent>
@@ -2266,6 +2257,21 @@ export default function Home() {
       )}
       <ContactInfo />
       <SpeedInsights />
+      <Link 
+        href="/guide" 
+        className="inline-flex items-center gap-2 text-sm bg-blue-600/50 hover:bg-blue-600/80 px-4 py-2 rounded-lg transition-all duration-300 text-white"
+      >
+        <Info className="h-4 w-4" />
+        Staking Guide
+      </Link>
+      <div className="mt-8 text-center">
+        <Link 
+          href="/guide" 
+          className="text-blue-400 hover:text-blue-300 transition-colors underline"
+        >
+          Learn more about STRK staking
+        </Link>
+      </div>
     </div>
   )
 }
