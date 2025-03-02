@@ -2310,22 +2310,11 @@ export default function Home() {
           </CardHeader>
           <CardContent className="pb-3 pt-0">
             <div className="space-y-4">
-              <div className="flex flex-row items-center justify-between gap-2">
-                <div className="flex items-center space-x-2">
-                  <input
-                    type="checkbox"
-                    id="verifiedOnly"
-                    checked={verifiedOnly}
-                    onChange={(e) => setVerifiedOnly(e.target.checked)}
-                    className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
-                  />
-                  <Label htmlFor="verifiedOnly" className="text-gray-300 text-sm">
-                    Show verified only
-                  </Label>
-                </div>
+              {/* Center the Random Bottom 20 button */}
+              <div className="flex justify-center">
                 <Button 
                   onClick={() => selectRandomDelegator(true)} 
-                  className="bg-purple-600 hover:bg-purple-700 text-white text-sm py-1 h-8"
+                  className="bg-purple-600 hover:bg-purple-700 text-white text-sm py-1 h-8 w-full"
                   size="sm"
                 >
                   <RefreshCw className="mr-1 h-4 w-4" />
@@ -2487,6 +2476,20 @@ export default function Home() {
                   {stakeResult}
                 </motion.p>
               )}
+              
+              {/* Move "Show verified only" checkbox to the bottom */}
+              <div className="flex items-center justify-center space-x-2 pt-1 border-t border-gray-700">
+                <input
+                  type="checkbox"
+                  id="verifiedOnly"
+                  checked={verifiedOnly}
+                  onChange={(e) => setVerifiedOnly(e.target.checked)}
+                  className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                />
+                <Label htmlFor="verifiedOnly" className="text-gray-300 text-sm">
+                  Show verified validators only
+                </Label>
+              </div>
             </div>
           </CardContent>
         </Card>
