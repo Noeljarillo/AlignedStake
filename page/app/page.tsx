@@ -296,18 +296,18 @@ const CallToAction = ({ walletConnected }: {
           </div>
         </div>
         
-        <div className="flex items-center gap-3">
+        <div className="flex flex-col sm:flex-row items-center gap-3">
           <Link
             href="/guide"
-            className="px-6 py-2 rounded-lg transition-all duration-300 transform hover:scale-105 bg-gradient-to-r from-purple-600 to-indigo-600 text-white flex items-center gap-2"
+            className="text-blue-400 hover:text-blue-300 transition-colors flex items-center gap-2 bg-blue-500/10 px-3 py-1.5 rounded-md"
           >
             <Info className="h-4 w-4" />
-            <span>Staking Guide</span>
+            <span>New to staking? Read the guide</span>
           </Link>
           
           {walletConnected && (
             <Button 
-              className="px-6 py-2 rounded-lg transition-all duration-300 transform hover:scale-105 bg-blue-600 hover:bg-blue-700 text-white"
+              className="px-6 py-2 rounded-lg transition-all duration-300 transform hover:scale-105 bg-blue-600 hover:bg-blue-700 text-white sm:ml-4"
               onClick={() => window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' })}
             >
               <div className="flex items-center gap-2">
@@ -986,6 +986,14 @@ export default function Home() {
   const [isConnecting, setIsConnecting] = useState(false);
   const [priceData, setPriceData] = useState<PriceData | null>(null);
 
+  // Add this new state for the split delegation feature
+  const [isSplitDelegation, setIsSplitDelegation] = useState(false);
+  const [randomBottomValidator, setRandomBottomValidator] = useState<Validator | null>(null);
+  const [splitDelegationPreview, setSplitDelegationPreview] = useState({
+    mainAmount: "0",
+    bottomAmount: "0"
+  });
+
   useEffect(() => {
     const fetchData = async () => {
       try {
@@ -1176,10 +1184,24 @@ export default function Home() {
     }
   }
 
+  // Add this function to calculate split amounts
+  const calculateSplitAmounts = (totalAmount: string) => {
+    if (!totalAmount || isNaN(Number(totalAmount)) || Number(totalAmount) <= 0) {
+      return { mainAmount: "0", bottomAmount: "0" };
+    }
+    
+    const total = Number(totalAmount);
+    const bottomAmount = (total * 0.1).toFixed(6); // 10% to bottom validator
+    const mainAmount = (total - Number(bottomAmount)).toFixed(6); // 90% to main validator
+    
+    return { mainAmount, bottomAmount };
+  };
+
+  // Update the existing handleStake function to handle split delegation
   const handleStake = async (e: React.FormEvent) => {
     e.preventDefault()
     if (!selectedDelegator || !stakeAmount) return
-
+    
     setIsStaking(true)
     setStakeResult("")
 
@@ -1193,18 +1215,71 @@ export default function Home() {
         }
       }
 
-      // Approve   strk
-      const approved = await approveTokens(selectedDelegator.poolAddress, stakeAmount);
-      if (!approved) {
+      if (isSplitDelegation && !randomBottomValidator) {
+        // Select a random bottom validator if not already selected
+        selectRandomDelegator(true);
         setIsStaking(false);
+        setStakeResult("Please try again - selecting a random bottom validator");
         return;
       }
 
-      // Stake   strk
-      const staked = await stake(selectedDelegator.poolAddress, stakeAmount);
-      if (staked) {
-        setStakeResult(`Successfully staked ${stakeAmount} tokens to ${selectedDelegator.name}`);
-        setStakeAmount("");
+      const { mainAmount, bottomAmount } = isSplitDelegation ? 
+        calculateSplitAmounts(stakeAmount) : 
+        { mainAmount: stakeAmount, bottomAmount: "0" };
+
+      // For regular delegation
+      if (!isSplitDelegation) {
+        // Approve STRK
+        const approved = await approveTokens(selectedDelegator.poolAddress, stakeAmount);
+        if (!approved) {
+          setIsStaking(false);
+          return;
+        }
+
+        // Stake STRK
+        const staked = await stake(selectedDelegator.poolAddress, stakeAmount);
+        if (staked) {
+          setStakeResult(`Successfully staked ${stakeAmount} tokens to ${selectedDelegator.name}`);
+          setStakeAmount("");
+        }
+      } 
+      // For split delegation
+      else if (randomBottomValidator) {
+        // Approve STRK for main validator
+        const approvedMain = await approveTokens(selectedDelegator.poolAddress, mainAmount);
+        if (!approvedMain) {
+          setIsStaking(false);
+          return;
+        }
+
+        // Stake STRK to main validator
+        const stakedMain = await stake(selectedDelegator.poolAddress, mainAmount);
+        if (!stakedMain) {
+          setIsStaking(false);
+          setStakeResult("Failed to stake to main validator");
+          return;
+        }
+
+        // Approve STRK for bottom validator
+        const approvedBottom = await approveTokens(randomBottomValidator.poolAddress, bottomAmount);
+        if (!approvedBottom) {
+          setIsStaking(false);
+          setStakeResult(`Staked ${mainAmount} to ${selectedDelegator.name}, but failed to approve for second validator`);
+          return;
+        }
+
+        // Stake STRK to bottom validator
+        const stakedBottom = await stake(randomBottomValidator.poolAddress, bottomAmount);
+        if (stakedBottom) {
+          setStakeResult(
+            `Successfully split staked: ${mainAmount} to ${selectedDelegator.name} and ${bottomAmount} to ${randomBottomValidator.name}`
+          );
+          setStakeAmount("");
+        } else {
+          setStakeResult(
+            `Staked ${mainAmount} to ${selectedDelegator.name}, but failed to stake to second validator`
+          );
+        }
       }
     } catch (error) {
       console.error('Staking error:', error);
@@ -1214,11 +1289,53 @@ export default function Home() {
     }
   }
 
+  // Add this function to select a random bottom validator for split delegation
+  const selectRandomBottomValidatorForSplit = () => {
+    if (bottomValidators.length === 0) return;
+    
+    // Filter out the currently selected main validator if it's in the bottom list
+    const filteredBottomValidators = bottomValidators.filter(
+      v => !selectedDelegator || v.address !== selectedDelegator.address
+    );
+    
+    if (filteredBottomValidators.length === 0) return;
+    
+    const randomIndex = Math.floor(Math.random() * filteredBottomValidators.length);
+    setRandomBottomValidator(filteredBottomValidators[randomIndex]);
+  };
+
+  // Update the stakeAmount change handler to calculate split preview
+  const handleStakeAmountChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const newAmount = e.target.value;
+    setStakeAmount(newAmount);
+    
+    if (isSplitDelegation) {
+      setSplitDelegationPreview(calculateSplitAmounts(newAmount));
+    }
+  };
+
+  // Add this effect to select a random bottom validator when split delegation is enabled
+  useEffect(() => {
+    if (isSplitDelegation && !randomBottomValidator) {
+      selectRandomBottomValidatorForSplit();
+    }
+    
+    if (isSplitDelegation && stakeAmount) {
+      setSplitDelegationPreview(calculateSplitAmounts(stakeAmount));
+    }
+  }, [isSplitDelegation, selectedDelegator]);
+
+  // Update the existing selectRandomDelegator function
   const selectRandomDelegator = (fromBottom: boolean = false) => {
     const validatorList = fromBottom ? bottomValidators : validators;
     if (validatorList.length === 0) return;
     const randomIndex = Math.floor(Math.random() * validatorList.length);
-    setSelectedDelegator(validatorList[randomIndex]);
+    
+    if (fromBottom && isSplitDelegation) {
+      setRandomBottomValidator(validatorList[randomIndex]);
+    } else {
+      setSelectedDelegator(validatorList[randomIndex]);
+    }
   }
 
   const CustomTooltip = ({ active, payload }: any) => {
@@ -1979,7 +2096,7 @@ export default function Home() {
               </div>
               <NetworkStatsHeader />
               
-              {/* Move the ValidatorList component here - right after NetworkStatsHeader */}
+        
               <ValidatorList onSelectValidator={setSelectedDelegator} />
             </div>
           </CardHeader>
@@ -2104,7 +2221,6 @@ export default function Home() {
         <Card className="lg:col-span-1 bg-gradient-to-b from-blue-900/50 to-gray-800 border-blue-700/30 lg:sticky lg:top-24 h-fit shadow-xl shadow-blue-500/10">
           <CardHeader className="text-center" id="staking-component">
             <CardTitle className="text-3xl font-bold text-blue-400">Stake STRK</CardTitle>
-            <CardDescription className="text-lg text-gray-300">Choose a validator and stake your STRK</CardDescription>
           </CardHeader>
           <CardContent>
             <div className="space-y-8">
@@ -2168,7 +2284,7 @@ export default function Home() {
                   </div>
                 </motion.div>
               )}
-              <form onSubmit={handleStake} className="space-y-6">
+              <form onSubmit={handleStake} className="space-y-4">
                 <div>
                   <Label htmlFor="stakeAmount" className="text-lg text-gray-300 font-medium">
                     Stake Amount (STRK)
@@ -2180,26 +2296,106 @@ export default function Home() {
                     min="0"
                     placeholder="Enter amount to stake (e.g. 0.1)"
                     value={stakeAmount}
-                    onChange={(e) => setStakeAmount(e.target.value)}
+                    onChange={handleStakeAmountChange}
                     required
                     className="bg-gray-700 border-gray-600 text-white placeholder-gray-400 text-lg mt-2 h-12"
                   />
                 </div>
+                
+                {/* Replace the checkbox with a more visually appealing toggle */}
+                <div className="flex items-center justify-between bg-gray-800/60 p-2 rounded-md border border-gray-700">
+                  <div className="flex items-center gap-2">
+                    <div className="bg-purple-500/20 p-1 rounded">
+                      <Zap className="h-4 w-4 text-purple-400" />
+                    </div>
+                    <span className="text-sm text-gray-300">Split delegation</span>
+                  </div>
+                  <div className="relative inline-block w-10 h-5 transition duration-200 ease-in-out">
+                    <input
+                      type="checkbox"
+                      id="splitDelegation"
+                      checked={isSplitDelegation}
+                      onChange={(e) => {
+                        setIsSplitDelegation(e.target.checked);
+                        if (e.target.checked && !randomBottomValidator) {
+                          selectRandomBottomValidatorForSplit();
+                        }
+                      }}
+                      className="opacity-0 w-0 h-0"
+                    />
+                    <label
+                      htmlFor="splitDelegation"
+                      className={`absolute cursor-pointer top-0 left-0 right-0 bottom-0 rounded-full transition-colors duration-200 ${
+                        isSplitDelegation ? 'bg-purple-600' : 'bg-gray-600'
+                      }`}
+                    >
+                      <span 
+                        className={`absolute left-0.5 bottom-0.5 bg-white w-4 h-4 rounded-full transition-transform duration-200 ${
+                          isSplitDelegation ? 'transform translate-x-5' : ''
+                        }`}
+                      />
+                    </label>
+                  </div>
+                </div>
+                
+                {isSplitDelegation && stakeAmount && Number(stakeAmount) > 0 && (
+                  <motion.div
+                    initial={{ opacity: 0, height: 0 }}
+                    animate={{ opacity: 1, height: 'auto' }}
+                    exit={{ opacity: 0, height: 0 }}
+                    className="p-3 border border-blue-700/30 rounded-md bg-blue-900/20"
+                  >
+                    <div className="space-y-2 text-sm">
+                      <div className="flex justify-between items-center">
+                        <div className="flex items-center gap-1">
+                          <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
+                          <span className="text-gray-300 truncate max-w-[120px]">{selectedDelegator?.name}</span>
+                        </div>
+                        <span className="text-white font-medium">{splitDelegationPreview.mainAmount} (90%)</span>
+                      </div>
+                      
+                      <div className="flex justify-between items-center">
+                        <div className="flex items-center gap-1">
+                          <div className="w-2 h-2 bg-purple-500 rounded-full"></div>
+                          <span className="text-gray-300 truncate max-w-[120px]">
+                            {randomBottomValidator?.name || 'Selecting...'}
+                          </span>
+                        </div>
+                        <span className="text-white font-medium">{splitDelegationPreview.bottomAmount} (10%)</span>
+                      </div>
+                    </div>
+                    
+                    {randomBottomValidator && (
+                      <div className="mt-2 pt-2 border-t border-gray-700">
+                        <Button
+                          type="button"
+                          onClick={selectRandomBottomValidatorForSplit}
+                          className="w-full mt-1 bg-purple-600/50 hover:bg-purple-600 text-white text-xs py-1"
+                          size="sm"
+                        >
+                          <RefreshCw className="mr-1 h-3 w-3" />
+                          Change bottom validator
+                        </Button>
+                      </div>
+                    )}
+                  </motion.div>
+                )}
+                
                 <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
                   <Button
                     type="submit"
                     className="w-full bg-green-600 hover:bg-green-700 text-white py-6 text-lg"
-                    disabled={!selectedDelegator || isStaking}
+                    disabled={!selectedDelegator || isStaking || (isSplitDelegation && !randomBottomValidator)}
                   >
                     {isStaking ? (
                       <>
                         <Loader2 className="mr-2 h-6 w-6 animate-spin" />
-                        Staking...
+                        {isSplitDelegation ? 'Processing Split Stake...' : 'Staking...'}
                       </>
                     ) : (
                       <>
                         <Zap className="mr-2 h-6 w-6" />
-                        Stake Now
+                        {isSplitDelegation ? 'Split Stake Now' : 'Stake Now'}
                       </>
                     )}
                   </Button>
@@ -2257,21 +2453,6 @@ export default function Home() {
       )}
       <ContactInfo />
       <SpeedInsights />
-      <Link 
-        href="/guide" 
-        className="inline-flex items-center gap-2 text-sm bg-blue-600/50 hover:bg-blue-600/80 px-4 py-2 rounded-lg transition-all duration-300 text-white"
-      >
-        <Info className="h-4 w-4" />
-        Staking Guide
-      </Link>
-      <div className="mt-8 text-center">
-        <Link 
-          href="/guide" 
-          className="text-blue-400 hover:text-blue-300 transition-colors underline"
-        >
-          Learn more about STRK staking
-        </Link>
-      </div>
     </div>
   )
 }
