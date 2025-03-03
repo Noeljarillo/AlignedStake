@@ -431,9 +431,6 @@ const DelegationStats = () => {
     };
 
     fetchStats();
-    // Refresh every 60 seconds
-    const interval = setInterval(fetchStats, 60000);
-    return () => clearInterval(interval);
   }, []);
 
   return (
