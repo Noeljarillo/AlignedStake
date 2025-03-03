@@ -21,9 +21,9 @@ export default function GuidePage() {
           <ArrowLeft className="h-4 w-4 mr-2" />
           Back to Dashboard
         </Link>
-        <h1 className="text-4xl font-bold mt-6 mb-4 text-white">Starknet Staking Guide</h1>
+        <h1 className="text-4xl font-bold mt-6 mb-4 text-white">STARKNET Staking Guide</h1>
         <p className="text-xl text-gray-300">
-          Learn how to stake your STRK tokens and contribute to Starknet's security
+          Learn how to stake your STRK tokens and contribute to STARKNET's security
         </p>
       </motion.div>
 
@@ -35,9 +35,9 @@ export default function GuidePage() {
           transition={{ duration: 0.5, delay: 0.1 }}
           className="bg-gray-800/50 backdrop-blur-sm p-8 rounded-xl border border-gray-700"
         >
-          <h2 className="text-2xl font-bold mb-4 text-blue-400">What is STRK Staking?</h2>
+          <h2 className="text-2xl font-bold mb-4 text-blue-400">What is STARKNET Staking?</h2>
           <p className="text-gray-300 mb-4">
-            Staking is the process of actively participating in the Starknet network by delegating your STRK tokens to validators who help secure and operate the network.
+            Staking is the process of actively participating in the STARKNET network by delegating your STRK tokens to validators who help secure and operate the network.
           </p>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-6">
             <div className="bg-gray-700/50 p-5 rounded-lg">
@@ -53,7 +53,7 @@ export default function GuidePage() {
                 </li>
                 <li className="flex items-start">
                   <CheckCircle className="h-5 w-5 text-green-400 mr-2 mt-0.5" />
-                  <span>Support Starknet's long-term success and growth</span>
+                  <span>Support STARKNET's long-term success and growth</span>
                 </li>
               </ul>
             </div>
@@ -89,7 +89,7 @@ export default function GuidePage() {
             <div>
               <h3 className="text-xl font-medium mb-3 text-white">Step 1: Connect Your Wallet</h3>
               <p className="text-gray-300 mb-4">
-                To start staking, you need to connect a compatible Starknet wallet containing STRK tokens.
+                To start staking, you need to connect a compatible STARKNET wallet containing STRK tokens.
               </p>
               <div className="flex items-center space-x-6 mt-4">
                 <div className="flex flex-col items-center">
@@ -178,7 +178,7 @@ export default function GuidePage() {
             <div>
               <h3 className="text-xl font-medium mb-3 text-white">Viewing Your Delegations</h3>
               <p className="text-gray-300">
-                Once connected, you can view all your delegations, including:
+                Once connected, you can view all your STARKNET delegations, including:
               </p>
               <ul className="space-y-2 text-gray-300 ml-6 mt-2">
                 <li className="list-disc">Total amount delegated</li>
@@ -246,14 +246,14 @@ export default function GuidePage() {
             <div>
               <h3 className="text-xl font-medium mb-2 text-white">Can I stake to multiple validators?</h3>
               <p className="text-gray-300">
-                Yes, you can delegate your STRK tokens to multiple validators to diversify your staking portfolio.
+                Yes, you can delegate your STRK tokens to multiple STARKNET validators to diversify your staking portfolio.
               </p>
             </div>
 
             <div>
               <h3 className="text-xl font-medium mb-2 text-white">What happens if a validator misbehaves?</h3>
               <p className="text-gray-300">
-               Now the only bad action will be just remove their stake, which will stop generating rewards for you. When V2 staking gets implemented If a validator behaves maliciously or fails to perform their duties, they may be penalized. This is why it's important to choose reputable validators.
+               Now the only bad action will be just remove their stake, which will stop generating rewards for you. When V2 staking gets implemented If a validator behaves maliciously or fails to perform their duties, they may be penalized. This is why it's important to choose reputable STARKNET validators.
               </p>
             </div>
 
@@ -284,7 +284,7 @@ export default function GuidePage() {
             >
               <div>
                 <h3 className="text-lg font-medium mb-2 text-white flex items-center">
-                  Starknet Delegation Documentation
+                  STARKNET Delegation Documentation
                   <ExternalLink className="h-4 w-4 ml-2" />
                 </h3>
                 <p className="text-gray-300">
@@ -301,7 +301,7 @@ export default function GuidePage() {
             >
               <div>
                 <h3 className="text-lg font-medium mb-2 text-white flex items-center">
-                SNIP 28: Staking V2 proposal
+                SNIP 28: STARKNET Staking V2 proposal
                   <ExternalLink className="h-4 w-4 ml-2" />
                 </h3>
                 <p className="text-gray-300">
@@ -322,7 +322,7 @@ export default function GuidePage() {
                   <ExternalLink className="h-4 w-4 ml-2" />
                 </h3>
                 <p className="text-gray-300">
-                  Block explorer for Starknet - track transactions and verify staking activities.
+                  Block explorer for STARKNET - track transactions and verify staking activities.
                 </p>
               </div>
             </a>
@@ -335,7 +335,7 @@ export default function GuidePage() {
             >
               <div>
                 <h3 className="text-lg font-medium mb-2 text-white flex items-center">
-                 Get your Starknet wallet 
+                 Get your STARKNET wallet 
                   <ExternalLink className="h-4 w-4 ml-2" />
                 </h3>
                 <p className="text-gray-300">

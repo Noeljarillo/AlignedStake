@@ -43,27 +43,37 @@ export async function GET(request: Request) {
       WHERE totalStake > '0';
     `;
 
-    // Query for average delegated stake of bottom 20 validators
-    const avgDelegatedBottom20Query = `
+    // Query for average delegated stake of all validators except top 10
+    const avgDelegatedRestQuery = `
       SELECT AVG(delegatedStake::numeric)
       FROM (
         SELECT delegatedStake
         FROM validators
-        WHERE delegatedStake > '0'
-        ORDER BY delegatedStake::numeric ASC
-        LIMIT 20
+        WHERE delegatedStake > '0' ${verifiedFilter}
+        AND address NOT IN (
+          SELECT address
+          FROM validators
+          WHERE 1=1 ${verifiedFilter}
+          ORDER BY delegatedStake DESC
+          LIMIT 10
+        )
       ) subquery;
     `;
 
-    // Query for average staked of bottom 20 validators
-    const avgStakedBottom20Query = `
+    // Query for average staked of all validators except top 10
+    const avgStakedRestQuery = `
       SELECT AVG(totalStake::numeric)
       FROM (
         SELECT totalStake
         FROM validators
-        WHERE totalStake > '0'
-        ORDER BY totalStake::numeric ASC
-        LIMIT 20
+        WHERE totalStake > '0' ${verifiedFilter}
+        AND address NOT IN (
+          SELECT address
+          FROM validators
+          WHERE 1=1 ${verifiedFilter}
+          ORDER BY totalStake DESC
+          LIMIT 10
+        )
       ) subquery;
     `;
 
@@ -86,15 +96,19 @@ export async function GET(request: Request) {
       ) subquery;
     `;
 
-    // Query for average number of delegators for bottom 20 validators
-    const avgDelegatorsBottom20Query = `
+    // Query for average number of delegators for all validators except top 10
+    const avgDelegatorsRestQuery = `
       SELECT AVG(totalDelegators::numeric)
       FROM (
         SELECT totalDelegators
         FROM validators
         WHERE totalDelegators IS NOT NULL
-        ORDER BY delegatedStake::numeric ASC
-        LIMIT 20
+        AND address NOT IN (
+          SELECT address
+          FROM validators
+          ORDER BY delegatedStake::numeric DESC
+          LIMIT 10
+        )
       ) subquery;
     `;
 
@@ -129,11 +143,11 @@ export async function GET(request: Request) {
       avgDelegatorsResult,
       avgStakedResult,
       zeroStakeResult,
-      avgDelegatedBottom20Result,
-      avgStakedBottom20Result,
+      avgDelegatedRestResult,
+      avgStakedRestResult,
       validatorsOver1MResult,
       avgDelegatorsTop10Result,
-      avgDelegatorsBottom20Result,
+      avgDelegatorsRestResult,
       totalNetworkStakeResult,
       topTenStakeResult,
       validatorsWithTwoPlusResult,
@@ -142,11 +156,11 @@ export async function GET(request: Request) {
       sql(avgDelegatorsTopTenQuery),
       sql(avgStakedPerStakerQuery),
       sql(validatorsWithZeroStakeQuery),
-      sql(avgDelegatedBottom20Query),
-      sql(avgStakedBottom20Query),
+      sql(avgDelegatedRestQuery),
+      sql(avgStakedRestQuery),
       sql(validatorsOver1MQuery),
       sql(avgDelegatorsTop10Query),
-      sql(avgDelegatorsBottom20Query),
+      sql(avgDelegatorsRestQuery),
       sql(totalNetworkStakeQuery),
       sql(topTenStakeQuery),
       sql(validatorsWithTwoPlusQuery),
@@ -158,11 +172,11 @@ export async function GET(request: Request) {
       avgDelegatorsTopTen: Math.floor(Number(avgDelegatorsResult[0]?.avg) / Math.pow(10, 18)) || 0,
       avgStakedPerStaker: Math.floor(Number(avgStakedResult[0]?.avg) / Math.pow(10, 18)) || 0,
       validatorsWithZeroStake: Number(zeroStakeResult[0]?.count) || 0,
-      avgDelegatedBottom20: Math.floor(Number(avgDelegatedBottom20Result[0]?.avg) / Math.pow(10, 18)) || 0,
-      avgStakedBottom20: Math.floor(Number(avgStakedBottom20Result[0]?.avg) / Math.pow(10, 18)) || 0,
+      avgDelegatedRest: Math.floor(Number(avgDelegatedRestResult[0]?.avg) / Math.pow(10, 18)) || 0,
+      avgStakedRest: Math.floor(Number(avgStakedRestResult[0]?.avg) / Math.pow(10, 18)) || 0,
       validatorsOver1M: Number(validatorsOver1MResult[0]?.count) || 0,
       avgNumDelegatorsTop10: Math.floor(Number(avgDelegatorsTop10Result[0]?.avg)) || 0,
-      avgNumDelegatorsBottom20: Math.floor(Number(avgDelegatorsBottom20Result[0]?.avg)) || 0,
+      avgNumDelegatorsRest: Math.floor(Number(avgDelegatorsRestResult[0]?.avg)) || 0,
       totalNetworkStake: Number(totalNetworkStakeResult[0]?.total_stake) || 0,
       topTenStake: Number(topTenStakeResult[0]?.top_ten_stake) || 0,
       validatorsWithTwoPlus: Number(validatorsWithTwoPlusResult[0]?.count) || 0,

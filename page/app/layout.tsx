@@ -6,7 +6,7 @@ import './globals.css'
 const inter = Inter({ subsets: ['latin'] })
 
 export const metadata: Metadata = {
-  title: 'STRK Staking Dashboard',
+  title: 'STARKNET Staking Dashboard',
   description: 'Starknet STRK token staking and delegation dashboard',
   icons: {
     icon: '/favicon-32x32.png',

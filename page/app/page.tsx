@@ -191,11 +191,11 @@ interface Stats {
   avgDelegatorsTopTen: number;
   avgStakedPerStaker: number;
   validatorsWithZeroStake: number;
-  avgDelegatedBottom20: number;
-  avgStakedBottom20: number;
+  avgDelegatedRest: number;
+  avgStakedRest: number;
   validatorsOver1M: number;
   avgNumDelegatorsTop10: number;
-  avgNumDelegatorsBottom20: number;
+  avgNumDelegatorsRest: number;
   totalNetworkStake: number;
   topTenStake: number;
   validatorsWithTwoPlus: number;
@@ -985,11 +985,11 @@ export default function Home() {
     avgDelegatorsTopTen: 0,
     avgStakedPerStaker: 0,
     validatorsWithZeroStake: 0,
-    avgDelegatedBottom20: 0,
-    avgStakedBottom20: 0,
+    avgDelegatedRest: 0,
+    avgStakedRest: 0,
     validatorsOver1M: 0,
     avgNumDelegatorsTop10: 0,
-    avgNumDelegatorsBottom20: 0,
+    avgNumDelegatorsRest: 0,
     totalNetworkStake: 0,
     topTenStake: 0,
     validatorsWithTwoPlus: 0,
@@ -1662,7 +1662,7 @@ export default function Home() {
   const ComparisonMetrics = () => {
     return (
       <div className="mt-8 bg-gray-900 rounded-xl p-6">
-        <h3 className="text-xl font-semibold text-blue-400 mb-6">Top 10 vs Bottom 20</h3>
+        <h3 className="text-xl font-semibold text-blue-400 mb-6">Top 10 vs Rest</h3>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
           <div className="space-y-4">
             <div className="flex items-center justify-between p-4 bg-gray-800 rounded-lg">
@@ -1675,9 +1675,9 @@ export default function Home() {
               </div>
               <div className="text-right">
                 <p className="text-2xl font-bold text-white">
-                  {stats.avgDelegatedBottom20.toLocaleString()} STRK
+                  {stats.avgDelegatedRest.toLocaleString()} STRK
                 </p>
-                <span className="text-purple-400 text-sm">Bottom 20</span>
+                <span className="text-purple-400 text-sm">Rest</span>
               </div>
             </div>
 
@@ -1691,9 +1691,9 @@ export default function Home() {
               </div>
               <div className="text-right">
                 <p className="text-2xl font-bold text-white">
-                  {stats.avgStakedBottom20.toLocaleString()} STRK
+                  {stats.avgStakedRest.toLocaleString()} STRK
                 </p>
-                <span className="text-purple-400 text-sm">Bottom 20</span>
+                <span className="text-purple-400 text-sm">Rest</span>
               </div>
             </div>
 
@@ -1707,31 +1707,31 @@ export default function Home() {
               </div>
               <div className="text-right">
                 <p className="text-2xl font-bold text-white">
-                  {stats.avgNumDelegatorsBottom20.toLocaleString()}
+                  {stats.avgNumDelegatorsRest.toLocaleString()}
                 </p>
-                <span className="text-purple-400 text-sm">Bottom 20</span>
+                <span className="text-purple-400 text-sm">Rest</span>
               </div>
             </div>
           </div>
 
           <div className="space-y-4">
             <div className="p-4 bg-gray-800 rounded-lg">
-              <h4 className="text-sm font-medium text-gray-400 mb-2">Stake Ratio (Top 10 : Bottom 20)</h4>
+              <h4 className="text-sm font-medium text-gray-400 mb-2">Stake Ratio (Top 10 : Rest)</h4>
               <p className="text-3xl font-bold text-white">
-                {(stats.avgDelegatorsTopTen / stats.avgDelegatedBottom20).toFixed(1)}x
+                {(stats.avgDelegatorsTopTen / stats.avgDelegatedRest).toFixed(1)}x
               </p>
               <p className="text-sm text-gray-400 mt-1">
-                Top 10 validators have {(stats.avgDelegatorsTopTen / stats.avgDelegatedBottom20).toFixed(1)}x more stake
+                Top 10 validators have {(stats.avgDelegatorsTopTen / stats.avgDelegatedRest).toFixed(1)}x more stake
               </p>
             </div>
 
             <div className="p-4 bg-gray-800 rounded-lg">
-              <h4 className="text-sm font-medium text-gray-400 mb-2">Delegator Ratio (Top 10 : Bottom 20)</h4>
+              <h4 className="text-sm font-medium text-gray-400 mb-2">Delegator Ratio (Top 10 : Rest)</h4>
               <p className="text-3xl font-bold text-white">
-                {(stats.avgNumDelegatorsTop10 / stats.avgNumDelegatorsBottom20).toFixed(1)}x
+                {(stats.avgNumDelegatorsTop10 / stats.avgNumDelegatorsRest).toFixed(1)}x
               </p>
               <p className="text-sm text-gray-400 mt-1">
-                Top 10 validators have {(stats.avgNumDelegatorsTop10 / stats.avgNumDelegatorsBottom20).toFixed(1)}x more delegators
+                Top 10 validators have {(stats.avgNumDelegatorsTop10 / stats.avgNumDelegatorsRest).toFixed(1)}x more delegators
               </p>
             </div>
           </div>
@@ -2027,14 +2027,6 @@ export default function Home() {
                       {userStakeInfo.totalDelegated.toLocaleString()} STRK
                     </p>
                   </div>
-                  <Button
-                    onClick={unstakeTokens}
-                    className="mt-4 bg-red-600 hover:bg-red-700 text-white w-full"
-                    disabled={userStakeInfo.totalDelegated <= 0}
-                  >
-                    <Zap className="mr-2 h-4 w-4" />
-                    Unstake Tokens
-                  </Button>
                 </motion.div>
                 
                 <motion.div
