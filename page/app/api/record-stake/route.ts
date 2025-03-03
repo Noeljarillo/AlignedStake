@@ -15,9 +15,18 @@ export async function POST(request: Request) {
       );
     }
 
-    // Store the amount as is, without multiplying by 10^18
-    // We'll handle the conversion in the frontend when displaying
-    const amount = parseFloat(amountStaked).toString();
+    // Add debug logging to trace the issue
+    console.log("Recording stake:", {
+      txHash,
+      senderAddress,
+      contractAddress,
+      amountStaked: amountStaked.toString(), // Convert to string to avoid number precision issues
+      amountType: typeof amountStaked
+    });
+
+    // Ensure amount is treated as a string or properly parsed
+    // This is to avoid floating point precision issues
+    const amount = typeof amountStaked === 'string' ? amountStaked : amountStaked.toString();
 
     // Insert the stake record
     const query = `
@@ -43,7 +52,7 @@ export async function POST(request: Request) {
     });
 
   } catch (error) {
-    console.error('Error recording stake:', error);
+    console.error("Failed to record stake:", error);
     
     // Check for unique constraint violation - properly type check the error
     if (typeof error === 'object' && error !== null && 'code' in error && error.code === '23505') {
@@ -62,7 +71,7 @@ export async function POST(request: Request) {
     }
 
     return NextResponse.json(
-      { error: 'Failed to record stake transaction' },
+      { error: error instanceof Error ? error.message : 'Unknown error' },
       { status: 500 }
     );
   }
