@@ -26,6 +26,8 @@ This project is currently under active development. We're working hard to bring 
 - [X] Validator selection algorithm
 - [X] Stake distribution dashboard
 - [X] Easy delegation interface
+- [X] Split Delegation
+- [X] Batch Tx
 - [x] Staking positions by validator
 - [X] Rewards metric
 - [X] Signal Unstake
