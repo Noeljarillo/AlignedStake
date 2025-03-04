@@ -1368,7 +1368,7 @@ export default function Home() {
       if (error instanceof Error) {
         const errorStr = error.toString().toLowerCase();
         
-        if (errorStr.includes('insufficient erc20 balance')) {
+        if (errorStr.includes('insufficient') || errorStr.includes('balance')) {
           errorMessage = 'Insufficient STRK balance for this transaction';
         } else if (errorStr.includes('user rejected')) {
           errorMessage = 'Transaction was rejected in your wallet';
@@ -2479,19 +2479,25 @@ export default function Home() {
                 )}
                 
                 <Button
-                  type="submit"
+                  type={walletConnected ? "submit" : "button"}
+                  onClick={walletConnected ? undefined : connectWallet}
                   className="w-full bg-green-600 hover:bg-green-700 text-white py-1.5 h-10 text-md"
-                  disabled={!selectedDelegator || isStaking || (isSplitDelegation && !randomBottomValidator)}
+                  disabled={walletConnected && (!selectedDelegator || isStaking || (isSplitDelegation && !randomBottomValidator))}
                 >
                   {isStaking ? (
                     <>
                       <Loader2 className="mr-1.5 h-4 w-4 animate-spin" />
                       {isSplitDelegation ? 'Processing Split...' : 'Staking...'}
                     </>
-                  ) : (
+                  ) : walletConnected ? (
                     <>
                       <Zap className="mr-1.5 h-4 w-4" />
                       {isSplitDelegation ? 'Split Stake' : 'Stake Now'}
+                    </>
+                  ) : (
+                    <>
+                      <Landmark className="mr-1.5 h-4 w-4" />
+                      Connect Wallet First
                     </>
                   )}
                 </Button>
