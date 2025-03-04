@@ -27,6 +27,7 @@ import {
 } from "@/components/ui/dropdown-menu"
 import Link from "next/link"
 import { Info } from "lucide-react"
+import { useToast } from "@/components/ui/use-toast"
 
 declare global {
   interface Window {
@@ -139,6 +140,22 @@ const stakingPoolAbi = [
       {
         name: "amount",
         type: "core::integer::u128"
+      }
+    ],
+    outputs: [
+      {
+        type: "core::integer::u128"
+      }
+    ],
+    state_mutability: "external"
+  },
+  {
+    name: "claim_rewards",
+    type: "function",
+    inputs: [
+      {
+        name: "pool_member",
+        type: "core::starknet::contract_address::ContractAddress"
       }
     ],
     outputs: [
@@ -1010,6 +1027,8 @@ export default function Home() {
     mainAmount: "0",
     bottomAmount: "0"
   });
+  const [processing, setProcessing] = useState(false);
+  const { toast } = useToast();
 
   useEffect(() => {
     const fetchData = async () => {
@@ -1498,8 +1517,50 @@ export default function Home() {
   };
 
   const claimRewards = async () => {
-    // TODO: Implement actual claiming logic
-    alert('Claiming rewards... (mock)');
+    if (!account) return;
+    
+    try {
+      // Show loading state
+      setProcessing(true);
+      
+      // Filter delegations that have rewards over the minimum threshold (0.001 STRK)
+      const eligibleDelegations = userStakeInfo.delegations.filter(
+        delegation => delegation.pendingRewards > 0.001
+      );
+      
+      if (eligibleDelegations.length === 0) {
+        alert("No delegations found with rewards greater than 0.001 STRK");
+        return;
+      }
+      
+      // Create a multicall for eligible delegations only
+      const calls = eligibleDelegations.map(delegation => {
+        // Return the call to claim rewards with the user's address as pool_member
+        return {
+          contractAddress: delegation.poolAddress,
+          entrypoint: 'claim_rewards',
+          calldata: [account.address]
+        };
+      });
+      
+      // Execute the multicall
+      console.log(`Claiming rewards from ${eligibleDelegations.length} validators`);
+      const tx = await account.execute(calls);
+      await account.waitForTransaction(tx.transaction_hash);
+      
+      // Refresh user stake info to show updated rewards
+      await fetchUserStakeInfo();
+      
+      // Show success message
+      alert(`Successfully claimed rewards from ${eligibleDelegations.length} validators`);
+    } catch (error: any) {
+      console.error('Error claiming rewards:', error);
+      // Show error message
+      alert(`Failed to claim rewards: ${error?.message || 'Unknown error'}`);
+    } finally {
+      // Hide loading state
+      setProcessing(false);
+    }
   };
 
   const unstakeTokens = async () => {
@@ -2080,10 +2141,19 @@ export default function Home() {
                   <Button
                     onClick={claimRewards}
                     className="mt-4 bg-green-600 hover:bg-green-700 text-white w-full"
-                    disabled={userStakeInfo.availableRewards <= 0}
+                    disabled={userStakeInfo.availableRewards <= 0 || processing}
                   >
-                    <Gift className="mr-2 h-4 w-4" />
-                    Claim Rewards
+                    {processing ? (
+                      <>
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                        Claiming...
+                      </>
+                    ) : (
+                      <>
+                        <Gift className="mr-2 h-4 w-4" />
+                        Claim Rewards
+                      </>
+                    )}
                   </Button>
                 </motion.div>
                 
