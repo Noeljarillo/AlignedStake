@@ -1137,153 +1137,69 @@ export default function Home() {
     }
   }
 
-  const approveTokens = async (poolAddress: string, amount: string) => {
-    if (!account) return false;
+  // Update the approveTokens function to return call objects instead of executing a transaction
+  const approveTokensCall = async (poolAddress: string, amount: string): Promise<any> => {
+    if (!account) return null;
 
     try {
       // Check if we already have sufficient allowance
       const hasAllowance = await checkAllowance(poolAddress, amount);
       if (hasAllowance) {
         console.log('Sufficient allowance already exists');
-        return true;
+        return null; // No approval needed
       }
 
       const amountBn = cairo.uint256(parseTokenAmount(amount).toString());
-      const tokenContract = new Contract(erc20Abi, STRK_TOKEN_ADDRESS, account);
       
-      const approveTx = await tokenContract.approve(poolAddress, amountBn);
-      await account.waitForTransaction(approveTx.transaction_hash);
-      return true;
+      // Return the call object instead of executing it
+      return {
+        contractAddress: STRK_TOKEN_ADDRESS,
+        entrypoint: 'approve',
+        calldata: [poolAddress, amountBn.low, amountBn.high]
+      };
     } catch (error) {
-      console.error('Error approving   strk:', error);
-      setStakeResult('Failed to approve   strk');
-      return false;
+      console.error('Error creating approve call:', error);
+      return null;
     }
   }
 
-  // Update the existing stake function to handle already delegated pools
-  const stake = async (poolAddress: string, amount: string) => {
-    if (!account) return false;
+  // Update the stake function to return call objects instead of executing a transaction
+  const stakeCall = async (poolAddress: string, amount: string): Promise<any> => {
+    if (!account) return null;
 
     try {
       const amountBn = parseTokenAmount(amount);
-      const poolContract = new Contract(stakingPoolAbi, poolAddress, account);
       
       // Check if user already has a delegation to this pool
       const hasExistingDelegation = userStakeInfo.delegations.some(
         delegation => delegation.poolAddress.toLowerCase() === poolAddress.toLowerCase()
       );
       
-      let stakeTx;
-      
+      // Create the appropriate call object based on whether it's a new or existing delegation
       if (hasExistingDelegation) {
         // If already delegated, use add_to_delegation_pool with both parameters
         console.log('Using add_to_delegation_pool for existing delegation');
-        stakeTx = await poolContract.add_to_delegation_pool(
-          account.address,  // pool_member parameter
-          amountBn          // amount parameter
-        );
+        return {
+          contractAddress: poolAddress,
+          entrypoint: 'add_to_delegation_pool',
+          calldata: [account.address, amountBn.toString()]
+        };
       } else {
         // For first-time delegation, use enter_delegation_pool
         console.log('Using enter_delegation_pool for new delegation');
-        stakeTx = await poolContract.enter_delegation_pool(
-          account.address,
-          amountBn
-        );
-      }
-      
-      await account.waitForTransaction(stakeTx.transaction_hash);
-
-      // Record the transaction in the database
-      const response = await fetch('/api/record-stake', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          txHash: stakeTx.transaction_hash,
-          senderAddress: account.address,
+        return {
           contractAddress: poolAddress,
-          amountStaked: amount,
-        }),
-      });
-
-      if (!response.ok) {
-        console.error('Failed to record stake transaction');
+          entrypoint: 'enter_delegation_pool',
+          calldata: [account.address, amountBn.toString()]
+        };
       }
-      
-      // Refresh user stake info after successful staking
-      await fetchUserStakeInfo();
-      
-      return true;
     } catch (error) {
-      console.error('Error staking:', error);
-      // Check if error is about using wrong function
-      if (error instanceof Error && 
-          error.message.includes("use add_to_delegation_pool instead")) {
-        console.log('Retrying with add_to_delegation_pool...');
-        // Retry with add_to_delegation_pool with both parameters
-        try {
-          const amountBn = parseTokenAmount(amount);
-          const poolContract = new Contract(stakingPoolAbi, poolAddress, account);
-          
-          const stakeTx = await poolContract.add_to_delegation_pool(
-            account.address,  // pool_member parameter
-            amountBn          // amount parameter
-          );
-          await account.waitForTransaction(stakeTx.transaction_hash);
-          
-          // Record the transaction in the database
-          const response = await fetch('/api/record-stake', {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-              txHash: stakeTx.transaction_hash,
-              senderAddress: account.address,
-              contractAddress: poolAddress,
-              amountStaked: amount,
-            }),
-          });
-          
-          await fetchUserStakeInfo();
-          return true;
-        } catch (retryError) {
-          console.error('Error in retry staking:', retryError);
-          setStakeResult('Failed to stake STRK');
-          return false;
-        }
-      }
-      
-      setStakeResult('Failed to stake STRK');
-      return false;
+      console.error('Error creating stake call:', error);
+      return null;
     }
   }
 
-  // Add this helper function to strip trailing zeros from decimal numbers
-  const formatAmount = (amount: string): string => {
-    // Convert to a number to handle scientific notation and then back to string
-    return Number(amount).toString();
-  };
-
-  // Update the calculateSplitAmounts function to use the helper
-  const calculateSplitAmounts = (totalAmount: string) => {
-    if (!totalAmount || isNaN(Number(totalAmount)) || Number(totalAmount) <= 0) {
-      return { mainAmount: "0", bottomAmount: "0" };
-    }
-    
-    const total = Number(totalAmount);
-    const bottomAmount = (total * 0.1).toFixed(6); // 10% to bottom validator
-    const mainAmount = (total - Number(bottomAmount)).toFixed(6); // 90% to main validator
-    
-    return { 
-      mainAmount: formatAmount(mainAmount), 
-      bottomAmount: formatAmount(bottomAmount)
-    };
-  };
-
-  // Update the existing handleStake function to handle split delegation
+  // Update the handleStake function to batch transactions
   const handleStake = async (e: React.FormEvent) => {
     e.preventDefault()
     if (!selectedDelegator || !stakeAmount) return
@@ -1313,63 +1229,167 @@ export default function Home() {
         calculateSplitAmounts(stakeAmount) : 
         { mainAmount: stakeAmount, bottomAmount: "0" };
 
+      // Collect all transaction calls
+      const calls = [];
+
       // For regular delegation
       if (!isSplitDelegation) {
-        // Approve STRK
-        const approved = await approveTokens(selectedDelegator.poolAddress, stakeAmount);
-        if (!approved) {
-          setIsStaking(false);
-          return;
+        // Get approval call if needed
+        const approveCall = await approveTokensCall(selectedDelegator.poolAddress, stakeAmount);
+        if (approveCall) {
+          calls.push(approveCall);
         }
 
-        // Stake STRK
-        const staked = await stake(selectedDelegator.poolAddress, stakeAmount);
-        if (staked) {
-          setStakeResult(`Successfully staked ${stakeAmount} tokens to ${selectedDelegator.name}`);
-          setStakeAmount("");
+        // Get stake call
+        const mainStakeCall = await stakeCall(selectedDelegator.poolAddress, stakeAmount);
+        if (mainStakeCall) {
+          calls.push(mainStakeCall);
         }
       } 
       // For split delegation
       else if (randomBottomValidator) {
-        // Approve STRK for main validator
-        const approvedMain = await approveTokens(selectedDelegator.poolAddress, mainAmount);
-        if (!approvedMain) {
-          setIsStaking(false);
-          return;
+        // Get approval call for main validator if needed
+        const approveMainCall = await approveTokensCall(selectedDelegator.poolAddress, mainAmount);
+        if (approveMainCall) {
+          calls.push(approveMainCall);
         }
 
-        // Stake STRK to main validator
-        const stakedMain = await stake(selectedDelegator.poolAddress, mainAmount);
-        if (!stakedMain) {
-          setIsStaking(false);
-          setStakeResult("Failed to stake to main validator");
-          return;
+        // Get stake call for main validator
+        const mainStakeCall = await stakeCall(selectedDelegator.poolAddress, mainAmount);
+        if (mainStakeCall) {
+          calls.push(mainStakeCall);
         }
 
-        // Approve STRK for bottom validator
-        const approvedBottom = await approveTokens(randomBottomValidator.poolAddress, bottomAmount);
-        if (!approvedBottom) {
-          setIsStaking(false);
-          setStakeResult(`Staked ${mainAmount} to ${selectedDelegator.name}, but failed to approve for second validator`);
-          return;
+        // Get approval call for bottom validator if needed
+        const approveBottomCall = await approveTokensCall(randomBottomValidator.poolAddress, bottomAmount);
+        if (approveBottomCall) {
+          calls.push(approveBottomCall);
         }
 
-        // Stake STRK to bottom validator
-        const stakedBottom = await stake(randomBottomValidator.poolAddress, bottomAmount);
-        if (stakedBottom) {
+        // Get stake call for bottom validator
+        const bottomStakeCall = await stakeCall(randomBottomValidator.poolAddress, bottomAmount);
+        if (bottomStakeCall) {
+          calls.push(bottomStakeCall);
+        }
+      }
+
+      // If we have any calls to make, execute them as a batch
+      if (calls.length > 0) {
+        // Make sure account is not null before proceeding
+        if (!account) {
+          setIsStaking(false);
+          setStakeResult("Wallet not connected. Please connect your wallet and try again.");
+          return;
+        }
+        
+        // Execute all calls in a single transaction
+        const tx = await account.execute(calls);
+        await account.waitForTransaction(tx.transaction_hash);
+
+        // Record the transaction in the database - handle split delegations properly
+        if (isSplitDelegation && randomBottomValidator) {
+          // For split delegations, record two separate transactions
+          try {
+            // Record main validator delegation
+            await fetch('/api/record-stake', {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+              },
+              body: JSON.stringify({
+                txHash: tx.transaction_hash + "_main", // Append suffix to make hash unique 
+                senderAddress: account.address,
+                contractAddress: selectedDelegator.poolAddress,
+                amountStaked: mainAmount,
+              }),
+            });
+            
+            // Record bottom validator delegation
+            await fetch('/api/record-stake', {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+              },
+              body: JSON.stringify({
+                txHash: tx.transaction_hash + "_bottom", // Append suffix to make hash unique
+                senderAddress: account.address,
+                contractAddress: randomBottomValidator.poolAddress,
+                amountStaked: bottomAmount,
+              }),
+            });
+          } catch (recordError) {
+            console.error('Failed to record split delegation:', recordError);
+            // Continue with success message even if recording fails
+          }
+        } else {
+          // For regular delegations, record a single transaction
+          try {
+            await fetch('/api/record-stake', {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+              },
+              body: JSON.stringify({
+                txHash: tx.transaction_hash,
+                senderAddress: account.address,
+                contractAddress: selectedDelegator.poolAddress,
+                amountStaked: stakeAmount,
+              }),
+            });
+          } catch (recordError) {
+            console.error('Failed to record stake transaction:', recordError);
+            // Continue with success message even if recording fails
+          }
+        }
+
+        // Set success message
+        if (isSplitDelegation && randomBottomValidator) {
           setStakeResult(
             `Successfully split staked: ${mainAmount} to ${selectedDelegator.name} and ${bottomAmount} to ${randomBottomValidator.name}`
           );
-          setStakeAmount("");
         } else {
-          setStakeResult(
-            `Staked ${mainAmount} to ${selectedDelegator.name}, but failed to stake to second validator`
-          );
+          setStakeResult(`Successfully staked ${stakeAmount} tokens to ${selectedDelegator.name}`);
         }
+        
+        setStakeAmount("");
+        
+        // Refresh user stake info after successful staking
+        await fetchUserStakeInfo();
+      } else {
+        setStakeResult("No transactions needed to be executed");
       }
     } catch (error) {
       console.error('Staking error:', error);
-      setStakeResult('An error occurred while staking');
+      
+      // Extract the error message
+      let errorMessage = 'An error occurred while staking';
+      
+      // Check for common errors
+      if (error instanceof Error) {
+        const errorStr = error.toString().toLowerCase();
+        
+        if (errorStr.includes('insufficient erc20 balance')) {
+          errorMessage = 'Insufficient STRK balance for this transaction';
+        } else if (errorStr.includes('user rejected')) {
+          errorMessage = 'Transaction was rejected in your wallet';
+        } else if (errorStr.includes('user abort')) {
+          errorMessage = 'Transaction was aborted';
+        } else if (errorStr.includes('deadline') || errorStr.includes('timeout')) {
+          errorMessage = 'Transaction timed out. Please try again';
+        } else if (errorStr.includes('nonce')) {
+          errorMessage = 'Transaction nonce error. Please try again';
+        } else if (errorStr.includes('error in the called contract')) {
+          // Try to extract the specific error reason
+          const reasonMatch = errorStr.match(/failure reason: "(.*?)"/i);
+          if (reasonMatch && reasonMatch[1]) {
+            errorMessage = `Contract error: ${reasonMatch[1]}`;
+          } else {
+            errorMessage = 'Contract execution failed';
+          }
+        }
+      }
+      
+      setStakeResult(errorMessage);
     } finally {
       setIsStaking(false);
     }
@@ -1906,6 +1926,27 @@ export default function Home() {
     console.log('Wallet disconnected (app state reset)');
   };
 
+  // Add this helper function to strip trailing zeros from decimal numbers
+  const formatAmount = (amount: string): string => {
+    // Convert to a number to handle scientific notation and then back to string
+    return Number(amount).toString();
+  };
+
+  // Update the calculateSplitAmounts function to use the helper
+  const calculateSplitAmounts = (totalAmount: string) => {
+    if (!totalAmount || isNaN(Number(totalAmount)) || Number(totalAmount) <= 0) {
+      return { mainAmount: "0", bottomAmount: "0" };
+    }
+    
+    const total = Number(totalAmount);
+    const bottomAmount = (total * 0.1).toFixed(6); // 10% to bottom validator
+    const mainAmount = (total - Number(bottomAmount)).toFixed(6); // 90% to main validator
+    
+    return { 
+      mainAmount: formatAmount(mainAmount), 
+      bottomAmount: formatAmount(bottomAmount)
+    };
+  };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-900 to-gray-800 flex flex-col items-center pt-0 px-0 pb-4">
