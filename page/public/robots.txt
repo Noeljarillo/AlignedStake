@@ -1,0 +1,9 @@
+# *
+User-agent: *
+Allow: /
+
+# Host
+Host: https://www.starknet-stake.com
+
+# Sitemaps
+Sitemap: https://www.starknet-stake.com/sitemap.xml

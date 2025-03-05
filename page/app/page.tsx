@@ -12,6 +12,7 @@ import { Contract, AccountInterface, RpcProvider } from "starknet"
 import { cairo } from "starknet"
 import CountUp from "react-countup"
 import { SpeedInsights } from "@vercel/speed-insights/next"
+import StructuredData from "./components/StructuredData"
 import { 
   Select, 
   SelectContent, 
@@ -2697,6 +2698,7 @@ export default function Home() {
       )}
       <ContactInfo />
       <SpeedInsights />
+      <StructuredData />
     </div>
   )
 }
