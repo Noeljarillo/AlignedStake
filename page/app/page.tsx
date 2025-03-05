@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { Label } from "@/components/ui/label"
-import { Loader2, RefreshCw, Zap, ChevronDown, ChevronUp, Gift, Users, Landmark, Users2, Activity, Mail, MessageCircle, Twitter, ChevronLeft, ChevronRight, Search, Filter, ArrowUpDown, Check } from "lucide-react"
+import { Loader2, RefreshCw, Zap, ChevronDown, ChevronUp, Gift, Users, Landmark, Users2, Activity, Mail, MessageCircle, Twitter, ChevronLeft, ChevronRight, Search, Filter, ArrowUpDown, Check, AlertCircle, CheckCircle } from "lucide-react"
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell } from "recharts"
 import { Contract, AccountInterface, RpcProvider } from "starknet"
 import { cairo } from "starknet"
@@ -28,6 +28,8 @@ import {
 import Link from "next/link"
 import { Info } from "lucide-react"
 import { useToast } from "@/components/ui/use-toast"
+import { useRouter } from "next/navigation"
+import { Switch } from "@/components/ui/switch"
 
 declare global {
   interface Window {
@@ -595,6 +597,7 @@ interface ValidatorListProps {
 
 
 const ValidatorList = ({ onSelectValidator }: ValidatorListProps) => {
+  const router = useRouter()
   const [validators, setValidators] = useState<Validator[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [page, setPage] = useState(1);
@@ -725,6 +728,11 @@ const ValidatorList = ({ onSelectValidator }: ValidatorListProps) => {
     // The fee is in basis points (1/100 of a percent)
     // So 10 = 0.1%, 1000 = 10%
     return `${(feeNumber / 100).toFixed(2)}%`;
+  };
+  
+  const navigateToValidatorDashboard = (validator: Validator, e: React.MouseEvent) => {
+    e.stopPropagation();
+    router.push(`/validator/${validator.address}`);
   };
   
   return (
@@ -924,7 +932,10 @@ const ValidatorList = ({ onSelectValidator }: ValidatorListProps) => {
                           )}
                         </div>
                         <div>
-                          <div className="text-sm font-medium text-white">
+                          <div 
+                            className="text-sm font-medium text-white hover:text-blue-400 cursor-pointer transition-colors"
+                            onClick={(e) => navigateToValidatorDashboard(validator, e)}
+                          >
                             {validator.name}
                           </div>
                           <div className="text-xs text-gray-400">
@@ -2414,7 +2425,7 @@ export default function Home() {
               <div className="flex justify-center">
                 <Button 
                   onClick={() => selectRandomDelegator(true)} 
-                  className="bg-purple-600 hover:bg-purple-700 text-white text-sm py-1 h-8 w-full"
+                  className="bg-blue-600 hover:bg-blue-700 text-white text-sm py-1 h-8 w-full"
                   size="sm"
                 >
                   <RefreshCw className="mr-1 h-4 w-4" />
@@ -2475,7 +2486,7 @@ export default function Home() {
                     <div className="bg-purple-500/20 p-0.5 rounded">
                       <Zap className="h-3 w-3 text-purple-400" />
                     </div>
-                    <span className="text-xs text-gray-300">Split delegation</span>
+                    <span className="text-xs text-gray-300 font-medium">Split delegation (90/10)</span>
                   </div>
                   <div className="relative inline-block w-8 h-4 transition duration-200 ease-in-out">
                     <input
@@ -2493,7 +2504,7 @@ export default function Home() {
                     <label
                       htmlFor="splitDelegation"
                       className={`absolute cursor-pointer top-0 left-0 right-0 bottom-0 rounded-full transition-colors duration-200 ${
-                        isSplitDelegation ? 'bg-purple-600' : 'bg-gray-600'
+                        isSplitDelegation ? 'bg-blue-600' : 'bg-gray-700'
                       }`}
                     >
                       <span 
@@ -2510,25 +2521,53 @@ export default function Home() {
                     initial={{ opacity: 0, height: 0 }}
                     animate={{ opacity: 1, height: 'auto' }}
                     exit={{ opacity: 0, height: 0 }}
-                    className="p-2 border border-blue-700/30 rounded-md bg-blue-900/20"
+                    className="p-2 border border-blue-700/30 rounded-md bg-secondary/80"
                   >
                     <div className="space-y-1 text-xs">
                       <div className="flex justify-between items-center">
                         <div className="flex items-center gap-1">
-                          <div className="w-1.5 h-1.5 bg-blue-500 rounded-full"></div>
+                          {selectedDelegator && (
+                            <div className="w-4 h-4 rounded-full bg-green-500/20 flex items-center justify-center">
+                              {selectedDelegator.imgSrc ? (
+                                <img 
+                                  src={selectedDelegator.imgSrc} 
+                                  alt={selectedDelegator.name} 
+                                  className="w-4 h-4 rounded-full"
+                                />
+                              ) : (
+                                <span className="text-green-400 text-xs font-bold">
+                                  {selectedDelegator.name.charAt(0)}
+                                </span>
+                              )}
+                            </div>
+                          )}
                           <span className="text-gray-300 truncate max-w-[100px]">{selectedDelegator?.name}</span>
                         </div>
-                        <span className="text-white">{splitDelegationPreview.mainAmount} (90%)</span>
+                        <span className="text-white font-semibold">{splitDelegationPreview.mainAmount} STRK</span>
                       </div>
                       
-                      <div className="flex justify-between items-center">
+                      <div className="flex justify-between items-center pt-1 border-t border-border/50">
                         <div className="flex items-center gap-1">
-                          <div className="w-1.5 h-1.5 bg-purple-500 rounded-full"></div>
+                          {randomBottomValidator && (
+                            <div className="w-4 h-4 rounded-full bg-blue-500/20 flex items-center justify-center">
+                              {randomBottomValidator.imgSrc ? (
+                                <img 
+                                  src={randomBottomValidator.imgSrc} 
+                                  alt={randomBottomValidator.name} 
+                                  className="w-4 h-4 rounded-full"
+                                />
+                              ) : (
+                                <span className="text-blue-400 text-xs font-bold">
+                                  {randomBottomValidator.name.charAt(0)}
+                                </span>
+                              )}
+                            </div>
+                          )}
                           <span className="text-gray-300 truncate max-w-[100px]">
                             {randomBottomValidator?.name || 'Selecting...'}
                           </span>
                         </div>
-                        <span className="text-white">{splitDelegationPreview.bottomAmount} (10%)</span>
+                        <span className="text-white font-semibold">{splitDelegationPreview.bottomAmount} STRK</span>
                       </div>
                     </div>
                     
@@ -2537,51 +2576,72 @@ export default function Home() {
                         <Button
                           type="button"
                           onClick={selectRandomBottomValidatorForSplit}
-                          className="w-full mt-0.5 bg-purple-600/50 hover:bg-purple-600 text-white text-xs py-0.5 h-6"
+                          className="w-full mt-0.5 bg-blue-600 hover:bg-blue-700 text-white text-xs py-0.5 h-6"
                           size="sm"
                         >
-                          <RefreshCw className="mr-1 h-2.5 w-2.5" />
-                          Change bottom validator
+                          <RefreshCw className="mr-1 h-3 w-3" />
+                          Change Bottom Validator
                         </Button>
                       </div>
                     )}
                   </motion.div>
                 )}
                 
-                <Button
-                  type={walletConnected ? "submit" : "button"}
-                  onClick={walletConnected ? undefined : connectWallet}
-                  className="w-full bg-green-600 hover:bg-green-700 text-white py-1.5 h-10 text-md"
-                  disabled={walletConnected && (!selectedDelegator || isStaking || (isSplitDelegation && !randomBottomValidator))}
-                >
-                  {isStaking ? (
-                    <>
-                      <Loader2 className="mr-1.5 h-4 w-4 animate-spin" />
-                      {isSplitDelegation ? 'Processing Split...' : 'Staking...'}
-                    </>
-                  ) : walletConnected ? (
-                    <>
-                      <Zap className="mr-1.5 h-4 w-4" />
-                      {isSplitDelegation ? 'Split Stake' : 'Stake Now'}
-                    </>
-                  ) : (
-                    <>
-                      <Landmark className="mr-1.5 h-4 w-4" />
-                      Connect Wallet First
-                    </>
-                  )}
-                </Button>
+                {stakeResult && (
+                  <div className={`p-3 rounded-md ${
+                    stakeResult.includes('successful') 
+                      ? 'bg-green-500/10 text-green-500' 
+                      : 'bg-red-500/10 text-red-500'
+                  }`}>
+                    <div className="flex items-center">
+                      {stakeResult.includes('successful') 
+                        ? <CheckCircle className="h-4 w-4 mr-2" /> 
+                        : <AlertCircle className="h-4 w-4 mr-2" />
+                      }
+                      <p className="text-sm">{stakeResult}</p>
+                    </div>
+                  </div>
+                )}
+                
+                {!walletConnected ? (
+                  <Button 
+                    type="button" 
+                    onClick={connectWallet} 
+                    disabled={isConnecting}
+                    className="w-full bg-blue-600 hover:bg-blue-700 text-white"
+                  >
+                    {isConnecting ? (
+                      <>
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                        Connecting...
+                      </>
+                    ) : (
+                      <>
+                        <Landmark className="mr-2 h-4 w-4" />
+                        Connect Wallet
+                      </>
+                    )}
+                  </Button>
+                ) : (
+                  <Button 
+                    type="submit" 
+                    disabled={isStaking || !selectedDelegator || !stakeAmount || Number(stakeAmount) <= 0}
+                    className="w-full bg-blue-600 hover:bg-blue-700 text-white"
+                  >
+                    {isStaking ? (
+                      <>
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                        Staking...
+                      </>
+                    ) : (
+                      <>
+                        <Zap className="mr-2 h-4 w-4" />
+                        STAKE with {selectedDelegator?.name || 'Validator'}
+                      </>
+                    )}
+                  </Button>
+                )}
               </form>
-              
-              {stakeResult && (
-                <motion.p
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  className="text-xs text-green-400 w-full text-center mt-1"
-                >
-                  {stakeResult}
-                </motion.p>
-              )}
               
               {/* Move "Show verified only" checkbox to the bottom */}
               <div className="flex items-center justify-center space-x-2 pt-1 border-t border-gray-700">
