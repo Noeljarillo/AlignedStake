@@ -310,7 +310,7 @@ const CallToAction = ({ walletConnected }: {
   walletConnected: boolean
 }) => {
   return (
-    <div className="w-full bg-gradient-to-r from-blue-600/10 to-purple-600/10 backdrop-blur-sm border-b border-blue-500/20 p-4">
+    <div className="w-full bg-background/80 backdrop-blur-sm border-b border-border p-4">
       <div className="max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-between gap-4">
         <div className="flex items-center gap-3">
           <div className="bg-primary/10 p-2 rounded-lg">
@@ -785,7 +785,7 @@ const ValidatorList = ({ onSelectValidator }: ValidatorListProps) => {
                     Filters
                   </Button>
                 </DropdownMenuTrigger>
-                <DropdownMenuContent className="p-4 space-y-4 w-64">
+                <DropdownMenuContent className="p-4 space-y-4 w-64 bg-gray-900 border-gray-700">
                   <div className="flex items-center gap-2 cursor-pointer" onClick={() => setVerifiedOnly(!verifiedOnly)}>
                     <div className="w-4 h-4 flex items-center justify-center border border-input rounded">
                       {verifiedOnly && <Check className="h-3 w-3 text-primary" />}
@@ -806,10 +806,10 @@ const ValidatorList = ({ onSelectValidator }: ValidatorListProps) => {
                       value={maxFee?.toString() || ""}
                       onValueChange={handleMaxFeeChange}
                     >
-                      <SelectTrigger className="w-full bg-background border-input text-foreground">
+                      <SelectTrigger className="w-full bg-gray-900 border-input text-gray-200">
                         <SelectValue placeholder="Any fee" />
                       </SelectTrigger>
-                      <SelectContent>
+                      <SelectContent className="bg-gray-900 border-gray-700">
                         <SelectItem value="any">Any fee</SelectItem>
                         <SelectItem value="0">0% (No fee)</SelectItem>
                         <SelectItem value="5">Max 5%</SelectItem>
@@ -1482,7 +1482,7 @@ export default function Home() {
     if (active && payload && payload.length) {
       const validator = payload[0].payload;
       return (
-        <div className="bg-gray-800 border border-gray-700 p-3 rounded-lg shadow-xl">
+        <div className="bg-gray-900 border border-gray-700 p-3 rounded-lg shadow-xl">
           <div className="flex items-center gap-2 mb-2">
             {validator.imgSrc && (
               <img 
@@ -1839,7 +1839,7 @@ export default function Home() {
   const MetricCard = ({ metric }: { metric: StatMetric }) => {
     return (
       <div 
-        className="group relative bg-background/95 p-4 rounded-lg border border-border/50 transition-all duration-300 hover:bg-secondary/50 hover:border-border"
+        className="group relative bg-background p-4 rounded-lg border border-border/50 transition-all duration-300 hover:bg-secondary/50 hover:border-border"
       >
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
@@ -1853,10 +1853,10 @@ export default function Home() {
           </div>
         </div>
         
-        {/* Updated Tooltip to appear below */}
+        {/* Updated Tooltip to have solid background */}
         <div className="absolute top-full left-1/2 -translate-x-1/2 mt-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none z-50">
-          <div className="w-3 h-3 bg-popover border-border border-l border-t rotate-45 absolute -top-1.5 left-1/2 -translate-x-1/2"></div>
-          <div className="bg-popover text-popover-foreground px-4 py-2 rounded-lg shadow-md border border-border w-64">
+          <div className="w-3 h-3 bg-gray-900 border-gray-700 border-l border-t rotate-45 absolute -top-1.5 left-1/2 -translate-x-1/2"></div>
+          <div className="bg-gray-900 text-gray-200 px-4 py-2 rounded-lg shadow-md border border-gray-700 w-64">
             <p className="text-sm">{metric.tooltip}</p>
           </div>
         </div>
@@ -2574,7 +2574,7 @@ export default function Home() {
                     initial={{ opacity: 0, height: 0 }}
                     animate={{ opacity: 1, height: 'auto' }}
                     exit={{ opacity: 0, height: 0 }}
-                    className="p-2 border border-blue-700/30 rounded-md bg-secondary/80"
+                    className="p-2 border border-blue-700 rounded-md bg-gray-900"
                   >
                     <div className="space-y-1 text-xs">
                       <div className="flex justify-between items-center">
@@ -2604,7 +2604,7 @@ export default function Home() {
                         <span className="text-white font-semibold">{splitDelegationPreview.mainAmount} STRK</span>
                       </div>
                       
-                      <div className="flex justify-between items-center pt-1 border-t border-border/50">
+                      <div className="flex justify-between items-center pt-1 border-t border-gray-700">
                         <div className="flex items-center gap-1">
                           {randomBottomValidator && (
                             <div className="w-4 h-4 rounded-full bg-blue-500/20 flex items-center justify-center">

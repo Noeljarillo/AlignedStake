@@ -3,7 +3,8 @@ User-agent: *
 Allow: /
 
 # Host
-Host: https://www.starknet-stake.com
+Host: https://www.aligned-stake.com
 
 # Sitemaps
+Sitemap: https://www.aligned-stake.com/sitemap.xml
 Sitemap: https://www.starknet-stake.com/sitemap.xml
