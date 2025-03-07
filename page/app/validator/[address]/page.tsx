@@ -1,5 +1,5 @@
 "use client"
-
+import { track } from '@vercel/analytics';
 import { useState, useEffect } from "react"
 import { useParams, useRouter } from "next/navigation"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
@@ -289,6 +289,7 @@ export default function ValidatorDashboard() {
       const userAccount = window.starknet.account;
       setAccount(userAccount);
       setWalletConnected(true);
+      track('Wallet Connected');
       return userAccount;
     } catch (error) {
       console.error('Error connecting wallet:', error);
@@ -300,6 +301,7 @@ export default function ValidatorDashboard() {
   }
 
   const disconnectWallet = () => {
+    track('Wallet Disconnected');
     setWalletConnected(false);
     setAccount(null);
   };
@@ -484,10 +486,9 @@ export default function ValidatorDashboard() {
   const handleStake = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!data || !stakeAmount) return;
-    
+    track('Stake Initiated', { stakeAmount, validator: data.validator.name, isSplitDelegation });
     setIsStaking(true);
     setStakeResult("");
-
     try {
       // Connect wallet if not connected
       if (!walletConnected) {
@@ -499,7 +500,6 @@ export default function ValidatorDashboard() {
       }
 
       if (isSplitDelegation && !randomBottomValidator) {
-        // Select a random bottom validator if not already selected
         selectRandomBottomValidatorForSplit();
         setIsStaking(false);
         toast({
@@ -514,53 +514,37 @@ export default function ValidatorDashboard() {
         calculateSplitAmounts(stakeAmount) : 
         { mainAmount: stakeAmount, bottomAmount: "0" };
 
-      // Collect all transaction calls
       const calls = [];
 
-      // For regular delegation
       if (!isSplitDelegation) {
-        // Get approval call if needed
         const approveCall = await approveTokensCall(data.validator.poolAddress, stakeAmount);
         if (approveCall) {
           calls.push(approveCall);
         }
-
-        // Get stake call
         const mainStakeCall = await stakeCall(data.validator.poolAddress, stakeAmount);
         if (mainStakeCall) {
           calls.push(mainStakeCall);
         }
-      } 
-      // For split delegation
-      else if (randomBottomValidator) {
-        // Get approval call for main validator if needed
+      } else if (randomBottomValidator) {
         const approveMainCall = await approveTokensCall(data.validator.poolAddress, mainAmount);
         if (approveMainCall) {
           calls.push(approveMainCall);
         }
-
-        // Get stake call for main validator
         const mainStakeCall = await stakeCall(data.validator.poolAddress, mainAmount);
         if (mainStakeCall) {
           calls.push(mainStakeCall);
         }
-
-        // Get approval call for bottom validator if needed
         const approveBottomCall = await approveTokensCall(randomBottomValidator.poolAddress, bottomAmount);
         if (approveBottomCall) {
           calls.push(approveBottomCall);
         }
-
-        // Get stake call for bottom validator
         const bottomStakeCall = await stakeCall(randomBottomValidator.poolAddress, bottomAmount);
         if (bottomStakeCall) {
           calls.push(bottomStakeCall);
         }
       }
 
-      // If we have any calls to make, execute them as a batch
       if (calls.length > 0) {
-        // Make sure account is not null before proceeding
         if (!account) {
           setIsStaking(false);
           toast({
@@ -570,37 +554,28 @@ export default function ValidatorDashboard() {
           });
           return;
         }
-        
-        // Execute all calls in a single transaction
+
         const tx = await account.execute(calls);
         await account.waitForTransaction(tx.transaction_hash);
+        track('Staking Successful', { transactionHash: tx.transaction_hash, stakeAmount, validator: data.validator.name, isSplitDelegation, mainAmount, bottomAmount });
 
-        // Record the transaction in the database - handle split delegations properly
         if (isSplitDelegation && randomBottomValidator) {
-          // For split delegations, record two separate transactions
           try {
-            // Record main validator delegation
             await fetch('/api/record-stake', {
               method: 'POST',
-              headers: {
-                'Content-Type': 'application/json',
-              },
+              headers: { 'Content-Type': 'application/json' },
               body: JSON.stringify({
-                txHash: tx.transaction_hash + "_main", // Append suffix to make hash unique 
+                txHash: tx.transaction_hash + "_main",
                 senderAddress: account.address,
                 contractAddress: data.validator.poolAddress,
                 amountStaked: Number(mainAmount),
               }),
             });
-            
-            // Record bottom validator delegation
             await fetch('/api/record-stake', {
               method: 'POST',
-              headers: {
-                'Content-Type': 'application/json',
-              },
+              headers: { 'Content-Type': 'application/json' },
               body: JSON.stringify({
-                txHash: tx.transaction_hash + "_bottom", // Append suffix to make hash unique
+                txHash: tx.transaction_hash + "_bottom",
                 senderAddress: account.address,
                 contractAddress: randomBottomValidator.poolAddress,
                 amountStaked: Number(bottomAmount),
@@ -608,16 +583,12 @@ export default function ValidatorDashboard() {
             });
           } catch (recordError) {
             console.error('Error recording stake:', recordError);
-            // Non-critical, continue anyway
           }
         } else {
-          // For single delegations, record one transaction
           try {
             await fetch('/api/record-stake', {
               method: 'POST',
-              headers: {
-                'Content-Type': 'application/json',
-              },
+              headers: { 'Content-Type': 'application/json' },
               body: JSON.stringify({
                 txHash: tx.transaction_hash,
                 senderAddress: account.address,
@@ -627,11 +598,9 @@ export default function ValidatorDashboard() {
             });
           } catch (recordError) {
             console.error('Error recording stake:', recordError);
-            // Non-critical, continue anyway
           }
         }
 
-        // Show success message
         setStakeResult("Transaction successful!");
         toast({
           title: "Staking successful",
@@ -641,21 +610,16 @@ export default function ValidatorDashboard() {
           variant: "default"
         });
 
-        // Reset state
         setStakeAmount("");
         setStakeDialogOpen(false);
-        
-        // Refresh user delegations after successful staking
         if (account) {
           await fetchUserDelegations();
         }
       }
     } catch (error: any) {
+      track('Staking Failed', { error: error.message, stakeAmount, validator: data.validator.name, isSplitDelegation });
       console.error('Staking error:', error);
-      
-      // Handle error and extract useful message
       let errorMessage = 'Transaction failed. Please try again.';
-      
       if (error.message) {
         const errorStr = error.message.toLowerCase();
         if (errorStr.includes('insufficient') || errorStr.includes('balance')) {
@@ -669,7 +633,6 @@ export default function ValidatorDashboard() {
         } else if (errorStr.includes('nonce')) {
           errorMessage = 'Transaction nonce error. Please try again';
         } else if (errorStr.includes('error in the called contract')) {
-          // Try to extract the specific error reason
           const reasonMatch = errorStr.match(/failure reason: "(.*?)"/i);
           if (reasonMatch && reasonMatch[1]) {
             errorMessage = `Contract error: ${reasonMatch[1]}`;
@@ -678,7 +641,6 @@ export default function ValidatorDashboard() {
           }
         }
       }
-      
       setStakeResult(errorMessage);
       toast({
         title: "Staking failed",
@@ -779,7 +741,7 @@ export default function ValidatorDashboard() {
                   <Switch
                     id="split-delegation"
                     checked={isSplitDelegation}
-                    onCheckedChange={setIsSplitDelegation}
+                    onCheckedChange={(checked) => { track('Split Delegation Toggled', { enabled: checked }); setIsSplitDelegation(checked); }}
                     className="data-[state=unchecked]:bg-gray-700 data-[state=checked]:bg-blue-600 border-2 border-gray-600 h-6 w-11 [&>span]:h-5 [&>span]:w-5 [&>span]:bg-white"
                   />
                   <Label htmlFor="split-delegation" className="font-medium text-white">
