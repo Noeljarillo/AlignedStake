@@ -1,11 +1,20 @@
 // A simple script to ping search engines about your sitemap
 const https = require('https');
 
-const sitemapUrl = 'https://www.starknet-stake.com/sitemap.xml';
-const searchEngines = [
-  `https://www.google.com/ping?sitemap=${encodeURIComponent(sitemapUrl)}`,
-  `https://www.bing.com/ping?sitemap=${encodeURIComponent(sitemapUrl)}`
+const sitemapUrls = [
+  'https://www.aligned-stake.com/sitemap.xml',
+  'https://www.starknet-stake.com/sitemap.xml'
 ];
+
+// Create ping URLs for each search engine and sitemap combination
+const searchEngines = [];
+
+sitemapUrls.forEach(sitemapUrl => {
+  searchEngines.push(
+    `https://www.google.com/ping?sitemap=${encodeURIComponent(sitemapUrl)}`,
+    `https://www.bing.com/ping?sitemap=${encodeURIComponent(sitemapUrl)}`
+  );
+});
 
 // Function to ping a search engine
 function pingSearchEngine(url) {
@@ -28,7 +37,7 @@ function pingSearchEngine(url) {
 
 // Execute pings
 async function pingAll() {
-  console.log('🔍 Pinging search engines with sitemap URL...');
+  console.log('🔍 Pinging search engines with sitemap URLs...');
   
   try {
     await Promise.all(searchEngines.map(pingSearchEngine));

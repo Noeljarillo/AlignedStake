@@ -1,9 +1,10 @@
 /** @type {import('next-sitemap').IConfig} */
 module.exports = {
-  siteUrl: process.env.SITE_URL || 'https://www.starknet-stake.com',
+  siteUrl: process.env.SITE_URL || 'https://www.aligned-stake.com',
   generateRobotsTxt: true,
   robotsTxtOptions: {
     additionalSitemaps: [
+      'https://www.aligned-stake.com/sitemap.xml',
       'https://www.starknet-stake.com/sitemap.xml',
     ],
     policies: [

@@ -23,11 +23,14 @@ export default function RootLayout({
             __html: JSON.stringify({
               "@context": "https://schema.org",
               "@type": "WebSite",
-              "name": "Starknet Staking Dashboard",
-              "url": "https://www.starknet-stake.com/",
+              "name": "AlignedStake",
+              "alternateName": ["Starknet Staking Dashboard", "STRK Staking Dashboard"],
+              "url": "https://www.aligned-stake.com/",
+              "sameAs": ["https://www.starknet-stake.com/"],
+              "description": "The easiest way to stake STRK on Starknet. Find validators, track rewards, and learn how to stake STRK tokens safely.",
               "potentialAction": {
                 "@type": "SearchAction",
-                "target": "https://www.starknet-stake.com/search?q={search_term_string}",
+                "target": "https://www.aligned-stake.com/search?q={search_term_string}",
                 "query-input": "required name=search_term_string"
               }
             })

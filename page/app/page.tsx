@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { Label } from "@/components/ui/label"
-import { Loader2, RefreshCw, Zap, ChevronDown, ChevronUp, Gift, Users, Landmark, Users2, Activity, Mail, MessageCircle, Twitter, ChevronLeft, ChevronRight, Search, Filter, ArrowUpDown, Check, AlertCircle, CheckCircle } from "lucide-react"
+import { Loader2, RefreshCw, Zap, ChevronDown, ChevronUp, Gift, Users, Landmark, Users2, Activity, Mail, MessageCircle, Twitter, ChevronLeft, ChevronRight, Search, Filter, ArrowUpDown, Check, AlertCircle, CheckCircle, ShieldCheck } from "lucide-react"
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell } from "recharts"
 import { Contract, AccountInterface, RpcProvider } from "starknet"
 import { cairo } from "starknet"
@@ -313,9 +313,10 @@ const CallToAction = ({ walletConnected }: {
     <div className="w-full bg-gradient-to-r from-blue-600/10 to-purple-600/10 backdrop-blur-sm border-b border-blue-500/20 p-4">
       <div className="max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-between gap-4">
         <div className="flex items-center gap-3">
-          <div className="p-2 rounded-lg bg-blue-500/20">
+          <div className="bg-primary/10 p-2 rounded-lg">
             <svg 
-              className="w-6 h-6 text-blue-400" 
+              xmlns="http://www.w3.org/2000/svg" 
+              className="h-6 w-6 text-primary" 
               fill="none" 
               viewBox="0 0 24 24" 
               stroke="currentColor"
@@ -329,8 +330,8 @@ const CallToAction = ({ walletConnected }: {
             </svg>
           </div>
           <div>
-            <h2 className="text-xl font-semibold text-white">Shape Starknet's Future</h2>
-            <p className="text-gray-400">
+            <h2 className="text-xl font-semibold">Shape Starknet's Future</h2>
+            <p className="text-muted-foreground">
               Every delegation strengthens the network. Be part of Starknet's decentralized future.
             </p>
           </div>
@@ -339,7 +340,7 @@ const CallToAction = ({ walletConnected }: {
         <div className="flex flex-col sm:flex-row items-center gap-3">
           <Link
             href="/guide"
-            className="text-blue-400 hover:text-blue-300 transition-colors flex items-center gap-2 bg-blue-500/10 px-3 py-1.5 rounded-md"
+            className="text-primary hover:text-primary/80 transition-colors flex items-center gap-2 bg-primary/10 px-3 py-1.5 rounded-md"
           >
             <Info className="h-4 w-4" />
             <span>New to staking? Read the guide</span>
@@ -347,7 +348,7 @@ const CallToAction = ({ walletConnected }: {
           
           {walletConnected && (
             <Button 
-              className="px-6 py-2 rounded-lg transition-all duration-300 transform hover:scale-105 bg-blue-600 hover:bg-blue-700 text-white sm:ml-4"
+              className="px-6 py-2"
               onClick={() => window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' })}
             >
               <div className="flex items-center gap-2">
@@ -454,13 +455,13 @@ const DelegationStats = () => {
   }, []);
 
   return (
-    <div className="mt-12 w-full bg-gradient-to-r from-gray-900 to-gray-800 rounded-xl border border-blue-500/20 overflow-hidden">
+    <div className="mt-12 w-full bg-background rounded-lg border border-border overflow-hidden shadow-sm">
       <div className="p-6">
-        <h2 className="text-2xl font-bold text-blue-400 mb-6">Aligned Delegation Stats</h2>
+        <h2 className="text-2xl font-semibold mb-6">Aligned Delegation Stats</h2>
         
         {isLoading ? (
           <div className="flex justify-center py-8">
-            <Loader2 className="w-10 h-10 text-blue-400 animate-spin" />
+            <Loader2 className="w-10 h-10 text-primary animate-spin" />
           </div>
         ) : (
           <div className="space-y-8">
@@ -470,15 +471,15 @@ const DelegationStats = () => {
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.1 }}
-                className="bg-gray-800/50 backdrop-blur-sm p-6 rounded-xl border border-gray-700"
+                className="bg-background p-6 rounded-lg border border-border"
               >
                 <div className="flex items-center gap-4">
-                  <div className="p-3 rounded-lg bg-blue-500/20">
-                    <Users className="w-8 h-8 text-blue-400" />
+                  <div className="p-3 rounded-lg bg-primary/10">
+                    <Users className="w-8 h-8 text-primary" />
                   </div>
                   <div>
-                    <h3 className="text-lg font-medium text-gray-400">Aligned Delegators</h3>
-                    <p className="text-3xl font-bold text-white">
+                    <h3 className="text-lg font-medium text-muted-foreground">Aligned Delegators</h3>
+                    <p className="text-3xl font-bold">
                       <CountUp 
                         end={stats.totalUsers} 
                         duration={2} 
@@ -493,15 +494,15 @@ const DelegationStats = () => {
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.2 }}
-                className="bg-gray-800/50 backdrop-blur-sm p-6 rounded-xl border border-gray-700"
+                className="bg-background p-6 rounded-lg border border-border"
               >
                 <div className="flex items-center gap-4">
-                  <div className="p-3 rounded-lg bg-green-500/20">
-                    <Landmark className="w-8 h-8 text-green-400" />
+                  <div className="p-3 rounded-lg bg-green-500/10">
+                    <Landmark className="w-8 h-8 text-green-600 dark:text-green-400" />
                   </div>
                   <div>
-                    <h3 className="text-lg font-medium text-gray-400">Total STRK Delegated</h3>
-                    <p className="text-3xl font-bold text-white">
+                    <h3 className="text-lg font-medium text-muted-foreground">Total STRK Delegated</h3>
+                    <p className="text-3xl font-bold">
                       <CountUp 
                         end={stats.totalStaked} 
                         duration={2} 
@@ -523,51 +524,51 @@ const DelegationStats = () => {
                 animate={{ opacity: 1 }}
                 transition={{ delay: 0.3 }}
               >
-                <h3 className="text-xl font-semibold text-blue-400 mb-4">Recent Delegations</h3>
-                <div className="overflow-hidden rounded-xl border border-gray-700">
+                <h3 className="text-xl font-semibold mb-4">Recent Delegations</h3>
+                <div className="overflow-hidden rounded-lg border border-border">
                   <div className="overflow-x-auto">
                     <table className="w-full">
-                      <thead className="bg-gray-800">
+                      <thead className="bg-muted/50">
                         <tr>
-                          <th className="px-4 py-3 text-left text-sm font-medium text-gray-400">Time</th>
-                          <th className="px-4 py-3 text-left text-sm font-medium text-gray-400">Delegator</th>
-                          <th className="px-4 py-3 text-left text-sm font-medium text-gray-400">Amount</th>
-                          <th className="px-4 py-3 text-left text-sm font-medium text-gray-400">Tx Hash</th>
+                          <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">Time</th>
+                          <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">Delegator</th>
+                          <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">Amount</th>
+                          <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">Tx Hash</th>
                         </tr>
                       </thead>
-                      <tbody className="divide-y divide-gray-700">
+                      <tbody className="divide-y divide-border">
                         {stats.recentDelegations.map((delegation, index) => (
                           <motion.tr 
                             key={delegation.txHash}
                             initial={{ opacity: 0, y: 10 }}
                             animate={{ opacity: 1, y: 0 }}
                             transition={{ delay: 0.1 * index }}
-                            className="bg-gray-900/50 hover:bg-gray-800/50 transition-colors"
+                            className="bg-background/50 hover:bg-muted/30 transition-colors"
                           >
-                            <td className="px-4 py-3 text-sm text-gray-300">
+                            <td className="px-4 py-3 text-sm">
                               {new Date(delegation.timestamp).toLocaleString()}
                             </td>
                             <td className="px-4 py-3 text-sm">
                               <a 
-                                href={`https://voyager.online/contract/${delegation.senderAddress}`}
-                                target="_blank"
+                                href={`https://voyager.online/contract/${delegation.senderAddress}`} 
+                                target="_blank" 
                                 rel="noopener noreferrer"
-                                className="text-blue-400 hover:underline"
+                                className="hover:text-primary transition-colors"
                               >
                                 {delegation.senderAddress.slice(0, 6)}...{delegation.senderAddress.slice(-4)}
                               </a>
                             </td>
-                            <td className="px-4 py-3 text-sm text-green-400 font-medium">
-                              {delegation.amountStaked.toFixed(2)} STRK
+                            <td className="px-4 py-3 text-sm">
+                              {delegation.amountStaked.toLocaleString()} STRK
                             </td>
                             <td className="px-4 py-3 text-sm">
                               <a 
-                                href={`https://voyager.online/tx/${delegation.txHash}`}
-                                target="_blank"
+                                href={`https://voyager.online/tx/${delegation.txHash}`} 
+                                target="_blank" 
                                 rel="noopener noreferrer"
-                                className="text-blue-400 hover:underline"
+                                className="hover:text-primary transition-colors"
                               >
-                                {delegation.txHash.slice(0, 8)}...
+                                {delegation.txHash.slice(0, 6)}...{delegation.txHash.slice(-4)}
                               </a>
                             </td>
                           </motion.tr>
@@ -737,10 +738,10 @@ const ValidatorList = ({ onSelectValidator }: ValidatorListProps) => {
   };
   
   return (
-    <div className="w-full bg-gray-900 rounded-xl border border-gray-700 overflow-hidden">
-      <div className="p-6 border-b border-gray-700">
+    <div className="w-full bg-background rounded-lg border border-border overflow-hidden shadow-sm">
+      <div className="p-6 border-b border-border">
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-          <h3 className="text-xl font-semibold text-blue-400">
+          <h3 className="text-xl font-semibold text-foreground">
             {showBottom20 ? "Bottom 20 Validators" : "All Validators"}
           </h3>
           
@@ -751,9 +752,9 @@ const ValidatorList = ({ onSelectValidator }: ValidatorListProps) => {
                 placeholder="Search validators..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full bg-gray-800 border border-gray-700 rounded-lg py-2 pl-10 pr-4 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className="w-full bg-background border border-input rounded-md py-2 pl-10 pr-4 text-foreground placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:border-transparent"
               />
-              <Search className="absolute left-3 top-2.5 h-4 w-4 text-gray-400" />
+              <Search className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
               <button type="submit" className="sr-only">Search</button>
             </form>
             
@@ -766,10 +767,10 @@ const ValidatorList = ({ onSelectValidator }: ValidatorListProps) => {
                 }}
                 disabled={showBottom20}
               >
-                <SelectTrigger className="w-[100px] bg-gray-800 border-gray-700 text-white">
+                <SelectTrigger className="w-[100px] bg-background border-input text-foreground">
                   <SelectValue placeholder="20 per page" />
                 </SelectTrigger>
-                <SelectContent className="bg-gray-800 border-gray-700 text-white">
+                <SelectContent>
                   <SelectItem value="10">10 per page</SelectItem>
                   <SelectItem value="20">20 per page</SelectItem>
                   <SelectItem value="50">50 per page</SelectItem>
@@ -779,22 +780,22 @@ const ValidatorList = ({ onSelectValidator }: ValidatorListProps) => {
               
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <Button variant="outline" className="bg-gray-800 border-gray-700 text-white">
+                  <Button variant="outline">
                     <Filter className="h-4 w-4 mr-2" />
                     Filters
                   </Button>
                 </DropdownMenuTrigger>
-                <DropdownMenuContent className="bg-gray-800 border-gray-700 text-white p-4 space-y-4 w-64">
+                <DropdownMenuContent className="p-4 space-y-4 w-64">
                   <div className="flex items-center gap-2 cursor-pointer" onClick={() => setVerifiedOnly(!verifiedOnly)}>
-                    <div className="w-4 h-4 flex items-center justify-center border border-gray-600 rounded">
-                      {verifiedOnly && <Check className="h-3 w-3 text-blue-400" />}
+                    <div className="w-4 h-4 flex items-center justify-center border border-input rounded">
+                      {verifiedOnly && <Check className="h-3 w-3 text-primary" />}
                     </div>
                     <span>Verified Only</span>
                   </div>
                   
                   <div className="flex items-center gap-2 cursor-pointer" onClick={toggleBottom20}>
-                    <div className="w-4 h-4 flex items-center justify-center border border-gray-600 rounded">
-                      {showBottom20 && <Check className="h-3 w-3 text-blue-400" />}
+                    <div className="w-4 h-4 flex items-center justify-center border border-input rounded">
+                      {showBottom20 && <Check className="h-3 w-3 text-primary" />}
                     </div>
                     <span>Show Bottom 20</span>
                   </div>
@@ -805,10 +806,10 @@ const ValidatorList = ({ onSelectValidator }: ValidatorListProps) => {
                       value={maxFee?.toString() || ""}
                       onValueChange={handleMaxFeeChange}
                     >
-                      <SelectTrigger className="w-full bg-gray-800 border-gray-700 text-white">
+                      <SelectTrigger className="w-full bg-background border-input text-foreground">
                         <SelectValue placeholder="Any fee" />
                       </SelectTrigger>
-                      <SelectContent className="bg-gray-800 border-gray-700 text-white">
+                      <SelectContent>
                         <SelectItem value="any">Any fee</SelectItem>
                         <SelectItem value="0">0% (No fee)</SelectItem>
                         <SelectItem value="5">Max 5%</SelectItem>
@@ -826,68 +827,68 @@ const ValidatorList = ({ onSelectValidator }: ValidatorListProps) => {
       
       {isLoading ? (
         <div className="flex justify-center items-center py-20">
-          <Loader2 className="h-10 w-10 text-blue-400 animate-spin" />
+          <Loader2 className="h-10 w-10 text-primary animate-spin" />
         </div>
       ) : validators.length === 0 ? (
         <div className="text-center py-20">
-          <Users className="h-12 w-12 text-gray-500 mx-auto mb-4" />
-          <h3 className="text-xl font-medium text-gray-400">No validators found</h3>
-          <p className="text-gray-500 mt-2">Try adjusting your search or filters</p>
+          <Users className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+          <h3 className="text-xl font-medium text-muted-foreground">No validators found</h3>
+          <p className="text-muted-foreground mt-2">Try adjusting your search or filters</p>
         </div>
       ) : (
         <>
           <div className="overflow-x-auto relative">
             {/* Add overlay with spinner when sorting/filtering */}
             {isSorting && (
-              <div className="absolute inset-0 bg-gray-900/70 flex items-center justify-center z-10">
-                <Loader2 className="h-8 w-8 text-blue-400 animate-spin" />
+              <div className="absolute inset-0 bg-background/80 flex items-center justify-center z-10">
+                <Loader2 className="h-8 w-8 text-primary animate-spin" />
               </div>
             )}
             <table className="w-full">
-              <thead className="bg-gray-800/50">
+              <thead className="bg-muted/50">
                 <tr>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
                     <button 
-                      className={`flex items-center gap-1 ${!showBottom20 ? 'hover:text-blue-400' : 'cursor-default'} transition-colors`}
+                      className={`flex items-center gap-1 ${!showBottom20 ? 'hover:text-primary' : 'cursor-default'} transition-colors`}
                       onClick={() => handleSort('rank')}
                     >
                       Rank
                       {!showBottom20 && <ArrowUpDown className="h-3 w-3" />}
                     </button>
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
                     Validator
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
                     <button 
-                      className={`flex items-center gap-1 ${!showBottom20 ? 'hover:text-blue-400' : 'cursor-default'} transition-colors`}
+                      className={`flex items-center gap-1 ${!showBottom20 ? 'hover:text-primary' : 'cursor-default'} transition-colors`}
                       onClick={() => handleSort('delegatedStake')}
                     >
                       Delegated Stake
                       {!showBottom20 && <ArrowUpDown className="h-3 w-3" />}
                     </button>
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
                     <button 
-                      className={`flex items-center gap-1 ${!showBottom20 ? 'hover:text-blue-400' : 'cursor-default'} transition-colors`}
+                      className={`flex items-center gap-1 ${!showBottom20 ? 'hover:text-primary' : 'cursor-default'} transition-colors`}
                       onClick={() => handleSort('totalDelegators')}
                     >
                       Delegators
                       {!showBottom20 && <ArrowUpDown className="h-3 w-3" />}
                     </button>
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
                     <button 
-                      className={`flex items-center gap-1 ${!showBottom20 ? 'hover:text-blue-400' : 'cursor-default'} transition-colors`}
+                      className={`flex items-center gap-1 ${!showBottom20 ? 'hover:text-primary' : 'cursor-default'} transition-colors`}
                       onClick={() => handleSort('revenueShare')}
                     >
                       Fee
                       {!showBottom20 && <ArrowUpDown className="h-3 w-3" />}
                     </button>
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
                     <button 
-                      className={`flex items-center gap-1 ${!showBottom20 ? 'hover:text-blue-400' : 'cursor-default'} transition-colors`}
+                      className={`flex items-center gap-1 ${!showBottom20 ? 'hover:text-primary' : 'cursor-default'} transition-colors`}
                       onClick={() => handleSort('startTime')}
                     >
                       Start Date
@@ -896,16 +897,16 @@ const ValidatorList = ({ onSelectValidator }: ValidatorListProps) => {
                   </th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-gray-700 bg-gray-900/30">
+              <tbody className="divide-y divide-border bg-background/30">
                 {validators.map((validator) => (
                   <tr 
                     key={validator.address}
-                    className="hover:bg-gray-800/50 transition-colors cursor-pointer"
+                    className="hover:bg-muted/30 transition-colors cursor-pointer"
                     onClick={() => {
                       onSelectValidator(validator);
                     }}
                   >
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-300">
+                    <td className="px-6 py-4 whitespace-nowrap text-sm">
                       {validator.rank || '-'}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
@@ -915,11 +916,11 @@ const ValidatorList = ({ onSelectValidator }: ValidatorListProps) => {
                             <img 
                               src={validator.imgSrc} 
                               alt={validator.name} 
-                              className="h-10 w-10 rounded-full object-contain bg-gray-800"
+                              className="h-10 w-10 rounded-full object-contain bg-secondary"
                             />
                           ) : (
-                            <div className="h-10 w-10 rounded-full bg-blue-500/20 flex items-center justify-center">
-                              <span className="text-blue-400 text-lg font-bold">
+                            <div className="h-10 w-10 rounded-full bg-primary/20 flex items-center justify-center">
+                              <span className="text-primary text-lg font-bold">
                                 {validator.name.charAt(0)}
                               </span>
                             </div>
@@ -934,21 +935,21 @@ const ValidatorList = ({ onSelectValidator }: ValidatorListProps) => {
                         </div>
                         <div>
                           <div 
-                            className="text-sm font-medium text-white hover:text-blue-400 cursor-pointer transition-colors"
+                            className="text-sm font-medium hover:text-primary cursor-pointer transition-colors"
                             onClick={(e) => navigateToValidatorDashboard(validator, e)}
                           >
                             {validator.name}
                           </div>
-                          <div className="text-xs text-gray-400">
+                          <div className="text-xs text-muted-foreground">
                             {validator.address.slice(0, 6)}...{validator.address.slice(-4)}
                           </div>
                         </div>
                       </div>
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-white">
+                    <td className="px-6 py-4 whitespace-nowrap text-sm">
                       {validator.delegatedStake.toLocaleString()} STRK
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-white">
+                    <td className="px-6 py-4 whitespace-nowrap text-sm">
                       {validator.totalDelegators.toLocaleString()}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-white">
@@ -963,28 +964,32 @@ const ValidatorList = ({ onSelectValidator }: ValidatorListProps) => {
             </table>
           </div>
           
-          <div className="px-6 py-4 flex items-center justify-between border-t border-gray-700">
-            <div className="text-sm text-gray-400">
-              Showing <span className="font-medium text-white">{validators.length}</span> of{' '}
-              <span className="font-medium text-white">many</span> validators
+          <div className="px-6 py-4 flex items-center justify-between border-t border-border">
+            <div className="text-sm text-muted-foreground">
+              Showing <span className="font-medium">{validators.length}</span> of{' '}
+              <span className="font-medium">many</span> validators
             </div>
             {!showBottom20 && (
               <div className="flex items-center gap-2">
                 <Button
                   onClick={() => handlePageChange(page - 1)}
                   disabled={page === 1}
-                  className="p-2 bg-gray-800 border border-gray-700 rounded-md text-gray-400 hover:text-white disabled:opacity-50"
+                  variant="outline"
+                  size="icon"
+                  className="h-8 w-8"
                 >
                   <ChevronLeft className="h-4 w-4" />
                 </Button>
-                <span className="text-sm text-gray-400">
-                  Page <span className="font-medium text-white">{page}</span> of{' '}
-                  <span className="font-medium text-white">{totalPages}</span>
+                <span className="text-sm text-muted-foreground">
+                  Page <span className="font-medium">{page}</span> of{' '}
+                  <span className="font-medium">{totalPages}</span>
                 </span>
                 <Button
                   onClick={() => handlePageChange(page + 1)}
                   disabled={page === totalPages}
-                  className="p-2 bg-gray-800 border border-gray-700 rounded-md text-gray-400 hover:text-white disabled:opacity-50"
+                  variant="outline"
+                  size="icon"
+                  className="h-8 w-8"
                 >
                   <ChevronRight className="h-4 w-4" />
                 </Button>
@@ -1668,22 +1673,22 @@ export default function Home() {
     const restStake = totalStake - topTenStake;
     
     return (
-      <div className="w-full bg-gray-900 rounded-xl p-6 mb-8">
+      <div className="w-full bg-background border border-border rounded-lg p-6 mb-8 shadow-sm">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           <div className="col-span-1">
-            <h3 className="text-lg font-semibold text-gray-400 mb-2">Total Network Stake</h3>
-            <p className="text-4xl font-bold text-white mb-1">
+            <h3 className="text-lg font-semibold text-muted-foreground mb-2">Total Network Stake</h3>
+            <p className="text-4xl font-bold mb-1">
               {Math.round(totalStake).toLocaleString()} STRK
             </p>
-            <p className="text-sm text-gray-500">
+            <p className="text-sm text-muted-foreground">
               Across all validators
             </p>
             {priceData && (
               <>
-                <p className="text-lg font-medium text-green-400 mt-2">
+                <p className="text-lg font-medium text-green-600 dark:text-green-400 mt-2">
                   ${((totalStake * priceData.usdPrice) / 1000000).toFixed(2)}M
                 </p>
-                <p className="text-sm text-gray-400">
+                <p className="text-sm text-muted-foreground">
                   STRK Price: ${priceData.usdPrice.toFixed(2)}
                 </p>
               </>
@@ -1692,34 +1697,34 @@ export default function Home() {
           
           <div className="md:col-span-2">
             <div className="flex justify-between items-center mb-2">
-              <h3 className="text-lg font-semibold text-gray-400">Stake Distribution</h3>
-              <span className="text-lg font-semibold text-blue-400">
+              <h3 className="text-lg font-semibold text-muted-foreground">Stake Distribution</h3>
+              <span className="text-lg font-semibold text-blue-600 dark:text-blue-400">
                 {Math.round(topTenStake/totalStake * 100)}% Concentration
               </span>
             </div>
             
             <div className="space-y-4">
               <div>
-                <div className="flex justify-between text-sm text-gray-400 mb-1">
+                <div className="flex justify-between text-sm text-muted-foreground mb-1">
                   <span>Top 10 Validators</span>
                   <span>{Math.round(topTenStake).toLocaleString()} STRK</span>
                 </div>
-                <div className="h-4 bg-gray-800 rounded-full overflow-hidden">
+                <div className="h-4 bg-secondary rounded-full overflow-hidden">
                   <div 
-                    className="h-full bg-gradient-to-r from-blue-500 to-blue-600 rounded-full"
+                    className="h-full bg-blue-600 dark:bg-blue-500 rounded-full"
                     style={{ width: `${(topTenStake/totalStake) * 100}%` }}
                   />
                 </div>
               </div>
               
               <div>
-                <div className="flex justify-between text-sm text-gray-400 mb-1">
+                <div className="flex justify-between text-sm text-muted-foreground mb-1">
                   <span>Other Validators</span>
                   <span>{Math.round(restStake).toLocaleString()} STRK</span>
                 </div>
-                <div className="h-4 bg-gray-800 rounded-full overflow-hidden">
+                <div className="h-4 bg-secondary rounded-full overflow-hidden">
                   <div 
-                    className="h-full bg-gradient-to-r from-purple-500 to-purple-600 rounded-full"
+                    className="h-full bg-purple-600 dark:bg-purple-500 rounded-full"
                     style={{ width: `${(restStake/totalStake) * 100}%` }}
                   />
                 </div>
@@ -1727,17 +1732,17 @@ export default function Home() {
               
               {priceData && (
                 <div className="mt-5">
-                  <div className="flex justify-between text-sm text-gray-400 mb-1">
+                  <div className="flex justify-between text-sm text-muted-foreground mb-1">
                     <span>Staked vs Circulating Supply</span>
                     <span>{((totalStake / priceData.circulatingSupply) * 100).toFixed(2)}%</span>
                   </div>
-                  <div className="h-4 bg-gray-800 rounded-full overflow-hidden">
+                  <div className="h-4 bg-secondary rounded-full overflow-hidden">
                     <div 
-                      className="h-full bg-gradient-to-r from-green-500 to-green-600 rounded-full"
+                      className="h-full bg-green-600 dark:bg-green-500 rounded-full"
                       style={{ width: `${(totalStake / priceData.circulatingSupply) * 100}%` }}
                     />
                   </div>
-                  <div className="flex justify-between text-xs text-gray-500 mt-1">
+                  <div className="flex justify-between text-xs text-muted-foreground mt-1">
                     <span>Staked: {Math.round(totalStake).toLocaleString()} STRK</span>
                     <span>Total: {Math.round(priceData.circulatingSupply).toLocaleString()} STRK</span>
                   </div>
@@ -1752,76 +1757,76 @@ export default function Home() {
 
   const ComparisonMetrics = () => {
     return (
-      <div className="mt-8 bg-gray-900 rounded-xl p-6">
-        <h3 className="text-xl font-semibold text-blue-400 mb-6">Top 10 vs Rest</h3>
+      <div className="mt-8 bg-background border border-border rounded-lg p-6 shadow-sm">
+        <h3 className="text-xl font-semibold text-foreground mb-6">Top 10 vs Rest</h3>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
           <div className="space-y-4">
-            <div className="flex items-center justify-between p-4 bg-gray-800 rounded-lg">
+            <div className="flex items-center justify-between p-4 bg-secondary/50 rounded-lg border border-border/50">
               <div>
-                <h4 className="text-sm font-medium text-gray-400">Average Delegated Stake</h4>
-                <p className="text-2xl font-bold text-white mt-1">
+                <h4 className="text-sm font-medium text-muted-foreground">Average Delegated Stake</h4>
+                <p className="text-2xl font-bold mt-1">
                   {stats.avgDelegatorsTopTen.toLocaleString()} STRK
                 </p>
-                <span className="text-blue-400 text-sm">Top 10</span>
+                <span className="text-blue-600 dark:text-blue-400 text-sm">Top 10</span>
               </div>
               <div className="text-right">
-                <p className="text-2xl font-bold text-white">
+                <p className="text-2xl font-bold">
                   {stats.avgDelegatedRest.toLocaleString()} STRK
                 </p>
-                <span className="text-purple-400 text-sm">Rest</span>
+                <span className="text-purple-600 dark:text-purple-400 text-sm">Rest</span>
               </div>
             </div>
 
-            <div className="flex items-center justify-between p-4 bg-gray-800 rounded-lg">
+            <div className="flex items-center justify-between p-4 bg-secondary/50 rounded-lg border border-border/50">
               <div>
-                <h4 className="text-sm font-medium text-gray-400">Average Total Stake</h4>
-                <p className="text-2xl font-bold text-white mt-1">
+                <h4 className="text-sm font-medium text-muted-foreground">Average Total Stake</h4>
+                <p className="text-2xl font-bold mt-1">
                   {stats.avgStakedPerStaker.toLocaleString()} STRK
                 </p>
-                <span className="text-blue-400 text-sm">Top 10</span>
+                <span className="text-blue-600 dark:text-blue-400 text-sm">Top 10</span>
               </div>
               <div className="text-right">
-                <p className="text-2xl font-bold text-white">
+                <p className="text-2xl font-bold">
                   {stats.avgStakedRest.toLocaleString()} STRK
                 </p>
-                <span className="text-purple-400 text-sm">Rest</span>
+                <span className="text-purple-600 dark:text-purple-400 text-sm">Rest</span>
               </div>
             </div>
 
-            <div className="flex items-center justify-between p-4 bg-gray-800 rounded-lg">
+            <div className="flex items-center justify-between p-4 bg-secondary/50 rounded-lg border border-border/50">
               <div>
-                <h4 className="text-sm font-medium text-gray-400">Average Delegators</h4>
-                <p className="text-2xl font-bold text-white mt-1">
+                <h4 className="text-sm font-medium text-muted-foreground">Average Delegators</h4>
+                <p className="text-2xl font-bold mt-1">
                   {stats.avgNumDelegatorsTop10.toLocaleString()}
                 </p>
-                <span className="text-blue-400 text-sm">Top 10</span>
+                <span className="text-blue-600 dark:text-blue-400 text-sm">Top 10</span>
               </div>
               <div className="text-right">
-                <p className="text-2xl font-bold text-white">
+                <p className="text-2xl font-bold">
                   {stats.avgNumDelegatorsRest.toLocaleString()}
                 </p>
-                <span className="text-purple-400 text-sm">Rest</span>
+                <span className="text-purple-600 dark:text-purple-400 text-sm">Rest</span>
               </div>
             </div>
           </div>
 
           <div className="space-y-4">
-            <div className="p-4 bg-gray-800 rounded-lg">
-              <h4 className="text-sm font-medium text-gray-400 mb-2">Stake Ratio (Top 10 : Rest)</h4>
-              <p className="text-3xl font-bold text-white">
+            <div className="p-4 bg-secondary/50 rounded-lg border border-border/50">
+              <h4 className="text-sm font-medium text-muted-foreground mb-2">Stake Ratio (Top 10 : Rest)</h4>
+              <p className="text-3xl font-bold">
                 {(stats.avgDelegatorsTopTen / stats.avgDelegatedRest).toFixed(1)}x
               </p>
-              <p className="text-sm text-gray-400 mt-1">
+              <p className="text-sm text-muted-foreground mt-1">
                 Top 10 validators have {(stats.avgDelegatorsTopTen / stats.avgDelegatedRest).toFixed(1)}x more stake
               </p>
             </div>
 
-            <div className="p-4 bg-gray-800 rounded-lg">
-              <h4 className="text-sm font-medium text-gray-400 mb-2">Delegator Ratio (Top 10 : Rest)</h4>
-              <p className="text-3xl font-bold text-white">
+            <div className="p-4 bg-secondary/50 rounded-lg border border-border/50">
+              <h4 className="text-sm font-medium text-muted-foreground mb-2">Delegator Ratio (Top 10 : Rest)</h4>
+              <p className="text-3xl font-bold">
                 {(stats.avgNumDelegatorsTop10 / stats.avgNumDelegatorsRest).toFixed(1)}x
               </p>
-              <p className="text-sm text-gray-400 mt-1">
+              <p className="text-sm text-muted-foreground mt-1">
                 Top 10 validators have {(stats.avgNumDelegatorsTop10 / stats.avgNumDelegatorsRest).toFixed(1)}x more delegators
               </p>
             </div>
@@ -1834,7 +1839,7 @@ export default function Home() {
   const MetricCard = ({ metric }: { metric: StatMetric }) => {
     return (
       <div 
-        className="group relative bg-gray-800/50 backdrop-blur-sm p-4 rounded-xl border border-gray-700/50 transition-all duration-300 hover:bg-gray-700/50 hover:border-gray-600"
+        className="group relative bg-background/95 p-4 rounded-lg border border-border/50 transition-all duration-300 hover:bg-secondary/50 hover:border-border"
       >
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
@@ -1842,16 +1847,16 @@ export default function Home() {
               {metric.icon}
             </div>
             <div>
-              <h4 className="text-sm font-medium text-gray-400">{metric.title}</h4>
-              <p className="text-2xl font-bold text-white mt-1">{metric.value.toLocaleString()}</p>
+              <h4 className="text-sm font-medium text-muted-foreground">{metric.title}</h4>
+              <p className="text-2xl font-bold mt-1">{metric.value.toLocaleString()}</p>
             </div>
           </div>
         </div>
         
         {/* Updated Tooltip to appear below */}
         <div className="absolute top-full left-1/2 -translate-x-1/2 mt-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none z-50">
-          <div className="w-3 h-3 bg-gray-900 border-gray-700 border-l border-t rotate-45 absolute -top-1.5 left-1/2 -translate-x-1/2"></div>
-          <div className="bg-gray-900 text-gray-300 px-4 py-2 rounded-lg shadow-xl border border-gray-700 w-64">
+          <div className="w-3 h-3 bg-popover border-border border-l border-t rotate-45 absolute -top-1.5 left-1/2 -translate-x-1/2"></div>
+          <div className="bg-popover text-popover-foreground px-4 py-2 rounded-lg shadow-md border border-border w-64">
             <p className="text-sm">{metric.tooltip}</p>
           </div>
         </div>
@@ -1945,16 +1950,16 @@ export default function Home() {
         className={`w-full relative overflow-hidden ${
           isUnpooling 
             ? timeLeft === null 
-              ? 'bg-green-600 hover:bg-green-700' 
-              : 'bg-blue-600 hover:bg-blue-700'
-            : 'bg-red-600 hover:bg-red-700'
-        } text-white text-sm`}
+              ? 'bg-green-600 hover:bg-green-700 dark:bg-green-600 dark:hover:bg-green-700' 
+              : 'bg-primary hover:bg-primary/90'
+            : 'bg-destructive hover:bg-destructive/90'
+        } text-sm`}
         disabled={isButtonDisabled}
       >
-        {/* Full button progress overlay */}
+        {/* Progress overlay */}
         {isUnpooling && (
           <div 
-            className="absolute inset-0 bg-gradient-to-r from-blue-500 to-indigo-600 z-0"
+            className="absolute inset-0 bg-primary/50 z-0"
             style={{ width: `${progress}%` }}
           />
         )}
@@ -2049,18 +2054,44 @@ export default function Home() {
             className="w-full bg-gray-800/50 backdrop-blur-sm border-b border-gray-700 mb-8 overflow-hidden"
           >
             <div className="w-full flex items-center justify-between h-16 px-4">
-              <div className="flex-1"></div> {/* Empty div for spacing */}
+              <div className="flex-1">
+                {!isStakeInfoOpen && walletConnected && (
+                  <div className="flex items-center">
+                    <div className="bg-gray-800/60 border border-gray-700/40 rounded-lg px-4 py-2 flex items-center gap-8">
+                      <div>
+                        <span className="text-xs text-gray-400 block">Total Delegated</span>
+                        <p className="text-sm font-medium text-white">{userStakeInfo.totalDelegated.toLocaleString()} STRK</p>
+                      </div>
+                      
+                      <div>
+                        <span className="text-xs text-gray-400 block">Available Rewards</span>
+                        <p className="text-sm font-medium text-white">{userStakeInfo.availableRewards.toLocaleString()} STRK</p>
+                      </div>
+                      
+                      <Button
+                        onClick={claimRewards}
+                        size="sm"
+                        variant="outline"
+                        className="border-gray-700 hover:bg-gray-700/50 text-white text-xs h-8"
+                        disabled={userStakeInfo.availableRewards <= 0 || processing}
+                      >
+                        {processing ? "Claiming..." : "Claim"}
+                      </Button>
+                    </div>
+                  </div>
+                )}
+              </div>
               
               <div 
                 className="flex-1 flex justify-center cursor-pointer group"
                 onClick={() => setIsStakeInfoOpen(!isStakeInfoOpen)}
               >
                 <div className="flex items-center gap-2">
-                  <span className="text-xl font-semibold text-blue-400 group-hover:text-blue-300 transition-colors">
+                  <span className="text-xl font-semibold text-foreground group-hover:text-primary transition-colors">
                     Staking Dashboard
                   </span>
                   {/* Small indicator icon next to title */}
-                  <div className="text-gray-400 group-hover:text-blue-300 transition-colors">
+                  <div className="text-muted-foreground group-hover:text-primary transition-colors">
                     {isStakeInfoOpen ? (
                       <ChevronUp className="h-4 w-4" />
                     ) : (
@@ -2113,9 +2144,10 @@ export default function Home() {
                   </div>
                 ) : (
                   <Button 
-                    className="px-6 py-2 rounded-lg transition-all duration-300 transform hover:scale-105 bg-gradient-to-r from-blue-600 to-purple-600 text-white"
+                    className="px-6"
                     onClick={connectWallet}
                     disabled={isConnecting}
+                    variant="default"
                   >
                     {isConnecting ? (
                       <div className="flex items-center gap-2">
@@ -2142,11 +2174,11 @@ export default function Home() {
               <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-5xl mx-auto">
                 <motion.div
                   whileHover={{ scale: 1.02 }}
-                  className="bg-gray-800/50 backdrop-blur-sm p-6 rounded-xl border border-gray-700 shadow-lg flex flex-col justify-between"
+                  className="bg-background p-6 rounded-lg border border-border shadow-sm flex flex-col justify-between"
                 >
                   <div>
-                    <h4 className="text-sm font-medium text-gray-400 mb-2">Total Delegated</h4>
-                    <p className="text-3xl font-bold text-white">
+                    <h4 className="text-sm font-medium text-muted-foreground mb-2">Total Delegated</h4>
+                    <p className="text-3xl font-bold">
                       {userStakeInfo.totalDelegated.toLocaleString()} STRK
                     </p>
                   </div>
@@ -2154,11 +2186,11 @@ export default function Home() {
                 
                 <motion.div
                   whileHover={{ scale: 1.02 }}
-                  className="bg-gray-800/50 backdrop-blur-sm p-6 rounded-xl border border-gray-700 shadow-lg flex flex-col justify-between"
+                  className="bg-background p-6 rounded-lg border border-border shadow-sm flex flex-col justify-between"
                 >
                   <div>
-                    <h4 className="text-sm font-medium text-gray-400 mb-2">Available Rewards</h4>
-                    <p className="text-3xl font-bold text-green-400">
+                    <h4 className="text-sm font-medium text-muted-foreground mb-2">Available Rewards</h4>
+                    <p className="text-3xl font-bold text-green-600 dark:text-green-400">
                       {userStakeInfo.availableRewards.toLocaleString()} STRK
                     </p>
                   </div>
@@ -2183,10 +2215,10 @@ export default function Home() {
                 
                 <motion.div
                   whileHover={{ scale: 1.02 }}
-                  className="md:col-span-1 bg-gray-800/50 backdrop-blur-sm p-6 rounded-xl border border-gray-700 shadow-lg"
+                  className="md:col-span-1 bg-background p-6 rounded-lg border border-border shadow-sm"
                 >
-                  <h4 className="text-sm font-medium text-gray-400 mb-2">Your Delegations</h4>
-                  <p className="text-3xl font-bold text-white">
+                  <h4 className="text-sm font-medium text-muted-foreground mb-2">Your Delegations</h4>
+                  <p className="text-3xl font-bold">
                     {userStakeInfo.delegations.length} Validators
                   </p>
                 </motion.div>
@@ -2198,7 +2230,7 @@ export default function Home() {
                         <motion.div
                           key={index}
                           whileHover={{ scale: 1.02 }}
-                          className="bg-gray-800/50 backdrop-blur-sm p-6 rounded-xl border border-gray-700 shadow-lg"
+                          className="bg-background p-6 rounded-lg border border-border shadow-sm"
                         >
                           <div className="flex items-center gap-4 mb-4">
                             <div className="relative w-12 h-12">
@@ -2209,8 +2241,8 @@ export default function Home() {
                                   className="w-12 h-12 rounded-full"
                                 />
                               ) : (
-                                <div className="w-12 h-12 rounded-full bg-blue-500/20 flex items-center justify-center">
-                                  <span className="text-blue-400 text-lg font-bold">
+                                <div className="w-12 h-12 rounded-full bg-primary/20 flex items-center justify-center">
+                                  <span className="text-primary text-lg font-bold">
                                     {delegation.validatorName.charAt(0)}
                                   </span>
                                 </div>
@@ -2225,8 +2257,8 @@ export default function Home() {
                             </div>
                             <div>
                               <h3 
-                                className="font-semibold text-white cursor-pointer hover:text-blue-400 hover:underline"
-                                onClick={(e) => navigateToValidatorDashboard(validator, e)}
+                                className="font-semibold cursor-pointer hover:text-primary hover:underline"
+                                onClick={(e) => navigateToValidatorDashboard(validators, e)}
                               >
                                 {delegation.validatorName}
                               </h3>
@@ -2234,7 +2266,7 @@ export default function Home() {
                                 href={`https://voyager.online/contract/${delegation.poolAddress}`}
                                 target="_blank"
                                 rel="noopener noreferrer"
-                                className="text-sm text-gray-400 hover:text-blue-400"
+                                className="text-sm text-muted-foreground hover:text-primary"
                               >
                                 {delegation.poolAddress.slice(0, 6)}...{delegation.poolAddress.slice(-4)}
                               </a>
@@ -2242,14 +2274,14 @@ export default function Home() {
                           </div>
                           <div className="space-y-2">
                             <div className="flex justify-between items-center">
-                              <span className="text-gray-400">Delegated</span>
-                              <span className="text-white font-medium">
+                              <span className="text-muted-foreground">Delegated</span>
+                              <span className="font-medium">
                                 {delegation.delegatedStake.toLocaleString()} STRK
                               </span>
                             </div>
                             <div className="flex justify-between items-center">
-                              <span className="text-gray-400">Pending Rewards</span>
-                              <span className="text-green-400 font-medium">
+                              <span className="text-muted-foreground">Pending Rewards</span>
+                              <span className="text-green-600 dark:text-green-400 font-medium">
                                 {delegation.pendingRewards.toLocaleString()} STRK
                               </span>
                             </div>
@@ -2272,7 +2304,7 @@ export default function Home() {
       </div>
 
       <div className="w-full max-w-[98%] grid grid-cols-1 lg:grid-cols-4 gap-8 relative">
-        <Card className="lg:col-span-3 bg-gray-800 border-gray-700">
+        <Card className="lg:col-span-3 bg-background border-border">
           <CardHeader>
             <div className="space-y-8">
               <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
@@ -2281,32 +2313,32 @@ export default function Home() {
                     title: "Zero Delegators",
                     value: stats.validatorsWithZeroStake,
                     tooltip: "Number of validators that have not received any delegations yet. These validators are waiting for their first delegators to join.",
-                    icon: <Users className="w-5 h-5 text-red-400" />,
-                    color: "bg-red-500/20"
+                    icon: <Users className="w-5 h-5 text-red-600 dark:text-red-400" />,
+                    color: "bg-red-500/10"
                   },
                   {
                     title: ">1M STRK Delegated",
                     value: stats.validatorsOver1M,
                     tooltip: "Number of validators that have received more than 1 million STRK in delegations. These are the largest validators by stake.",
-                    icon: <Landmark className="w-5 h-5 text-green-400" />,
-                    color: "bg-green-500/20"
+                    icon: <Landmark className="w-5 h-5 text-green-600 dark:text-green-400" />,
+                    color: "bg-green-500/10"
                   },
                   {
                     title: "2+ Delegators",
                     value: stats.validatorsWithTwoPlus,
                     tooltip: "Number of validators that have two or more unique delegators. This indicates validators with a diverse delegation base.",
-                    icon: <Users2 className="w-5 h-5 text-blue-400" />,
-                    color: "bg-blue-500/20"
+                    icon: <Users2 className="w-5 h-5 text-primary" />,
+                    color: "bg-primary/10"
                   },
                   {
                     title: "Active Validators",
                     value: stats.totalActiveValidators,
-                    tooltip: "Total number of validators currently active in the network with non-zero stake. This represents the size of the validator network.",
-                    icon: <Activity className="w-5 h-5 text-purple-400" />,
-                    color: "bg-purple-500/20"
+                    tooltip: "Total number of active validators on the Starknet network. These validators help secure and operate the network.",
+                    icon: <ShieldCheck className="w-5 h-5 text-emerald-600 dark:text-emerald-400" />,
+                    color: "bg-emerald-500/10"
                   }
-                ].map((metric, index) => (
-                  <MetricCard key={index} metric={metric} />
+                ].map((metric, i) => (
+                  <MetricCard key={i} metric={metric} />
                 ))}
               </div>
               <NetworkStatsHeader />
@@ -2321,8 +2353,8 @@ export default function Home() {
               
               <DelegationStats />
 
-              <div>
-                <h3 className="text-xl font-semibold text-blue-400 mb-4">Top 20 Validators</h3>
+              <div className="bg-background rounded-lg border border-border p-6 shadow-sm mt-8">
+                <h3 className="text-xl font-semibold mb-4">Top 20 Validators</h3>
                 <div className="h-80 w-full">
                   <ResponsiveContainer width="100%" height="100%">
                     <BarChart 
@@ -2371,8 +2403,8 @@ export default function Home() {
                 </div>
               </div>
 
-              <div>
-                <h3 className="text-xl font-semibold text-blue-400 mb-4">Bottom 20 Validators</h3>
+              <div className="bg-background rounded-lg border border-border p-6 shadow-sm mt-8">
+                <h3 className="text-xl font-semibold mb-4">Bottom 20 Validators</h3>
                 <div className="h-80 w-full">
                   <ResponsiveContainer width="100%" height="100%">
                     <BarChart 
@@ -2433,9 +2465,9 @@ export default function Home() {
           </CardContent>
         </Card>
 
-        <Card className="lg:col-span-1 bg-gradient-to-b from-blue-900/50 to-gray-800 border-blue-700/30 lg:sticky lg:top-24 h-fit shadow-xl shadow-blue-500/10">
+        <Card className="lg:col-span-1 bg-background border-border lg:sticky lg:top-24 h-fit shadow-sm">
           <CardHeader className="text-center py-3" id="staking-component">
-            <CardTitle className="text-2xl font-bold text-blue-400">Stake STRK</CardTitle>
+            <CardTitle className="text-2xl font-bold">Stake STRK</CardTitle>
           </CardHeader>
           <CardContent className="pb-3 pt-0">
             <div className="space-y-4">
@@ -2443,7 +2475,7 @@ export default function Home() {
               <div className="flex justify-center">
                 <Button 
                   onClick={() => selectRandomDelegator(true)} 
-                  className="bg-blue-600 hover:bg-blue-700 text-white text-sm py-1 h-8 w-full"
+                  className="text-sm py-1 h-8 w-full"
                   size="sm"
                 >
                   <RefreshCw className="mr-1 h-4 w-4" />
@@ -2455,7 +2487,7 @@ export default function Home() {
                 <motion.div
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
-                  className="p-2 border border-gray-700 rounded-md bg-gray-900"
+                  className="p-2 border border-border rounded-md bg-muted/30"
                 >
                   <div className="flex items-center gap-2">
                     {selectedDelegator.imgSrc && (
@@ -2467,15 +2499,15 @@ export default function Home() {
                     )}
                     <div>
                       <p 
-                        className="font-semibold text-blue-400 text-sm cursor-pointer hover:underline"
+                        className="font-semibold text-primary text-sm cursor-pointer hover:underline"
                         onClick={() => router.push(`/validator/${selectedDelegator.address}`)}
                       >
                         {selectedDelegator.name}
                         {selectedDelegator.isVerified && (
-                          <span className="ml-1 text-green-400">✓</span>
+                          <span className="ml-1 text-green-600 dark:text-green-400">✓</span>
                         )}
                       </p>
-                      <p className="text-xs text-gray-400">
+                      <p className="text-xs text-muted-foreground">
                         Stake: {selectedDelegator.delegatedStake.toLocaleString()} | 
                         Delegators: {selectedDelegator.totalDelegators?.toLocaleString() || 'N/A'}
                       </p>
@@ -2486,7 +2518,7 @@ export default function Home() {
               
               <form onSubmit={handleStake} className="space-y-3">
                 <div>
-                  <Label htmlFor="stakeAmount" className="text-sm text-gray-300 font-medium">
+                  <Label htmlFor="stakeAmount" className="text-sm font-medium">
                     Stake Amount (STRK)
                   </Label>
                   <Input
@@ -2498,16 +2530,16 @@ export default function Home() {
                     value={stakeAmount}
                     onChange={handleStakeAmountChange}
                     required
-                    className="bg-gray-700 border-gray-600 text-white placeholder-gray-400 text-md mt-1 h-9"
+                    className="mt-1 h-9"
                   />
                 </div>
                 
-                <div className="flex items-center justify-between bg-gray-800/60 p-1.5 rounded-md border border-gray-700">
+                <div className="flex items-center justify-between bg-muted/30 p-1.5 rounded-md border border-border">
                   <div className="flex items-center gap-1.5">
                     <div className="bg-purple-500/20 p-0.5 rounded">
-                      <Zap className="h-3 w-3 text-purple-400" />
+                      <Zap className="h-3 w-3 text-purple-600 dark:text-purple-400" />
                     </div>
-                    <span className="text-xs text-gray-300 font-medium">Split delegation (90/10)</span>
+                    <span className="text-xs font-medium">Split delegation (90/10)</span>
                   </div>
                   <div className="relative inline-block w-8 h-4 transition duration-200 ease-in-out">
                     <input
@@ -2520,7 +2552,7 @@ export default function Home() {
                           selectRandomBottomValidatorForSplit();
                         }
                       }}
-                      className="opacity-0 w-0 h-0"
+                      className="sr-only"
                     />
                     <label
                       htmlFor="splitDelegation"
@@ -2637,7 +2669,8 @@ export default function Home() {
                     type="button" 
                     onClick={connectWallet} 
                     disabled={isConnecting}
-                    className="w-full bg-blue-600 hover:bg-blue-700 text-white"
+                    className="w-full"
+                    variant="default"
                   >
                     {isConnecting ? (
                       <>
@@ -2692,22 +2725,22 @@ export default function Home() {
 
       {userStakeInfo.unstakeIntents.length > 0 && (
         <div className="md:col-span-3 mt-6">
-          <h3 className="text-xl font-semibold text-blue-400 mb-4">Pending Unstakes</h3>
+          <h3 className="text-xl font-semibold mb-4">Pending Unstakes</h3>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {userStakeInfo.unstakeIntents.map((intent, index) => (
               <motion.div
                 key={index}
-                className="bg-gray-800/50 backdrop-blur-sm p-6 rounded-xl border border-gray-700 shadow-lg"
+                className="bg-background p-6 rounded-lg border border-border shadow-sm"
               >
-                <h4 className="font-semibold text-white mb-2">{intent.validatorName}</h4>
+                <h4 className="font-semibold mb-2">{intent.validatorName}</h4>
                 <div className="space-y-2">
                   <div className="flex justify-between">
-                    <span className="text-gray-400">Amount</span>
-                    <span className="text-white">{intent.amount.toLocaleString()} STRK</span>
+                    <span className="text-muted-foreground">Amount</span>
+                    <span>{intent.amount.toLocaleString()} STRK</span>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-gray-400">Available in</span>
-                    <span className="text-white">
+                    <span className="text-muted-foreground">Available in</span>
+                    <span>
                       {Math.max(0, Math.ceil((intent.canClaimAt - Date.now()) / (1000 * 60 * 60 * 24)))} days
                     </span>
                   </div>
@@ -2715,6 +2748,7 @@ export default function Home() {
                     onClick={() => finalizeUnstake(intent)}
                     className="w-full mt-2"
                     disabled={Date.now() < intent.canClaimAt}
+                    variant={Date.now() < intent.canClaimAt ? "outline" : "default"}
                   >
                     {Date.now() < intent.canClaimAt ? 'Waiting Period' : 'Claim Unstaked Tokens'}
                   </Button>
@@ -2733,9 +2767,9 @@ export default function Home() {
 
 function StatCard({ title, value }: StatCardProps) {
   return (
-    <div className="bg-gray-900 p-4 rounded-lg border border-gray-700">
-      <h4 className="text-lg font-semibold text-blue-400 mb-2">{title}</h4>
-      <p className="text-2xl font-bold text-white">{value}</p>
+    <div className="bg-background p-4 rounded-lg border border-border shadow-sm">
+      <h4 className="text-lg font-semibold text-muted-foreground mb-2">{title}</h4>
+      <p className="text-2xl font-bold">{value}</p>
     </div>
   )
 }
