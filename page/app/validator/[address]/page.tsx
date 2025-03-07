@@ -26,10 +26,11 @@ import {
 } from "@/components/ui/dialog"
 
 // Constants for blockchain interactions
-const STRK_TOKEN_ADDRESS = '0x04718f5a0fc34cc1af16a1cdee98ffb20c31f5cd61d6ab07201858f4287c938d';
+
+const STRK_TOKEN_ADDRESS = "0x04718f5a0fc34cc1af16a1cdee98ffb20c31f5cd61d6ab07201858f4287c938d"
 const STRK_DECIMALS = 18;
-const RPC_URL = 'https://starknet-mainnet.infura.io/v3/55c736aadf004f3595a515f7c973ee24';
-const ALLOWANCE_SELECTOR = '0x0219209e083275171774dab1df80982e9df2096516f06319c5c6d71ae0a8480c';
+const RPC_URL = "https://free-rpc.nethermind.io/mainnet-juno/v0_7";
+const ALLOWANCE_SELECTOR = "0x1e888a1026b19c8c0b57c72d63ed1737106aa10034105b980ba117bd0c29fe1";
 
 // Types
 export type Validator = {
@@ -87,6 +88,14 @@ interface TopDelegator {
   address: string
   delegatedStake: number
   startTime: number
+}
+
+interface DelegationWithUnpoolTime {
+  validatorName: string;
+  poolAddress: string;
+  delegatedStake: number;
+  pendingRewards: number;
+  unpoolTime?: number; // Optional field for unpooltime
 }
 
 interface ValidatorDashboardData {
@@ -196,6 +205,7 @@ export default function ValidatorDashboard() {
   const [splitDelegationPreview, setSplitDelegationPreview] = useState({ mainAmount: "0", bottomAmount: "0" })
   const [bottomValidators, setBottomValidators] = useState<Validator[]>([])
   const [stakeDialogOpen, setStakeDialogOpen] = useState(false)
+  const [userDelegations, setUserDelegations] = useState<DelegationWithUnpoolTime[]>([])
 
   useEffect(() => {
     const fetchValidatorData = async () => {
@@ -254,6 +264,13 @@ export default function ValidatorDashboard() {
       selectRandomBottomValidatorForSplit();
     }
   }, [isSplitDelegation, bottomValidators]);
+
+  // After the wallet connection, fetch user delegations
+  useEffect(() => {
+    if (account) {
+      fetchUserDelegations();
+    }
+  }, [account]);
 
   const connectWallet = async () => {
     try {
@@ -359,6 +376,31 @@ export default function ValidatorDashboard() {
     }
   }
 
+  const fetchUserDelegations = async () => {
+    if (!account) return;
+    
+    try {
+      const addressToUse = normalizeAddress(account.address);
+      const response = await fetch(`/api/delegations?address=${addressToUse}`);
+      if (!response.ok) throw new Error('Failed to fetch delegations');
+      
+      const data = await response.json();
+      setUserDelegations(data.delegations || []);
+    } catch (error) {
+      console.error('Error fetching delegations:', error);
+    }
+  };
+
+  const normalizeAddress = (address: string): string => {
+    if (!address) return address;
+    
+    // If address starts with 0x and the next character isn't 0, add the 0
+    if (address.startsWith('0x') && address.length === 65) {
+      return `0x0${address.slice(2)}`;
+    }
+    return address;
+  };
+
   const stakeCall = async (poolAddress: string, amount: string): Promise<any> => {
     try {
       if (!account) {
@@ -368,13 +410,29 @@ export default function ValidatorDashboard() {
       
       const amountBn = parseTokenAmount(amount);
       
-      // For simplicity, always use enter_delegation_pool for now
-      // In a production app, you'd check if the user already has a delegation
-      return {
-        contractAddress: poolAddress,
-        entrypoint: 'enter_delegation_pool',
-        calldata: [account.address, amountBn.toString()]
-      };
+      // Check if user already has a delegation to this pool
+      const hasExistingDelegation = userDelegations.some(
+        delegation => delegation.poolAddress.toLowerCase() === poolAddress.toLowerCase()
+      );
+      
+      // Create the appropriate call object based on whether it's a new or existing delegation
+      if (hasExistingDelegation) {
+        // If already delegated, use add_to_delegation_pool with both parameters
+        console.log('Using add_to_delegation_pool for existing delegation');
+        return {
+          contractAddress: poolAddress,
+          entrypoint: 'add_to_delegation_pool',
+          calldata: [account.address, amountBn.toString()]
+        };
+      } else {
+        // For first-time delegation, use enter_delegation_pool
+        console.log('Using enter_delegation_pool for new delegation');
+        return {
+          contractAddress: poolAddress,
+          entrypoint: 'enter_delegation_pool',
+          calldata: [account.address, amountBn.toString()]
+        };
+      }
     } catch (error) {
       console.error('Error creating stake call:', error);
       return null;
@@ -589,6 +647,11 @@ export default function ValidatorDashboard() {
         // Reset state
         setStakeAmount("");
         setStakeDialogOpen(false);
+        
+        // Refresh user delegations after successful staking
+        if (account) {
+          await fetchUserDelegations();
+        }
       }
     } catch (error: any) {
       console.error('Staking error:', error);

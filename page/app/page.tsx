@@ -998,6 +998,7 @@ const ValidatorList = ({ onSelectValidator }: ValidatorListProps) => {
 };
 
 export default function Home() {
+  const router = useRouter()
   const [selectedDelegator, setSelectedDelegator] = useState<Validator | null>(null)
   const [stakeAmount, setStakeAmount] = useState("")
   const [isStaking, setIsStaking] = useState(false)
@@ -2021,6 +2022,16 @@ export default function Home() {
     };
   };
 
+  // Add this helper function to navigate to validator dashboard
+  const navigateToValidatorDashboard = (validator: any, e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (validator && validator.address) {
+      router.push(`/validator/${validator.address}`);
+    } else if (validator && validator.poolAddress) {
+      router.push(`/validator/${validator.poolAddress}`);
+    }
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-900 to-gray-800 flex flex-col items-center pt-0 px-0 pb-4">
       <meta name="google-site-verification" content="BioBqMAm54m_zMizQ_YtbyFCgVe_BY9KGhn8j6K9KWg" />
@@ -2034,7 +2045,7 @@ export default function Home() {
         <AnimatePresence>
           <motion.div
             initial={{ height: 0 }}
-            animate={{ height: isStakeInfoOpen ? 'auto' : '64px' }}
+            animate={{ height: isStakeInfoOpen ? '480px' : '64px' }}  // Changed from 400px
             className="w-full bg-gray-800/50 backdrop-blur-sm border-b border-gray-700 mb-8 overflow-hidden"
           >
             <div className="w-full flex items-center justify-between h-16 px-4">
@@ -2122,10 +2133,11 @@ export default function Home() {
               </div>
             </div>
             
+            {/* Make the content section scrollable */}
             <motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: isStakeInfoOpen ? 1 : 0 }}
-              className="px-4 pb-6 pt-2"
+              className="px-4 pb-6 pt-2 h-[calc(480px-64px)] overflow-y-auto"  // Changed from 400px
             >
               <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-5xl mx-auto">
                 <motion.div
@@ -2212,7 +2224,12 @@ export default function Home() {
                               )}
                             </div>
                             <div>
-                              <h3 className="font-semibold text-white">{delegation.validatorName}</h3>
+                              <h3 
+                                className="font-semibold text-white cursor-pointer hover:text-blue-400 hover:underline"
+                                onClick={(e) => navigateToValidatorDashboard(validator, e)}
+                              >
+                                {delegation.validatorName}
+                              </h3>
                               <a
                                 href={`https://voyager.online/contract/${delegation.poolAddress}`}
                                 target="_blank"
@@ -2449,7 +2466,10 @@ export default function Home() {
                       />
                     )}
                     <div>
-                      <p className="font-semibold text-blue-400 text-sm">
+                      <p 
+                        className="font-semibold text-blue-400 text-sm cursor-pointer hover:underline"
+                        onClick={() => router.push(`/validator/${selectedDelegator.address}`)}
+                      >
                         {selectedDelegator.name}
                         {selectedDelegator.isVerified && (
                           <span className="ml-1 text-green-400">✓</span>
@@ -2542,7 +2562,12 @@ export default function Home() {
                               )}
                             </div>
                           )}
-                          <span className="text-gray-300 truncate max-w-[100px]">{selectedDelegator?.name}</span>
+                          <span 
+                            className="text-gray-300 truncate max-w-[100px] cursor-pointer hover:text-blue-400"
+                            onClick={() => selectedDelegator && router.push(`/validator/${selectedDelegator.address}`)}
+                          >
+                            {selectedDelegator?.name}
+                          </span>
                         </div>
                         <span className="text-white font-semibold">{splitDelegationPreview.mainAmount} STRK</span>
                       </div>
@@ -2564,7 +2589,10 @@ export default function Home() {
                               )}
                             </div>
                           )}
-                          <span className="text-gray-300 truncate max-w-[100px]">
+                          <span 
+                            className="text-gray-300 truncate max-w-[100px] cursor-pointer hover:text-blue-400"
+                            onClick={() => randomBottomValidator && router.push(`/validator/${randomBottomValidator.address}`)}
+                          >
                             {randomBottomValidator?.name || 'Selecting...'}
                           </span>
                         </div>
