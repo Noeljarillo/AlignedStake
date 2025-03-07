@@ -588,8 +588,7 @@ export default function ValidatorDashboard() {
               body: JSON.stringify({
                 txHash: tx.transaction_hash + "_main", // Append suffix to make hash unique 
                 senderAddress: account.address,
-                validatorAddress: data.validator.address,
-                validatorName: data.validator.name,
+                contractAddress: data.validator.poolAddress,
                 amountStaked: Number(mainAmount),
               }),
             });
@@ -603,8 +602,7 @@ export default function ValidatorDashboard() {
               body: JSON.stringify({
                 txHash: tx.transaction_hash + "_bottom", // Append suffix to make hash unique
                 senderAddress: account.address,
-                validatorAddress: randomBottomValidator.address,
-                validatorName: randomBottomValidator.name,
+                contractAddress: randomBottomValidator.poolAddress,
                 amountStaked: Number(bottomAmount),
               }),
             });
@@ -623,8 +621,7 @@ export default function ValidatorDashboard() {
               body: JSON.stringify({
                 txHash: tx.transaction_hash,
                 senderAddress: account.address,
-                validatorAddress: data.validator.address,
-                validatorName: data.validator.name,
+                contractAddress: data.validator.poolAddress,
                 amountStaked: Number(stakeAmount),
               }),
             });
