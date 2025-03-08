@@ -395,23 +395,25 @@ const SidebarSeparator = React.forwardRef<
 })
 SidebarSeparator.displayName = "SidebarSeparator"
 
-const SidebarContent = React.forwardRef<
+export const EnhancedSidebarContent = React.forwardRef<
   HTMLDivElement,
   React.ComponentProps<"div">
 >(({ className, ...props }, ref) => {
+  const { open } = useSidebar()
+
   return (
     <div
       ref={ref}
-      data-sidebar="content"
       className={cn(
-        "flex min-h-0 flex-1 flex-col gap-2 overflow-auto group-data-[collapsible=icon]:overflow-hidden",
+        "flex flex-col h-full overflow-hidden transition-all duration-300",
+        open ? "opacity-100" : "opacity-0 lg:opacity-100",
         className
       )}
       {...props}
     />
   )
 })
-SidebarContent.displayName = "SidebarContent"
+EnhancedSidebarContent.displayName = "EnhancedSidebarContent"
 
 const SidebarGroup = React.forwardRef<
   HTMLDivElement,
@@ -734,6 +736,101 @@ const SidebarMenuSubButton = React.forwardRef<
   )
 })
 SidebarMenuSubButton.displayName = "SidebarMenuSubButton"
+
+export const EnhancedSidebarNav = React.forwardRef<
+  HTMLDivElement,
+  React.ComponentProps<"nav">
+>(({ className, ...props }, ref) => {
+  return (
+    <nav
+      ref={ref}
+      className={cn(
+        "flex-1 overflow-auto py-2 px-2",
+        className
+      )}
+      {...props}
+    />
+  )
+})
+EnhancedSidebarNav.displayName = "EnhancedSidebarNav"
+
+export interface EnhancedSidebarNavItemProps
+  extends React.ComponentProps<"div">,
+    VariantProps<typeof enhancedSidebarNavItemVariants> {
+  title: string
+  icon?: React.ComponentType<{ className?: string }>
+  isActive?: boolean
+  href?: string
+  onOpenChange?: (open: boolean) => void
+  asChild?: boolean
+}
+
+const enhancedSidebarNavItemVariants = cva(
+  "group flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium transition-all duration-200",
+  {
+    variants: {
+      variant: {
+        default: "text-muted-foreground hover:bg-accent hover:text-accent-foreground",
+        active: "bg-accent text-accent-foreground",
+      },
+    },
+    defaultVariants: {
+      variant: "default",
+    },
+  }
+)
+
+export const EnhancedSidebarNavItem = React.forwardRef<
+  HTMLDivElement,
+  EnhancedSidebarNavItemProps
+>(
+  (
+    {
+      title,
+      icon: Icon,
+      isActive,
+      variant = isActive ? "active" : "default",
+      href,
+      className,
+      children,
+      asChild = false,
+      ...props
+    },
+    ref
+  ) => {
+    const { open } = useSidebar()
+    const Comp = asChild ? Slot : "div"
+    
+    return (
+      <Comp ref={ref} className="w-full" {...props}>
+        <div
+          className={cn(
+            enhancedSidebarNavItemVariants({ variant }),
+            isActive && "bg-gradient-to-r from-blue-600/20 to-indigo-600/10 text-blue-100 font-medium",
+            "relative overflow-hidden hover:scale-[1.02] transform",
+            className
+          )}
+        >
+          {isActive && (
+            <div className="absolute left-0 top-0 h-full w-1 bg-gradient-to-b from-blue-500 to-indigo-600" />
+          )}
+          {Icon && (
+            <Icon
+              className={cn(
+                "h-5 w-5 shrink-0",
+                isActive ? "text-blue-400" : "text-muted-foreground group-hover:text-current",
+                variant === "active" && "text-current"
+              )}
+            />
+          )}
+          {open && <span>{title}</span>}
+          {children}
+        </div>
+      </Comp>
+    )
+  }
+)
+EnhancedSidebarNavItem.displayName = "EnhancedSidebarNavItem"
 
 export {
   Sidebar,

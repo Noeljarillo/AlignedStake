@@ -1,0 +1,96 @@
+/* Enhanced UI for AlignedStake */
+
+/* Card enhancements */
+.card {
+  @apply transition-all duration-300 !important;
+}
+
+.card-glass {
+  @apply bg-gray-800/60 backdrop-blur-md border-gray-700/50 text-white !important;
+}
+
+.card-gradient {
+  @apply bg-gradient-to-br from-gray-800 via-gray-900 to-gray-950 text-white border-gray-700/50 !important;
+}
+
+.card-glow {
+  @apply bg-gray-800 text-white border-blue-500/30 shadow-[0_0_15px_rgba(59,130,246,0.15)] !important;
+}
+
+/* Button enhancements */
+.btn-gradient {
+  @apply relative bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 text-white overflow-hidden shadow-md hover:shadow-lg transform hover:-translate-y-0.5 before:absolute before:inset-0 before:bg-gradient-to-r before:from-blue-500 before:via-indigo-500 before:to-purple-500 before:opacity-0 before:transition-opacity hover:before:opacity-100 before:duration-300 !important;
+}
+
+.btn-glow {
+  @apply relative bg-gray-800 text-white overflow-hidden shadow-[0_0_15px_rgba(59,130,246,0.5)] hover:shadow-[0_0_20px_rgba(59,130,246,0.7)] transform hover:-translate-y-0.5 after:absolute after:inset-0 after:border after:border-blue-500 after:rounded-md after:opacity-0 hover:after:opacity-100 after:transition-opacity after:duration-300 !important;
+}
+
+/* Input enhancements */
+.input-modern {
+  @apply border border-gray-700 bg-gray-800/80 backdrop-blur-sm text-white placeholder:text-gray-400 focus:border-blue-500 focus:ring-1 focus:ring-blue-500/20 !important;
+}
+
+.input-minimal {
+  @apply border-0 border-b-2 border-gray-700 bg-transparent rounded-none px-0 focus:border-blue-500 !important;
+}
+
+.input-glow {
+  @apply border border-gray-700 bg-gray-800 text-white focus:shadow-[0_0_10px_rgba(59,130,246,0.5)] focus:border-blue-500 !important;
+}
+
+/* Nav item enhancements */
+.nav-item-active {
+  @apply bg-gradient-to-r from-blue-600/20 to-indigo-600/10 text-blue-100 font-medium relative overflow-hidden !important;
+}
+
+.nav-item-active::before {
+  content: '';
+  @apply absolute left-0 top-0 h-full w-1 bg-gradient-to-b from-blue-500 to-indigo-600;
+}
+
+/* Animated elements */
+.animate-float {
+  animation: float 5s ease-in-out infinite;
+}
+
+@keyframes float {
+  0% { transform: translateY(0px); }
+  50% { transform: translateY(-10px); }
+  100% { transform: translateY(0px); }
+}
+
+.animate-pulse-slow {
+  animation: pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.8; }
+}
+
+/* Container enhancements */
+.glass-panel {
+  @apply bg-gray-800/60 backdrop-blur-md border border-gray-700/50 rounded-xl shadow-lg !important;
+}
+
+.subtle-glow-text {
+  text-shadow: 0 0 8px rgba(255, 255, 255, 0.5);
+}
+
+.gradient-border {
+  position: relative;
+  border-radius: 0.5rem;
+}
+
+.gradient-border::before {
+  content: '';
+  position: absolute;
+  inset: -2px;
+  border-radius: 0.6rem;
+  background: linear-gradient(to right, #3b82f6, #6366f1);
+  mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  mask-composite: exclude;
+  -webkit-mask-composite: xor;
+  pointer-events: none;
+} 

@@ -1,10 +1,16 @@
 import type { Metadata } from 'next'
 import { Analytics } from '@vercel/analytics/react'
-import { Inter } from 'next/font/google'
+import { Inter, Poppins } from 'next/font/google'
 import './globals.css'
+import './enhanced-ui.css'
 import { metadata as siteMetadata } from './metadata'
 
-const inter = Inter({ subsets: ['latin'] })
+const inter = Inter({ subsets: ['latin'], variable: '--font-inter' })
+const poppins = Poppins({
+  weight: ['500', '600', '700'],
+  subsets: ['latin'],
+  variable: '--font-poppins',
+})
 
 // We'll use the metadata from metadata.js
 export const metadata: Metadata = siteMetadata;
@@ -37,9 +43,10 @@ export default function RootLayout({
           }}
         />
       </head>
-      <body className={inter.className}>
-        <div className="relative min-h-screen bg-gradient-to-br from-gray-900 via-gray-900 to-gray-800">
-          <div className="relative w-full">
+      <body className={`${inter.variable} ${poppins.variable}`}>
+        <div className="relative min-h-screen enhanced-gradient bg-gray-900">
+          <div className="absolute inset-0 bg-starknet-pattern opacity-20"></div>
+          <div className="relative w-full max-w-[1920px] mx-auto px-4 sm:px-6 lg:px-8">
             {children}
           </div>
         </div>
