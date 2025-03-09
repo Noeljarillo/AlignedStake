@@ -12,6 +12,7 @@ import { Contract, AccountInterface, RpcProvider } from "starknet"
 import { cairo } from "starknet"
 import CountUp from "react-countup"
 import { SpeedInsights } from "@vercel/speed-insights/next"
+import { track } from '@vercel/analytics'
 import StructuredData from "./components/StructuredData"
 import { 
   Select, 
@@ -1221,6 +1222,9 @@ export default function Home() {
       setAccount(userAccount);
       setWalletConnected(true);
       
+      // Track wallet connection event
+      track('Wallet Connected', { address: userAccount.address });
+      
       // Fetch token balance after connecting
       if (userAccount) {
         const balance = await getTokenBalance();
@@ -1231,6 +1235,8 @@ export default function Home() {
     } catch (error) {
       console.error('Error connecting wallet:', error);
       setStakeResult('Failed to connect wallet');
+      // Track failed wallet connection
+      track('Wallet Connection Failed', { error: (error as Error).message });
       return null;
     } finally {
       setIsConnecting(false);
@@ -1378,6 +1384,13 @@ export default function Home() {
     setIsStaking(true)
     setStakeResult("")
 
+    // Track staking initiated
+    track('Stake Initiated', { 
+      stakeAmount, 
+      validator: selectedDelegator.name, 
+      isSplitDelegation 
+    });
+
     try {
       // Connect wallet if not connected
       if (!walletConnected) {
@@ -1456,6 +1469,25 @@ export default function Home() {
         // Execute all calls in a single transaction
         const tx = await account.execute(calls);
         await account.waitForTransaction(tx.transaction_hash);
+
+        // Track successful staking
+        if (isSplitDelegation && randomBottomValidator) {
+          track('Staking Successful', { 
+            transactionHash: tx.transaction_hash, 
+            mainAmount, 
+            mainValidator: selectedDelegator.name,
+            bottomAmount,
+            bottomValidator: randomBottomValidator.name,
+            isSplitDelegation: true
+          });
+        } else {
+          track('Staking Successful', { 
+            transactionHash: tx.transaction_hash, 
+            stakeAmount, 
+            validator: selectedDelegator.name,
+            isSplitDelegation: false
+          });
+        }
 
         // Record the transaction in the database - handle split delegations properly
         if (isSplitDelegation && randomBottomValidator) {
@@ -1559,6 +1591,14 @@ export default function Home() {
           }
         }
       }
+      
+      // Track staking failure
+      track('Staking Failed', { 
+        error: errorMessage, 
+        stakeAmount, 
+        validator: selectedDelegator.name, 
+        isSplitDelegation 
+      });
       
       setStakeResult(errorMessage);
     } finally {
@@ -1699,6 +1739,12 @@ export default function Home() {
         return;
       }
       
+      // Track rewards claim initiated
+      track('Claim Rewards Initiated', { 
+        delegationCount: eligibleDelegations.length,
+        totalRewards: userStakeInfo.availableRewards
+      });
+      
       // Create a multicall for eligible delegations only
       const calls = eligibleDelegations.map(delegation => {
         // Return the call to claim rewards with the user's address as pool_member
@@ -1714,6 +1760,13 @@ export default function Home() {
       const tx = await account.execute(calls);
       await account.waitForTransaction(tx.transaction_hash);
       
+      // Track successful rewards claim
+      track('Claim Rewards Successful', { 
+        transactionHash: tx.transaction_hash,
+        delegationCount: eligibleDelegations.length,
+        totalRewards: userStakeInfo.availableRewards
+      });
+      
       // Refresh user stake info to show updated rewards
       await fetchUserStakeInfo();
       
@@ -1721,6 +1774,14 @@ export default function Home() {
       alert(`Successfully claimed rewards from ${eligibleDelegations.length} validators`);
     } catch (error: any) {
       console.error('Error claiming rewards:', error);
+      
+      // Track failed rewards claim
+      track('Claim Rewards Failed', { 
+        error: error?.message || 'Unknown error',
+        delegationCount: userStakeInfo.delegations.filter(d => d.pendingRewards > 0.001).length,
+        totalRewards: userStakeInfo.availableRewards
+      });
+      
       // Show error message
       alert(`Failed to claim rewards: ${error?.message || 'Unknown error'}`);
     } finally {
@@ -1740,10 +1801,26 @@ export default function Home() {
     try {
       const normalizedAddress = normalizeAddress(account.address);
       const amountBn = parseTokenAmount(amount);
+      
+      // Track unstake intent initiated
+      track('Unstake Intent Initiated', { 
+        amount,
+        validatorName: delegation.validatorName,
+        poolAddress: delegation.poolAddress
+      });
+      
       const poolContract = new Contract(stakingPoolAbi, delegation.poolAddress, account);
       
       const tx = await poolContract.exit_delegation_pool_intent(amountBn);
       await account.waitForTransaction(tx.transaction_hash);
+      
+      // Track successful unstake intent
+      track('Unstake Intent Successful', { 
+        transactionHash: tx.transaction_hash,
+        amount,
+        validatorName: delegation.validatorName,
+        poolAddress: delegation.poolAddress
+      });
       
       // Add to unstake intents
       const now = Date.now();
@@ -1770,7 +1847,16 @@ export default function Home() {
       
       return true;
     } catch (error) {
-      console.error('Error signaling unstake:', error);
+      console.error('Error signaling unstake intent:', error);
+      
+      // Track failed unstake intent
+      track('Unstake Intent Failed', { 
+        error: (error as Error).message || 'Unknown error',
+        amount,
+        validatorName: delegation.validatorName,
+        poolAddress: delegation.poolAddress
+      });
+      
       return false;
     }
   };
@@ -1785,9 +1871,24 @@ export default function Home() {
         throw new Error(`Cannot unstake yet. Available in ${Math.ceil((intent.canClaimAt - now) / (1000 * 60 * 60 * 24))} days`);
       }
       
+      // Track unstake finalization initiated
+      track('Unstake Finalization Initiated', { 
+        amount: intent.amount,
+        validatorName: intent.validatorName,
+        poolAddress: intent.poolAddress
+      });
+      
       const poolContract = new Contract(stakingPoolAbi, intent.poolAddress, account);
       const tx = await poolContract.exit_delegation_pool_action(account.address);
       await account.waitForTransaction(tx.transaction_hash);
+      
+      // Track successful unstake finalization
+      track('Unstake Finalization Successful', { 
+        transactionHash: tx.transaction_hash,
+        amount: intent.amount,
+        validatorName: intent.validatorName,
+        poolAddress: intent.poolAddress
+      });
       
       // Remove from localStorage
       const storedIntents = JSON.parse(localStorage.getItem(`unstakeIntents_${normalizedAddress}`) || '[]');
@@ -1805,6 +1906,15 @@ export default function Home() {
       return true;
     } catch (error) {
       console.error('Error finalizing unstake:', error);
+      
+      // Track failed unstake finalization
+      track('Unstake Finalization Failed', { 
+        error: (error as Error).message || 'Unknown error',
+        amount: intent.amount,
+        validatorName: intent.validatorName,
+        poolAddress: intent.poolAddress
+      });
+      
       throw error;
     }
   };
@@ -2149,6 +2259,8 @@ export default function Home() {
     });
     setIsStakeInfoOpen(false);
     
+    // Track wallet disconnection event
+    track('Wallet Disconnected');
 
     console.log('Wallet disconnected (app state reset)');
   };
