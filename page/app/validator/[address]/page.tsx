@@ -24,6 +24,7 @@ import {
   DialogTitle,
   DialogTrigger
 } from "@/components/ui/dialog"
+import { formatTokenAmount } from "@/lib/utils"
 
 // Constants for blockchain interactions
 
@@ -31,6 +32,7 @@ const STRK_TOKEN_ADDRESS = "0x04718f5a0fc34cc1af16a1cdee98ffb20c31f5cd61d6ab0720
 const STRK_DECIMALS = 18;
 const RPC_URL = "https://free-rpc.nethermind.io/mainnet-juno/v0_7";
 const ALLOWANCE_SELECTOR = "0x1e888a1026b19c8c0b57c72d63ed1737106aa10034105b980ba117bd0c29fe1";
+const BALANCE_OF_SELECTOR = "0x2e4263afad30923c891518314c3c95dbe830a16874e8abc5777a9a20b54c76e";
 
 // Types
 export type Validator = {
@@ -106,16 +108,6 @@ interface ValidatorDashboardData {
 }
 
 // Helper functions
-const formatNumber = (num: number): string => {
-  if (num >= 1_000_000) {
-    return (num / 1_000_000).toFixed(2) + 'M'
-  }
-  if (num >= 1_000) {
-    return (num / 1_000).toFixed(2) + 'K'
-  }
-  return num.toFixed(2)
-}
-
 const formatAddress = (address: string): string => {
   if (!address) return ''
   return `${address.slice(0, 6)}...${address.slice(-4)}`
@@ -150,12 +142,6 @@ const parseTokenAmount = (amount: string): bigint => {
     return BigInt(0);
   }
 }
-
-// Add this helper function to strip trailing zeros from decimal numbers
-const formatTokenAmount = (amount: string): string => {
-  // Convert to a number to handle scientific notation and then back to string
-  return Number(amount).toString();
-};
 
 // Calculate additional metrics
 const calculateGrowthRate = (data: ValidatorDashboardData | null): string => {
@@ -206,6 +192,7 @@ export default function ValidatorDashboard() {
   const [bottomValidators, setBottomValidators] = useState<Validator[]>([])
   const [stakeDialogOpen, setStakeDialogOpen] = useState(false)
   const [userDelegations, setUserDelegations] = useState<DelegationWithUnpoolTime[]>([])
+  const [tokenBalance, setTokenBalance] = useState<string>("0")
 
   useEffect(() => {
     const fetchValidatorData = async () => {
@@ -272,6 +259,66 @@ export default function ValidatorDashboard() {
     }
   }, [account]);
 
+  // Function to get token balance
+  const getTokenBalance = async (): Promise<string> => {
+    if (!account) return "0";
+    
+    try {
+      // Make direct RPC call for balance
+      const response = await fetch(RPC_URL, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          jsonrpc: '2.0',
+          method: 'starknet_call',
+          params: [
+            {
+              contract_address: STRK_TOKEN_ADDRESS,
+              entry_point_selector: BALANCE_OF_SELECTOR,
+              calldata: [account.address]
+            },
+            'latest'
+          ],
+          id: 1
+        })
+      });
+
+      const result = await response.json();
+      
+      if (result.error) {
+        throw new Error(result.error.message);
+      }
+
+      // Parse the balance result (low, high parts of uint256)
+      const balanceLow = BigInt(result.result[0]);
+      const balanceHigh = BigInt(result.result[1]);
+      
+      // Combine high and low to get the full balance
+      const fullBalance = (balanceHigh * BigInt(2 ** 128)) + balanceLow;
+      
+      // Convert to human readable format
+      const balanceStr = fullBalance.toString();
+      const balanceLen = balanceStr.length;
+      
+      if (balanceLen <= STRK_DECIMALS) {
+        // Less than 1 whole token
+        const padded = balanceStr.padStart(STRK_DECIMALS, '0');
+        return `0.${padded}`;
+      } else {
+        // More than 1 whole token
+        const wholePart = balanceStr.slice(0, balanceLen - STRK_DECIMALS);
+        const decimalPart = balanceStr.slice(balanceLen - STRK_DECIMALS);
+        return `${wholePart}.${decimalPart}`;
+      }
+    } catch (error) {
+      console.error('Error fetching token balance:', error);
+      return "0";
+    }
+  };
+
+  // Update connectWallet to fetch token balance
   const connectWallet = async () => {
     try {
       setIsConnecting(true);
@@ -289,6 +336,13 @@ export default function ValidatorDashboard() {
       const userAccount = window.starknet.account;
       setAccount(userAccount);
       setWalletConnected(true);
+      
+      // Fetch token balance after connecting
+      if (userAccount) {
+        const balance = await getTokenBalance();
+        setTokenBalance(balance);
+      }
+      
       track('Wallet Connected');
       return userAccount;
     } catch (error) {
@@ -308,6 +362,10 @@ export default function ValidatorDashboard() {
 
   const checkAllowance = async (poolAddress: string, amount: string): Promise<boolean> => {
     if (!account) return false;
+    if (!poolAddress) {
+      console.error('Invalid pool address provided to checkAllowance');
+      return false;
+    }
 
     try {
       const amountBn = parseTokenAmount(amount);
@@ -336,7 +394,8 @@ export default function ValidatorDashboard() {
       const result = await response.json();
       
       if (result.error) {
-        throw new Error(result.error.message);
+        console.error('Allowance check error:', result.error);
+        return false;
       }
 
       // Parse the allowance result
@@ -410,12 +469,32 @@ export default function ValidatorDashboard() {
         return null;
       }
       
+      if (!poolAddress) {
+        console.error('Invalid pool address provided to stakeCall');
+        return null;
+      }
+      
       const amountBn = parseTokenAmount(amount);
       
-      // Check if user already has a delegation to this pool
-      const hasExistingDelegation = userDelegations.some(
-        delegation => delegation.poolAddress.toLowerCase() === poolAddress.toLowerCase()
-      );
+      // Verify user has sufficient balance
+      const currentBalance = await getTokenBalance();
+      if (Number(amount) > Number(currentBalance)) {
+        toast({
+          title: "Insufficient balance",
+          description: `You tried to stake ${amount} STRK but only have ${currentBalance} STRK available`,
+          variant: "destructive"
+        });
+        return null;
+      }
+      
+      // Check if user already has a delegation to this pool - handle null safely
+      let hasExistingDelegation = false;
+      if (userDelegations && userDelegations.length > 0) {
+        hasExistingDelegation = userDelegations.some(
+          delegation => delegation.poolAddress &&
+            delegation.poolAddress.toLowerCase() === poolAddress.toLowerCase()
+        );
+      }
       
       // Create the appropriate call object based on whether it's a new or existing delegation
       if (hasExistingDelegation) {
@@ -475,7 +554,20 @@ export default function ValidatorDashboard() {
   // Update stakeAmount when input changes
   const handleStakeAmountChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const newAmount = e.target.value;
-    setStakeAmount(newAmount);
+    
+    // Prevent setting amount higher than balance
+    if (walletConnected && Number(newAmount) > Number(tokenBalance)) {
+      // Format to 2 decimal places only, just like in setMaxBalance
+      const formattedBalance = Number(tokenBalance).toFixed(2);
+      setStakeAmount(formattedBalance);
+      toast({
+        title: "Amount exceeds balance",
+        description: `Setting to maximum available: ${formattedBalance} STRK`,
+        variant: "destructive"
+      });
+    } else {
+      setStakeAmount(newAmount);
+    }
     
     if (isSplitDelegation) {
       setSplitDelegationPreview(calculateSplitAmounts(newAmount));
@@ -652,6 +744,26 @@ export default function ValidatorDashboard() {
     }
   };
 
+  // Set max balance function
+  const setMaxBalance = () => {
+    if (walletConnected && Number(tokenBalance) > 0) {
+      // Format to 2 decimal places only
+      const formattedBalance = Number(tokenBalance).toFixed(2);
+      setStakeAmount(formattedBalance);
+      
+      if (isSplitDelegation) {
+        setSplitDelegationPreview(calculateSplitAmounts(formattedBalance));
+      }
+    }
+  };
+
+  // Add effect to refresh balance when needed
+  useEffect(() => {
+    if (walletConnected && account) {
+      getTokenBalance().then(balance => setTokenBalance(balance));
+    }
+  }, [walletConnected, account, stakeDialogOpen]);
+
   if (loading) {
     return (
       <div className="flex flex-col items-center justify-center min-h-screen">
@@ -725,16 +837,34 @@ export default function ValidatorDashboard() {
               <form onSubmit={handleStake} className="space-y-4 pt-4">
                 <div className="space-y-2">
                   <Label htmlFor="stake-amount">Amount (STRK)</Label>
-                  <Input
-                    id="stake-amount"
-                    type="number"
-                    step="0.000001"
-                    min="0"
-                    placeholder="0.0"
-                    value={stakeAmount}
-                    onChange={handleStakeAmountChange}
-                    required
-                  />
+                  <div className="relative">
+                    <Input
+                      id="stake-amount"
+                      type="number"
+                      step="0.000001"
+                      min="0"
+                      placeholder="0.0"
+                      value={stakeAmount}
+                      onChange={handleStakeAmountChange}
+                      required
+                      className="[appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                    />
+                    <Button
+                      type="button"
+                      size="sm"
+                      variant="outline"
+                      className="absolute right-1 top-1/2 -translate-y-1/2 h-6 px-1.5"
+                      onClick={setMaxBalance}
+                      disabled={!walletConnected}
+                    >
+                      MAX
+                    </Button>
+                  </div>
+                  {walletConnected && (
+                    <div className="text-xs text-gray-400 mt-1">
+                      Balance: {formatTokenAmount(parseFloat(tokenBalance))} STRK
+                    </div>
+                  )}
                 </div>
                 
                 <div className="flex items-center space-x-2">
@@ -1045,11 +1175,11 @@ export default function ValidatorDashboard() {
                   <div className="space-y-2">
                     <div className="flex justify-between border-b pb-1">
                       <span className="text-muted-foreground">Own Stake</span>
-                      <span>{formatNumber(validator.ownStake)} STRK</span>
+                      <span>{formatTokenAmount(validator.ownStake)} STRK</span>
                     </div>
                     <div className="flex justify-between border-b pb-1">
                       <span className="text-muted-foreground">Avg. Stake per Delegator</span>
-                      <span>{formatNumber(stats.avgStake)} STRK</span>
+                      <span>{formatTokenAmount(stats.avgStake)} STRK</span>
                     </div>
                     <div className="flex justify-between border-b pb-1">
                       <span className="text-muted-foreground">Rank</span>
@@ -1183,7 +1313,7 @@ export default function ValidatorDashboard() {
                             {formatAddress(delegator.address)}
                           </a>
                         </TableCell>
-                        <TableCell>{formatNumber(delegator.delegatedStake)} STRK</TableCell>
+                        <TableCell>{formatTokenAmount(delegator.delegatedStake)} STRK</TableCell>
                         <TableCell>
                           {delegator.startTime ? formatDate(delegator.startTime) : 'N/A'}
                         </TableCell>
@@ -1360,15 +1490,15 @@ export default function ValidatorDashboard() {
                 <div className="space-y-2">
                   <div className="flex justify-between border-b pb-1">
                     <span className="text-muted-foreground">Min Stake</span>
-                    <span>{formatNumber(stats.minStake)} STRK</span>
+                    <span>{formatTokenAmount(stats.minStake)} STRK</span>
                   </div>
                   <div className="flex justify-between border-b pb-1">
                     <span className="text-muted-foreground">Max Stake</span>
-                    <span>{formatNumber(stats.maxStake)} STRK</span>
+                    <span>{formatTokenAmount(stats.maxStake)} STRK</span>
                   </div>
                   <div className="flex justify-between border-b pb-1">
                     <span className="text-muted-foreground">Avg. Stake</span>
-                    <span>{formatNumber(stats.avgStake)} STRK</span>
+                    <span>{formatTokenAmount(stats.avgStake)} STRK</span>
                   </div>
                 </div>
                 <div className="space-y-2">
@@ -1388,15 +1518,15 @@ export default function ValidatorDashboard() {
                 <div className="space-y-2">
                   <div className="flex justify-between border-b pb-1">
                     <span className="text-muted-foreground">Own Stake</span>
-                    <span>{formatNumber(validator.ownStake)} STRK</span>
+                    <span>{formatTokenAmount(validator.ownStake)} STRK</span>
                   </div>
                   <div className="flex justify-between border-b pb-1">
                     <span className="text-muted-foreground">Delegated Stake</span>
-                    <span>{formatNumber(validator.delegatedStake)} STRK</span>
+                    <span>{formatTokenAmount(validator.delegatedStake)} STRK</span>
                   </div>
                   <div className="flex justify-between border-b pb-1">
                     <span className="text-muted-foreground">Total Stake</span>
-                    <span>{formatNumber(validator.totalStake)} STRK</span>
+                    <span>{formatTokenAmount(validator.totalStake)} STRK</span>
                   </div>
                 </div>
               </div>

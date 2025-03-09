@@ -31,6 +31,7 @@ import { Info } from "lucide-react"
 import { useToast } from "@/components/ui/use-toast"
 import { useRouter } from "next/navigation"
 import { Switch } from "@/components/ui/switch"
+import { formatTokenAmount } from "@/lib/utils"
 
 declare global {
   interface Window {
@@ -47,6 +48,7 @@ const STRK_TOKEN_ADDRESS = "0x04718f5a0fc34cc1af16a1cdee98ffb20c31f5cd61d6ab0720
 const STRK_DECIMALS = 18;
 const RPC_URL = "https://free-rpc.nethermind.io/mainnet-juno/v0_7";
 const ALLOWANCE_SELECTOR = "0x1e888a1026b19c8c0b57c72d63ed1737106aa10034105b980ba117bd0c29fe1";
+const BALANCE_OF_SELECTOR = "0x2e4263afad30923c891518314c3c95dbe830a16874e8abc5777a9a20b54c76e";
 //const TEST_ADDRESS = "0x07ffdeec4142172c63deb3b59b2f2b3e8efab889fecc0314d19db34ba0780027";
 //const IS_TESTING = true; // Flag to easily disable test mode
 
@@ -308,9 +310,7 @@ const normalizeAddress = (address: string): string => {
   return address;
 };
 
-const CallToAction = ({ walletConnected }: { 
-  walletConnected: boolean
-}) => {
+const CallToAction = () => {
   return (
     <div className="w-full bg-background/80 backdrop-blur-sm border-b border-border p-4">
       <div className="max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-between gap-4">
@@ -355,18 +355,6 @@ const CallToAction = ({ walletConnected }: {
             <Shield className="h-4 w-4" />
             <span>Learn about our mission</span>
           </Link>
-          
-          {walletConnected && (
-            <Button 
-              className="px-6 py-2"
-              onClick={() => window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' })}
-            >
-              <div className="flex items-center gap-2">
-                <Zap className="h-4 w-4" />
-                <span>Start Delegating</span>
-              </div>
-            </Button>
-          )}
         </div>
       </div>
     </div>
@@ -994,13 +982,13 @@ const ValidatorList = ({ onSelectValidator }: ValidatorListProps) => {
                       </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm">
-                      {validator.totalStake?.toLocaleString() || 'N/A'} STRK
+                      {formatTokenAmount(validator.totalStake || 0)} STRK
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm">
-                      {validator.delegatedStake.toLocaleString()} STRK
+                      {formatTokenAmount(validator.delegatedStake)} STRK
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm">
-                      {validator.ownStake?.toLocaleString() || 'N/A'} STRK
+                      {formatTokenAmount(validator.ownStake || 0)} STRK
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm">
                       {validator.totalDelegators.toLocaleString()}
@@ -1100,6 +1088,7 @@ export default function Home() {
   });
   const [processing, setProcessing] = useState(false);
   const { toast } = useToast();
+  const [tokenBalance, setTokenBalance] = useState<string>("0"); // Add state for token balance
 
   useEffect(() => {
     const fetchData = async () => {
@@ -1153,6 +1142,65 @@ export default function Home() {
     fetchPriceData();
   }, []);
 
+  // Add a function to get the user's token balance
+  const getTokenBalance = async (): Promise<string> => {
+    if (!account) return "0";
+    
+    try {
+      // Make direct RPC call for balance
+      const response = await fetch(RPC_URL, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          jsonrpc: '2.0',
+          method: 'starknet_call',
+          params: [
+            {
+              contract_address: STRK_TOKEN_ADDRESS,
+              entry_point_selector: BALANCE_OF_SELECTOR,
+              calldata: [account.address]
+            },
+            'latest'
+          ],
+          id: 1
+        })
+      });
+
+      const result = await response.json();
+      
+      if (result.error) {
+        throw new Error(result.error.message);
+      }
+
+      // Parse the balance result (low, high parts of uint256)
+      const balanceLow = BigInt(result.result[0]);
+      const balanceHigh = BigInt(result.result[1]);
+      
+      // Combine high and low to get the full balance
+      const fullBalance = (balanceHigh * BigInt(2 ** 128)) + balanceLow;
+      
+      // Convert to human readable format
+      const balanceStr = fullBalance.toString();
+      const balanceLen = balanceStr.length;
+      
+      if (balanceLen <= STRK_DECIMALS) {
+        // Less than 1 whole token
+        const padded = balanceStr.padStart(STRK_DECIMALS, '0');
+        return `0.${padded}`;
+      } else {
+        // More than 1 whole token
+        const wholePart = balanceStr.slice(0, balanceLen - STRK_DECIMALS);
+        const decimalPart = balanceStr.slice(balanceLen - STRK_DECIMALS);
+        return `${wholePart}.${decimalPart}`;
+      }
+    } catch (error) {
+      console.error('Error fetching token balance:', error);
+      return "0";
+    }
+  };
+
   const connectWallet = async () => {
     try {
       setIsConnecting(true);
@@ -1170,6 +1218,13 @@ export default function Home() {
       const userAccount = window.starknet.account;
       setAccount(userAccount);
       setWalletConnected(true);
+      
+      // Fetch token balance after connecting
+      if (userAccount) {
+        const balance = await getTokenBalance();
+        setTokenBalance(balance);
+      }
+      
       return userAccount;
     } catch (error) {
       console.error('Error connecting wallet:', error);
@@ -1182,6 +1237,10 @@ export default function Home() {
 
   const checkAllowance = async (poolAddress: string, amount: string): Promise<boolean> => {
     if (!account) return false;
+    if (!poolAddress) {
+      console.error('Invalid pool address provided to checkAllowance');
+      return false;
+    }
 
     try {
       const amountBn = parseTokenAmount(amount);
@@ -1210,7 +1269,8 @@ export default function Home() {
       const result = await response.json();
       
       if (result.error) {
-        throw new Error(result.error.message);
+        console.error('Allowance check error:', result.error);
+        return false;
       }
 
       // Parse the allowance result
@@ -1256,14 +1316,33 @@ export default function Home() {
   // Update the stake function to return call objects instead of executing a transaction
   const stakeCall = async (poolAddress: string, amount: string): Promise<any> => {
     if (!account) return null;
+    if (!poolAddress) {
+      console.error('Invalid pool address provided to stakeCall');
+      return null;
+    }
 
     try {
       const amountBn = parseTokenAmount(amount);
       
-      // Check if user already has a delegation to this pool
-      const hasExistingDelegation = userStakeInfo.delegations.some(
-        delegation => delegation.poolAddress.toLowerCase() === poolAddress.toLowerCase()
-      );
+      // Verify user has sufficient balance
+      const currentBalance = await getTokenBalance();
+      if (Number(amount) > Number(currentBalance)) {
+        toast({
+          title: "Insufficient balance",
+          description: `You tried to stake ${amount} STRK but only have ${currentBalance} STRK available`,
+          variant: "destructive"
+        });
+        return null;
+      }
+      
+      // Check if user already has a delegation to this pool - handle null safely
+      let hasExistingDelegation = false;
+      if (userStakeInfo && userStakeInfo.delegations) {
+        hasExistingDelegation = userStakeInfo.delegations.some(
+          delegation => delegation.poolAddress && 
+            delegation.poolAddress.toLowerCase() === poolAddress.toLowerCase()
+        );
+      }
       
       // Create the appropriate call object based on whether it's a new or existing delegation
       if (hasExistingDelegation) {
@@ -1503,7 +1582,20 @@ export default function Home() {
   // Update the stakeAmount change handler to calculate split preview
   const handleStakeAmountChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const newAmount = e.target.value;
-    setStakeAmount(newAmount);
+    
+    // Prevent setting amount higher than balance
+    if (walletConnected && Number(newAmount) > Number(tokenBalance)) {
+      // Format to 2 decimal places only, just like in setMaxBalance
+      const formattedBalance = Number(tokenBalance).toFixed(2);
+      setStakeAmount(formattedBalance);
+      toast({
+        title: "Amount exceeds balance",
+        description: `Setting to maximum available: ${formattedBalance} STRK`,
+        variant: "destructive"
+      });
+    } else {
+      setStakeAmount(newAmount);
+    }
     
     if (isSplitDelegation) {
       setSplitDelegationPreview(calculateSplitAmounts(newAmount));
@@ -1553,7 +1645,7 @@ export default function Home() {
           </div>
           <div className="text-sm text-gray-300">
             <p>Address: <a href={`https://voyager.online/validator/${validator.address}`} target="_blank" rel="noopener noreferrer" className="text-blue-400 hover:underline">{validator.address.slice(0, 8)}...{validator.address.slice(-6)}</a></p>
-            <p>Delegated Stake: {validator.delegatedStake.toLocaleString()} STRK</p>
+            <p>Delegated Stake: {formatTokenAmount(validator.delegatedStake)} STRK</p>
             <p>Total Delegators: {validator.totalDelegators?.toLocaleString() || 'N/A'}</p>
           </div>
         </div>
@@ -1731,7 +1823,7 @@ export default function Home() {
           <div className="col-span-1">
             <h3 className="text-lg font-semibold text-muted-foreground mb-2">Total Network Stake</h3>
             <p className="text-4xl font-bold mb-1">
-              {Math.round(totalStake).toLocaleString()} STRK
+              {formatTokenAmount(totalStake)} STRK
             </p>
             <p className="text-sm text-muted-foreground">
               Across all validators
@@ -1760,7 +1852,7 @@ export default function Home() {
               <div>
                 <div className="flex justify-between text-sm text-muted-foreground mb-1">
                   <span>Top 10 Validators</span>
-                  <span>{Math.round(topTenStake).toLocaleString()} STRK</span>
+                  <span>{formatTokenAmount(topTenStake)} STRK</span>
                 </div>
                 <div className="h-4 bg-secondary rounded-full overflow-hidden">
                   <div 
@@ -1773,7 +1865,7 @@ export default function Home() {
               <div>
                 <div className="flex justify-between text-sm text-muted-foreground mb-1">
                   <span>Other Validators</span>
-                  <span>{Math.round(restStake).toLocaleString()} STRK</span>
+                  <span>{formatTokenAmount(restStake)} STRK</span>
                 </div>
                 <div className="h-4 bg-secondary rounded-full overflow-hidden">
                   <div 
@@ -1796,8 +1888,8 @@ export default function Home() {
                     />
                   </div>
                   <div className="flex justify-between text-xs text-muted-foreground mt-1">
-                    <span>Staked: {Math.round(totalStake).toLocaleString()} STRK</span>
-                    <span>Total: {Math.round(priceData.circulatingSupply).toLocaleString()} STRK</span>
+                    <span>Staked: {formatTokenAmount(totalStake)}</span>
+                    <span>Total: {formatTokenAmount(priceData.circulatingSupply)}</span>
                   </div>
                 </div>
               )}
@@ -1818,13 +1910,13 @@ export default function Home() {
               <div>
                 <h4 className="text-sm font-medium text-muted-foreground">Average Delegated Stake</h4>
                 <p className="text-2xl font-bold mt-1">
-                  {stats.avgDelegatorsTopTen.toLocaleString()} STRK
+                  {formatTokenAmount(stats.avgDelegatorsTopTen)} STRK
                 </p>
                 <span className="text-blue-600 dark:text-blue-400 text-sm">Top 10</span>
               </div>
               <div className="text-right">
                 <p className="text-2xl font-bold">
-                  {stats.avgDelegatedRest.toLocaleString()} STRK
+                  {formatTokenAmount(stats.avgDelegatedRest)} STRK
                 </p>
                 <span className="text-purple-600 dark:text-purple-400 text-sm">Rest</span>
               </div>
@@ -1834,13 +1926,13 @@ export default function Home() {
               <div>
                 <h4 className="text-sm font-medium text-muted-foreground">Average Total Stake</h4>
                 <p className="text-2xl font-bold mt-1">
-                  {stats.avgStakedPerStaker.toLocaleString()} STRK
+                  {formatTokenAmount(stats.avgStakedPerStaker)} STRK
                 </p>
                 <span className="text-blue-600 dark:text-blue-400 text-sm">Top 10</span>
               </div>
               <div className="text-right">
                 <p className="text-2xl font-bold">
-                  {stats.avgStakedRest.toLocaleString()} STRK
+                  {formatTokenAmount(stats.avgStakedRest)} STRK
                 </p>
                 <span className="text-purple-600 dark:text-purple-400 text-sm">Rest</span>
               </div>
@@ -1850,13 +1942,13 @@ export default function Home() {
               <div>
                 <h4 className="text-sm font-medium text-muted-foreground">Average Delegators</h4>
                 <p className="text-2xl font-bold mt-1">
-                  {stats.avgNumDelegatorsTop10.toLocaleString()}
+                  {formatTokenAmount(stats.avgNumDelegatorsTop10)}
                 </p>
                 <span className="text-blue-600 dark:text-blue-400 text-sm">Top 10</span>
               </div>
               <div className="text-right">
                 <p className="text-2xl font-bold">
-                  {stats.avgNumDelegatorsRest.toLocaleString()}
+                  {formatTokenAmount(stats.avgNumDelegatorsRest)}
                 </p>
                 <span className="text-purple-600 dark:text-purple-400 text-sm">Rest</span>
               </div>
@@ -2060,8 +2152,9 @@ export default function Home() {
 
   // Add this helper function to strip trailing zeros from decimal numbers
   const formatAmount = (amount: string): string => {
-    // Convert to a number to handle scientific notation and then back to string
-    return Number(amount).toString();
+    // Import the utility function from utils.ts
+    const { formatTokenAmount } = require("@/lib/utils");
+    return formatTokenAmount(amount);
   };
 
   // Update the calculateSplitAmounts function to use the helper
@@ -2090,14 +2183,32 @@ export default function Home() {
     }
   };
 
+  // Add a function to set maximum available balance
+  const setMaxBalance = () => {
+    if (walletConnected && Number(tokenBalance) > 0) {
+      // Format to 2 decimal places only
+      const formattedBalance = Number(tokenBalance).toFixed(2);
+      setStakeAmount(formattedBalance);
+      
+      if (isSplitDelegation) {
+        setSplitDelegationPreview(calculateSplitAmounts(formattedBalance));
+      }
+    }
+  };
+
+  // Add effect to refresh balance when needed
+  useEffect(() => {
+    if (walletConnected && account) {
+      getTokenBalance().then(balance => setTokenBalance(balance));
+    }
+  }, [walletConnected, account, isStakeInfoOpen]);
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-900 to-gray-800 flex flex-col items-center pt-0 px-0 pb-4">
       <meta name="google-site-verification" content="BioBqMAm54m_zMizQ_YtbyFCgVe_BY9KGhn8j6K9KWg" />
       <div className="w-full">
         <VoyagerBanner />
-        <CallToAction 
-          walletConnected={walletConnected}
-        />
+        <CallToAction />
       </div>
       <div className="w-full sticky top-0 z-50">
         <AnimatePresence>
@@ -2113,12 +2224,12 @@ export default function Home() {
                     <div className="bg-gray-800/60 border border-gray-700/40 rounded-lg px-4 py-2 flex items-center gap-8">
                       <div>
                         <span className="text-xs text-gray-400 block">Total Delegated</span>
-                        <p className="text-sm font-medium text-white">{userStakeInfo.totalDelegated.toLocaleString()} STRK</p>
+                        <p className="text-sm font-medium text-white">{formatTokenAmount(userStakeInfo.totalDelegated)} STRK</p>
                       </div>
                       
                       <div>
                         <span className="text-xs text-gray-400 block">Available Rewards</span>
-                        <p className="text-sm font-medium text-white">{userStakeInfo.availableRewards.toLocaleString()} STRK</p>
+                        <p className="text-sm font-medium text-white">{formatTokenAmount(userStakeInfo.availableRewards)} STRK</p>
                       </div>
                       
                       <Button
@@ -2232,7 +2343,7 @@ export default function Home() {
                   <div>
                     <h4 className="text-sm font-medium text-muted-foreground mb-2">Total Delegated</h4>
                     <p className="text-3xl font-bold">
-                      {userStakeInfo.totalDelegated.toLocaleString()} STRK
+                      {formatTokenAmount(userStakeInfo.totalDelegated)} STRK
                     </p>
                   </div>
                 </motion.div>
@@ -2244,7 +2355,7 @@ export default function Home() {
                   <div>
                     <h4 className="text-sm font-medium text-muted-foreground mb-2">Available Rewards</h4>
                     <p className="text-3xl font-bold text-green-600 dark:text-green-400">
-                      {userStakeInfo.availableRewards.toLocaleString()} STRK
+                      {formatTokenAmount(userStakeInfo.availableRewards)} STRK
                     </p>
                   </div>
                   <Button
@@ -2329,13 +2440,13 @@ export default function Home() {
                             <div className="flex justify-between items-center">
                               <span className="text-muted-foreground">Delegated</span>
                               <span className="font-medium">
-                                {delegation.delegatedStake.toLocaleString()} STRK
+                                {formatTokenAmount(delegation.delegatedStake)} STRK
                               </span>
                             </div>
                             <div className="flex justify-between items-center">
                               <span className="text-muted-foreground">Pending Rewards</span>
                               <span className="text-green-600 dark:text-green-400 font-medium">
-                                {delegation.pendingRewards.toLocaleString()} STRK
+                                {formatTokenAmount(delegation.pendingRewards)} STRK
                               </span>
                             </div>
                           </div>
@@ -2561,7 +2672,7 @@ export default function Home() {
                         )}
                       </p>
                       <p className="text-xs text-muted-foreground">
-                        Stake: {selectedDelegator.delegatedStake.toLocaleString()} | 
+                        Stake: {formatTokenAmount(selectedDelegator.delegatedStake)} | 
                         Delegators: {selectedDelegator.totalDelegators?.toLocaleString() || 'N/A'}
                       </p>
                     </div>
@@ -2593,6 +2704,20 @@ export default function Home() {
                         <span className="text-sm text-gray-400">STRK</span>
                       </div>
                     </div>
+                    {walletConnected && (
+                      <div className="flex justify-between mt-1 text-xs text-gray-400">
+                        <span>Balance: {formatTokenAmount(parseFloat(tokenBalance))} STRK</span>
+                        <Button 
+                          type="button" 
+                          variant="ghost" 
+                          size="sm" 
+                          className="h-5 px-1.5 text-blue-400 hover:text-blue-300"
+                          onClick={setMaxBalance}
+                        >
+                          MAX
+                        </Button>
+                      </div>
+                    )}
                     {Number(stakeAmount) > 0 && (
                       <p className="text-xs text-blue-400 mt-0.5 animate-pulse-slow">
                         ≈ ${(Number(stakeAmount) * (priceData?.usdPrice || 0)).toFixed(2)} USD
@@ -2828,7 +2953,7 @@ export default function Home() {
                 <div className="space-y-2">
                   <div className="flex justify-between">
                     <span className="text-muted-foreground">Amount</span>
-                    <span>{intent.amount.toLocaleString()} STRK</span>
+                    <span>{formatTokenAmount(intent.amount)} STRK</span>
                   </div>
                   <div className="flex justify-between">
                     <span className="text-muted-foreground">Available in</span>
