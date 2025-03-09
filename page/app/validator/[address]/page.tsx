@@ -557,8 +557,9 @@ export default function ValidatorDashboard() {
     
     // Prevent setting amount higher than balance
     if (walletConnected && Number(newAmount) > Number(tokenBalance)) {
-      // Format to 2 decimal places only, just like in setMaxBalance
-      const formattedBalance = Number(tokenBalance).toFixed(2);
+      // Round down to 2 decimal places when setting max amount
+      const truncatedValue = Math.floor(Number(tokenBalance) * 100) / 100;
+      const formattedBalance = truncatedValue.toFixed(2);
       setStakeAmount(formattedBalance);
       toast({
         title: "Amount exceeds balance",
@@ -747,8 +748,9 @@ export default function ValidatorDashboard() {
   // Set max balance function
   const setMaxBalance = () => {
     if (walletConnected && Number(tokenBalance) > 0) {
-      // Format to 2 decimal places only
-      const formattedBalance = Number(tokenBalance).toFixed(2);
+      // Round down to 2 decimal places
+      const truncatedValue = Math.floor(Number(tokenBalance) * 100) / 100;
+      const formattedBalance = truncatedValue.toFixed(2);
       setStakeAmount(formattedBalance);
       
       if (isSplitDelegation) {
@@ -849,20 +851,20 @@ export default function ValidatorDashboard() {
                       required
                       className="[appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                     />
-                    <Button
-                      type="button"
-                      size="sm"
-                      variant="outline"
-                      className="absolute right-1 top-1/2 -translate-y-1/2 h-6 px-1.5"
-                      onClick={setMaxBalance}
-                      disabled={!walletConnected}
-                    >
-                      MAX
-                    </Button>
                   </div>
                   {walletConnected && (
-                    <div className="text-xs text-gray-400 mt-1">
-                      Balance: {formatTokenAmount(parseFloat(tokenBalance))} STRK
+                    <div className="flex justify-between mt-1 text-xs text-gray-400">
+                      <span>Balance: {formatTokenAmount(parseFloat(tokenBalance))} STRK</span>
+                      <Button 
+                        type="button" 
+                        variant="ghost" 
+                        size="sm" 
+                        className="h-6 px-2 text-blue-400 hover:text-blue-300"
+                        onClick={setMaxBalance}
+                        disabled={!walletConnected}
+                      >
+                        MAX
+                      </Button>
                     </div>
                   )}
                 </div>

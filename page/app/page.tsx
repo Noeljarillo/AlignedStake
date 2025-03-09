@@ -310,7 +310,9 @@ const normalizeAddress = (address: string): string => {
   return address;
 };
 
-const CallToAction = () => {
+const CallToAction = ({ walletConnected }: { 
+  walletConnected: boolean
+}) => {
   return (
     <div className="w-full bg-background/80 backdrop-blur-sm border-b border-border p-4">
       <div className="max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-between gap-4">
@@ -1585,8 +1587,9 @@ export default function Home() {
     
     // Prevent setting amount higher than balance
     if (walletConnected && Number(newAmount) > Number(tokenBalance)) {
-      // Format to 2 decimal places only, just like in setMaxBalance
-      const formattedBalance = Number(tokenBalance).toFixed(2);
+      // Round down to 2 decimal places when setting max amount
+      const truncatedValue = Math.floor(Number(tokenBalance) * 100) / 100;
+      const formattedBalance = truncatedValue.toFixed(2);
       setStakeAmount(formattedBalance);
       toast({
         title: "Amount exceeds balance",
@@ -2186,8 +2189,9 @@ export default function Home() {
   // Add a function to set maximum available balance
   const setMaxBalance = () => {
     if (walletConnected && Number(tokenBalance) > 0) {
-      // Format to 2 decimal places only
-      const formattedBalance = Number(tokenBalance).toFixed(2);
+      // Round down to 2 decimal places
+      const truncatedValue = Math.floor(Number(tokenBalance) * 100) / 100;
+      const formattedBalance = truncatedValue.toFixed(2);
       setStakeAmount(formattedBalance);
       
       if (isSplitDelegation) {
@@ -2208,7 +2212,9 @@ export default function Home() {
       <meta name="google-site-verification" content="BioBqMAm54m_zMizQ_YtbyFCgVe_BY9KGhn8j6K9KWg" />
       <div className="w-full">
         <VoyagerBanner />
-        <CallToAction />
+        <CallToAction 
+          walletConnected={walletConnected}
+        />
       </div>
       <div className="w-full sticky top-0 z-50">
         <AnimatePresence>
@@ -2711,7 +2717,7 @@ export default function Home() {
                           type="button" 
                           variant="ghost" 
                           size="sm" 
-                          className="h-5 px-1.5 text-blue-400 hover:text-blue-300"
+                          className="h-6 px-2 text-blue-400 hover:text-blue-300"
                           onClick={setMaxBalance}
                         >
                           MAX
