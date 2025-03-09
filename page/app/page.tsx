@@ -2322,6 +2322,7 @@ export default function Home() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-900 to-gray-800 flex flex-col items-center pt-0 px-0 pb-4">
       <meta name="google-site-verification" content="BioBqMAm54m_zMizQ_YtbyFCgVe_BY9KGhn8j6K9KWg" />
+      <meta name="google-site-verification" content="oeiS9fDdug9-SnVdx1EA5diIss5QdkrqRoWn-nZesC0" />
       <div className="w-full">
         <VoyagerBanner />
         <CallToAction 
