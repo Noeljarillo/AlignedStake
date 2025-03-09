@@ -19,7 +19,7 @@ export async function GET(request: Request) {
     const offset = (page - 1) * pageSize;
     
     // Validate sort column to prevent SQL injection
-    const validSortColumns = ['delegatedstake', 'totaldelegators', 'rank', 'name', 'revenueshare', 'starttime'];
+    const validSortColumns = ['delegatedstake', 'totaldelegators', 'rank', 'name', 'revenueshare', 'starttime', 'ownstake', 'totalstake'];
     const sanitizedSortBy = validSortColumns.includes(sortBy.toLowerCase()) 
       ? sortBy.toLowerCase() 
       : 'delegatedstake';
@@ -41,7 +41,9 @@ export async function GET(request: Request) {
         poolAddress,
         rank,
         revenueShare,
-        startTime
+        startTime,
+        ownStake,
+        totalStake
       FROM validators 
       WHERE 1=1
       ${verifiedOnly ? 'AND isVerified = true' : ''}
@@ -72,7 +74,9 @@ export async function GET(request: Request) {
         ? `${sanitizedSortBy}::bigint ${sanitizedSortOrder === 'asc' ? 'ASC' : 'DESC'}`
         : sanitizedSortBy === 'revenueshare' 
           ? `${sanitizedSortBy}::numeric ${sanitizedSortOrder === 'asc' ? 'ASC' : 'DESC'} NULLS ${sanitizedSortOrder === 'asc' ? 'FIRST' : 'LAST'}`
-          : `${sanitizedSortBy}::numeric ${sanitizedSortOrder === 'asc' ? 'ASC' : 'DESC'}`}
+          : sanitizedSortBy === 'rank' 
+            ? `${sanitizedSortBy}::integer ${sanitizedSortOrder === 'asc' ? 'ASC' : 'DESC'} NULLS LAST`
+            : `${sanitizedSortBy}::numeric ${sanitizedSortOrder === 'asc' ? 'ASC' : 'DESC'}`}
       LIMIT ${pageSize} OFFSET ${offset};
     `;
     
@@ -87,9 +91,11 @@ export async function GET(request: Request) {
       isVerified: validator.isverified,
       imgSrc: validator.imgsrc,
       poolAddress: validator.pooladdress,
-      rank: validator.rank,
+      rank: validator.rank ? Number(validator.rank) : null,
       revenueShare: validator.revenueshare,
-      startTime: validator.starttime
+      startTime: validator.starttime,
+      ownStake: Math.floor(Number(validator.ownstake) / Math.pow(10, 18)),
+      totalStake: Math.floor(Number(validator.totalstake) / Math.pow(10, 18))
     }));
     
     return NextResponse.json({

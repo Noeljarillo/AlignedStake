@@ -205,6 +205,8 @@ interface Validator {
   revenueShare?: number;
   startTime?: number;
   rank?: number; // Add the rank property as optional
+  ownStake?: number; // Add the validator's own stake
+  totalStake?: number; // Add the total stake (own + delegated)
 }
 
 interface Stats {
@@ -626,8 +628,8 @@ const ValidatorList = ({ onSelectValidator }: ValidatorListProps) => {
   const [isLoading, setIsLoading] = useState(true);
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
-  const [sortBy, setSortBy] = useState('delegatedStake');
-  const [sortOrder, setSortOrder] = useState('desc');
+  const [sortBy, setSortBy] = useState('rank');
+  const [sortOrder, setSortOrder] = useState('asc');
   const [verifiedOnly, setVerifiedOnly] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [pageSize, setPageSize] = useState(10); 
@@ -648,9 +650,9 @@ const ValidatorList = ({ onSelectValidator }: ValidatorListProps) => {
       
       let url = `/api/validators/all?page=${page}&pageSize=${pageSize}&sortBy=${sortBy}&sortOrder=${sortOrder}&verified=${verifiedOnly}&search=${encodeURIComponent(searchTerm)}`;
       
-      // If showing bottom 20, override sort settings
+      // If showing bottom 20, override page size but keep sort settings
       if (showBottom20) {
-        url = `/api/validators/all?page=1&pageSize=20&sortBy=delegatedStake&sortOrder=asc&verified=${verifiedOnly}&search=${encodeURIComponent(searchTerm)}`;
+        url = `/api/validators/all?page=1&pageSize=20&sortBy=${sortBy}&sortOrder=${sortOrder}&verified=${verifiedOnly}&search=${encodeURIComponent(searchTerm)}`;
       }
       
       // Add max fee filter if set
@@ -685,21 +687,26 @@ const ValidatorList = ({ onSelectValidator }: ValidatorListProps) => {
   }, [page, sortBy, sortOrder, verifiedOnly, searchTerm, pageSize, showBottom20, maxFee]);
   
   const handleSort = (column: string) => {
-    if (showBottom20) {
-
-      return;
-    }
-    
+    // Allow sorting even when showing bottom 20
     if (sortBy === column) {
       setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc');
     } else {
       setSortBy(column);
       
-      setSortOrder(column === 'revenueShare' ? 'asc' : 'desc');
+      // For numerical fields that are better when higher, default to descending
+      // For fee, lower is better so default to ascending
+      if (column === 'revenueShare') {
+        setSortOrder('asc');
+      } else if (column === 'rank') {
+        setSortOrder('asc'); // Ranks should default to ascending (1, 2, 3...)
+      } else {
+        setSortOrder('desc');
+      }
     }
     setPage(1);
     // No need to call fetchValidators here as the useEffect will handle it
   };
+  
   
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
@@ -871,11 +878,11 @@ const ValidatorList = ({ onSelectValidator }: ValidatorListProps) => {
                 <tr>
                   <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
                     <button 
-                      className={`flex items-center gap-1 ${!showBottom20 ? 'hover:text-primary' : 'cursor-default'} transition-colors`}
+                      className={`flex items-center gap-1 hover:text-primary transition-colors`}
                       onClick={() => handleSort('rank')}
                     >
                       Rank
-                      {!showBottom20 && <ArrowUpDown className="h-3 w-3" />}
+                      <ArrowUpDown className="h-3 w-3" />
                     </button>
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
@@ -883,38 +890,56 @@ const ValidatorList = ({ onSelectValidator }: ValidatorListProps) => {
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
                     <button 
-                      className={`flex items-center gap-1 ${!showBottom20 ? 'hover:text-primary' : 'cursor-default'} transition-colors`}
+                      className={`flex items-center gap-1 hover:text-primary transition-colors`}
+                      onClick={() => handleSort('totalStake')}
+                    >
+                      Total Stake
+                      <ArrowUpDown className="h-3 w-3" />
+                    </button>
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
+                    <button 
+                      className={`flex items-center gap-1 hover:text-primary transition-colors`}
                       onClick={() => handleSort('delegatedStake')}
                     >
                       Delegated Stake
-                      {!showBottom20 && <ArrowUpDown className="h-3 w-3" />}
+                      <ArrowUpDown className="h-3 w-3" />
                     </button>
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
                     <button 
-                      className={`flex items-center gap-1 ${!showBottom20 ? 'hover:text-primary' : 'cursor-default'} transition-colors`}
+                      className={`flex items-center gap-1 hover:text-primary transition-colors`}
+                      onClick={() => handleSort('ownStake')}
+                    >
+                      Own Stake
+                      <ArrowUpDown className="h-3 w-3" />
+                    </button>
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
+                    <button 
+                      className={`flex items-center gap-1 hover:text-primary transition-colors`}
                       onClick={() => handleSort('totalDelegators')}
                     >
                       Delegators
-                      {!showBottom20 && <ArrowUpDown className="h-3 w-3" />}
+                      <ArrowUpDown className="h-3 w-3" />
                     </button>
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
                     <button 
-                      className={`flex items-center gap-1 ${!showBottom20 ? 'hover:text-primary' : 'cursor-default'} transition-colors`}
+                      className={`flex items-center gap-1 hover:text-primary transition-colors`}
                       onClick={() => handleSort('revenueShare')}
                     >
                       Fee
-                      {!showBottom20 && <ArrowUpDown className="h-3 w-3" />}
+                      <ArrowUpDown className="h-3 w-3" />
                     </button>
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
                     <button 
-                      className={`flex items-center gap-1 ${!showBottom20 ? 'hover:text-primary' : 'cursor-default'} transition-colors`}
+                      className={`flex items-center gap-1 hover:text-primary transition-colors`}
                       onClick={() => handleSort('startTime')}
                     >
                       Start Date
-                      {!showBottom20 && <ArrowUpDown className="h-3 w-3" />}
+                      <ArrowUpDown className="h-3 w-3" />
                     </button>
                   </th>
                 </tr>
@@ -969,7 +994,13 @@ const ValidatorList = ({ onSelectValidator }: ValidatorListProps) => {
                       </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm">
+                      {validator.totalStake?.toLocaleString() || 'N/A'} STRK
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm">
                       {validator.delegatedStake.toLocaleString()} STRK
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm">
+                      {validator.ownStake?.toLocaleString() || 'N/A'} STRK
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm">
                       {validator.totalDelegators.toLocaleString()}
