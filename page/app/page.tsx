@@ -1102,6 +1102,7 @@ export default function Home() {
           fetch(`/api/validators?mode=bottom&limit=20${verifiedOnly ? '&verified=true' : ''}`)
         ]);
         
+        console.log('statsResponse', statsResponse);
         if (!statsResponse.ok) throw new Error('Failed to fetch stats');
         if (!topValidatorsResponse.ok) throw new Error('Failed to fetch top validators');
         if (!bottomValidatorsResponse.ok) throw new Error('Failed to fetch bottom validators');
