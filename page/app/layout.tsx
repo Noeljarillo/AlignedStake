@@ -4,6 +4,8 @@ import { Inter, Poppins } from 'next/font/google'
 import './globals.css'
 import './enhanced-ui.css'
 import { metadata as siteMetadata } from './metadata'
+import { ThemeProvider } from '@/components/theme-provider'
+import { MainNavigation } from './components/MainNavigation'
 
 const inter = Inter({ subsets: ['latin'], variable: '--font-inter' })
 const poppins = Poppins({
@@ -21,7 +23,7 @@ export default function RootLayout({
   children: React.ReactNode
 }>) {
   return (
-    <html lang="en" className="dark">
+    <html lang="en" className="dark" style={{ colorScheme: "dark" }}>
       <head>
         <script
           type="application/ld+json"
@@ -44,13 +46,21 @@ export default function RootLayout({
         />
       </head>
       <body className={`${inter.variable} ${poppins.variable}`}>
-        <div className="relative min-h-screen enhanced-gradient bg-gray-900">
-          <div className="absolute inset-0 bg-starknet-pattern opacity-20"></div>
-          <div className="relative w-full max-w-[1920px] mx-auto px-4 sm:px-6 lg:px-8">
-            {children}
+        <ThemeProvider
+          attribute="class"
+          defaultTheme="dark"
+          enableSystem
+          disableTransitionOnChange
+        >
+          <div className="relative min-h-screen enhanced-gradient bg-gray-900">
+            <div className="absolute inset-0 bg-starknet-pattern opacity-20"></div>
+            <div className="relative w-full max-w-[1920px] mx-auto px-4 sm:px-6 lg:px-8">
+              <MainNavigation />
+              {children}
+            </div>
           </div>
-        </div>
-        <Analytics />
+          <Analytics />
+        </ThemeProvider>
       </body>
     </html>
   )

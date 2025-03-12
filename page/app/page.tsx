@@ -1,12 +1,13 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useMemo } from "react"
 import { motion, AnimatePresence } from "framer-motion"
+import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { Label } from "@/components/ui/label"
-import { Loader2, RefreshCw, Zap, ChevronDown, ChevronUp, Gift, Users, Landmark, Users2, Activity, Mail, MessageCircle, Twitter, ChevronLeft, ChevronRight, Search, Filter, ArrowUpDown, Check, AlertCircle, CheckCircle, ShieldCheck, Shield, Coins } from "lucide-react"
+import { Loader2, RefreshCw, Zap, ChevronDown, ChevronUp, Gift, Users, Landmark, Users2, Activity, Mail, MessageCircle, Twitter, ChevronLeft, ChevronRight, Search, Filter, ArrowUpDown, Check, AlertCircle, CheckCircle, ShieldCheck, Shield, Coins, BarChart3 } from "lucide-react"
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell } from "recharts"
 import { Contract, AccountInterface, RpcProvider } from "starknet"
 import { cairo } from "starknet"
@@ -27,7 +28,6 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
-import Link from "next/link"
 import { Info } from "lucide-react"
 import { useToast } from "@/components/ui/use-toast"
 import { useRouter } from "next/navigation"
@@ -2427,24 +2427,37 @@ export default function Home() {
                     </div>
                   </div>
                 ) : (
-                  <Button 
-                    className="px-6"
-                    onClick={connectWallet}
-                    disabled={isConnecting}
-                    variant="default"
-                  >
-                    {isConnecting ? (
-                      <div className="flex items-center gap-2">
-                        <Loader2 className="h-4 w-4 animate-spin" />
-                        <span>Connecting...</span>
-                      </div>
-                    ) : (
-                      <div className="flex items-center gap-2">
-                        <Landmark className="h-4 w-4" />
-                        <span>Connect Wallet</span>
-                      </div>
-                    )}
-                  </Button>
+                  <div className="flex items-center gap-2">
+                    <Link href="/analytics">
+                      <Button 
+                        className="px-4"
+                        variant="secondary"
+                      >
+                        <div className="flex items-center gap-2">
+                          <BarChart3 className="h-4 w-4" />
+                          <span>Analytics</span>
+                        </div>
+                      </Button>
+                    </Link>
+                    <Button 
+                      className="px-6"
+                      onClick={connectWallet}
+                      disabled={isConnecting}
+                      variant="secondary"
+                    >
+                      {isConnecting ? (
+                        <div className="flex items-center gap-2">
+                          <Loader2 className="h-4 w-4 animate-spin" />
+                          <span>Connecting...</span>
+                        </div>
+                      ) : (
+                        <div className="flex items-center gap-2">
+                          <Landmark className="h-4 w-4" />
+                          <span>Connect Wallet</span>
+                        </div>
+                      )}
+                    </Button>
+                  </div>
                 )}
               </div>
             </div>
