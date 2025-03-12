@@ -1,4 +1,5 @@
 import React from 'react';
+import Script from 'next/script';
 
 export default function StructuredData() {
   const stakingService = {
@@ -65,16 +66,26 @@ export default function StructuredData() {
     ]
   };
 
+  // Convert objects to strings outside of JSX for better security
+  const stakingServiceString = JSON.stringify(stakingService);
+  const howToStakeString = JSON.stringify(howToStake);
+
   return (
     <>
-      <script
+      <Script 
+        id="staking-service-schema"
         type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(stakingService) }}
-      />
-      <script
+        strategy="afterInteractive"
+      >
+        {stakingServiceString}
+      </Script>
+      <Script
+        id="how-to-stake-schema"
         type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(howToStake) }}
-      />
+        strategy="afterInteractive"
+      >
+        {howToStakeString}
+      </Script>
     </>
   );
 } 

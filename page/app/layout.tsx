@@ -1,6 +1,7 @@
 import type { Metadata } from 'next'
 import { Analytics } from '@vercel/analytics/react'
 import { Inter, Poppins } from 'next/font/google'
+import Script from 'next/script'
 import './globals.css'
 import './enhanced-ui.css'
 import { metadata as siteMetadata } from './metadata'
@@ -17,6 +18,22 @@ const poppins = Poppins({
 // We'll use the metadata from metadata.js
 export const metadata: Metadata = siteMetadata;
 
+// Website schema object for structured data
+const websiteSchema = {
+  "@context": "https://schema.org",
+  "@type": "WebSite",
+  "name": "AlignedStake",
+  "alternateName": ["Starknet Staking Dashboard", "STRK Staking Dashboard"],
+  "url": "https://www.aligned-stake.com/",
+  "sameAs": ["https://www.starknet-stake.com/"],
+  "description": "The easiest way to stake STRK on Starknet. Find validators, track rewards, and learn how to stake STRK tokens safely.",
+  "potentialAction": {
+    "@type": "SearchAction",
+    "target": "https://www.aligned-stake.com/search?q={search_term_string}",
+    "query-input": "required name=search_term_string"
+  }
+};
+
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -25,25 +42,27 @@ export default function RootLayout({
   return (
     <html lang="en" className="dark" style={{ colorScheme: "dark" }}>
       <head>
-        <script
-          type="application/ld+json"
-          dangerouslySetInnerHTML={{
-            __html: JSON.stringify({
-              "@context": "https://schema.org",
-              "@type": "WebSite",
-              "name": "AlignedStake",
-              "alternateName": ["Starknet Staking Dashboard", "STRK Staking Dashboard"],
-              "url": "https://www.aligned-stake.com/",
-              "sameAs": ["https://www.starknet-stake.com/"],
-              "description": "The easiest way to stake STRK on Starknet. Find validators, track rewards, and learn how to stake STRK tokens safely.",
-              "potentialAction": {
-                "@type": "SearchAction",
-                "target": "https://www.aligned-stake.com/search?q={search_term_string}",
-                "query-input": "required name=search_term_string"
-              }
-            })
-          }}
+        {/* Google tag (gtag.js) */}
+        <Script
+          src="https://www.googletagmanager.com/gtag/js?id=G-B4GLJ51ZVF"
+          strategy="afterInteractive"
         />
+        <Script id="google-analytics" strategy="afterInteractive">
+          {`
+            window.dataLayer = window.dataLayer || [];
+            function gtag(){dataLayer.push(arguments);}
+            gtag('js', new Date());
+            gtag('config', 'G-B4GLJ51ZVF');
+          `}
+        </Script>
+        
+        <Script
+          id="website-schema"
+          type="application/ld+json"
+          strategy="afterInteractive"
+        >
+          {JSON.stringify(websiteSchema)}
+        </Script>
       </head>
       <body className={`${inter.variable} ${poppins.variable}`}>
         <ThemeProvider

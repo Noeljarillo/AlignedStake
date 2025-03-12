@@ -12,7 +12,6 @@ import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell } from 
 import { Contract, AccountInterface, RpcProvider } from "starknet"
 import { cairo } from "starknet"
 import CountUp from "react-countup"
-import { SpeedInsights } from "@vercel/speed-insights/next"
 import { track } from '@vercel/analytics'
 import StructuredData from "./components/StructuredData"
 import { 
@@ -761,13 +760,15 @@ const ValidatorList = ({ onSelectValidator }: ValidatorListProps) => {
     <div className="w-full bg-background rounded-lg border border-border overflow-hidden shadow-sm">
       <div className="p-6 border-b border-border">
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-          <h3 className="text-xl font-semibold text-foreground">
-            {showBottom20 ? "Bottom 20 Validators" : "All Validators"}
-          </h3>
+          <h2 className="text-xl font-semibold text-foreground">
+            {showBottom20 ? "Bottom 20 Validators" : "STRK Validators & Delegators"}
+          </h2>
           
           <div className="flex flex-col sm:flex-row gap-3 w-full md:w-auto">
             <form onSubmit={handleSearch} className="relative flex-1 sm:w-64">
+              <label htmlFor="search-validators" className="sr-only">Search validators</label>
               <input
+                id="search-validators"
                 type="text"
                 placeholder="Search validators..."
                 value={searchTerm}
@@ -1935,7 +1936,7 @@ export default function Home() {
       <div className="w-full bg-background border border-border rounded-lg p-6 mb-8 shadow-sm">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           <div className="col-span-1">
-            <h3 className="text-lg font-semibold text-muted-foreground mb-2">Total Network Stake</h3>
+            <h1 className="text-lg font-semibold text-muted-foreground mb-2">STRK Total Network Stake</h1>
             <p className="text-4xl font-bold mb-1">
               {formatTokenAmount(totalStake)} STRK
             </p>
@@ -2017,7 +2018,7 @@ export default function Home() {
   const ComparisonMetrics = () => {
     return (
       <div className="mt-8 bg-background border border-border rounded-lg p-6 shadow-sm">
-        <h3 className="text-xl font-semibold text-foreground mb-6">Top 10 vs Rest</h3>
+        <h2 className="text-xl font-semibold text-foreground mb-6">Top Validators Stake Comparison</h2>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
           <div className="space-y-4">
             <div className="flex items-center justify-between p-4 bg-secondary/50 rounded-lg border border-border/50">
@@ -2864,7 +2865,7 @@ export default function Home() {
                         <Zap className="h-3.5 w-3.5 text-purple-400" />
                       </div>
                       <div>
-                        <span className="text-sm font-medium text-white">Split delegation (90/10)</span>
+                        <label htmlFor="splitDelegation" className="text-sm font-medium text-white cursor-pointer">Split delegation (90/10)</label>
                         <p className="text-xs text-gray-400">Support smaller validators</p>
                       </div>
                     </div>
@@ -3109,7 +3110,7 @@ export default function Home() {
         </div>
       )}
       <ContactInfo />
-      <SpeedInsights />
+      {/* SpeedInsights removed due to CSP issues */}
       <StructuredData />
     </div>
   )

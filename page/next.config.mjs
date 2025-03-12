@@ -14,13 +14,22 @@ const nextConfig = {
     ignoreBuildErrors: true,
   },
   images: {
-    unoptimized: true,
+    // Enable image optimization for better web performance
+    unoptimized: false,
+    formats: ['image/webp', 'image/avif'],
+    minimumCacheTTL: 60,
   },
   experimental: {
     webpackBuildWorker: true,
     parallelServerBuildTraces: true,
     parallelServerCompiles: true,
   },
+  // Add optimization for better page performance
+  compiler: {
+    removeConsole: process.env.NODE_ENV === 'production',
+  },
+  reactStrictMode: true,
+  swcMinify: true,
 }
 
 mergeConfig(nextConfig, userConfig)

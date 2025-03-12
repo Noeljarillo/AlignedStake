@@ -1,10 +1,10 @@
 export const metadata = {
-  title: 'AlignedStake | The #1 Starknet STRK Staking Dashboard',
-  description: 'The easiest way to stake STRK on Starknet. Find validators, track rewards, and learn how to stake STRK tokens safely. Maximize your Starknet staking returns today.',
-  keywords: 'starknet stake, stake starknet, strk staking, starknet staking dashboard, starknet staking, stark staking, staking starknet, starknet token staking, stake strk, how to stake strk, aligned stake, alignedstake',
+  title: 'AlignedStake | STRK Staking Dashboard for Validators & Delegators',
+  description: 'The easiest way to stake STRK on Starknet. Find validators, track total stake, and connect with delegators. Maximize your Starknet staking returns with AlignedStake.',
+  keywords: 'starknet stake, stake starknet, strk staking, starknet staking dashboard, starknet staking, stark staking, staking starknet, starknet token staking, stake strk, how to stake strk, aligned stake, alignedstake, validators, delegators, total stake',
   openGraph: {
-    title: 'AlignedStake | The #1 Starknet STRK Staking Dashboard',
-    description: 'The easiest way to stake STRK on Starknet. Find validators, track rewards, and learn how to stake STRK tokens safely. Maximize your Starknet staking returns today.',
+    title: 'AlignedStake | STRK Staking Dashboard for Validators & Delegators',
+    description: 'The easiest way to stake STRK on Starknet. Find validators, track total stake, and connect with delegators. Maximize your Starknet staking returns with AlignedStake.',
     url: 'https://www.aligned-stake.com/',
     type: 'website',
     images: [
@@ -19,8 +19,8 @@ export const metadata = {
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'AlignedStake | The #1 Starknet STRK Staking Dashboard',
-    description: 'The easiest way to stake STRK on Starknet. Find validators, track rewards, and learn how to stake STRK tokens safely.',
+    title: 'AlignedStake | STRK Staking Dashboard for Validators & Delegators',
+    description: 'The easiest way to stake STRK on Starknet. Find validators, track total stake, and connect with delegators.',
     images: ['https://www.aligned-stake.com/staking-dashboard-preview.png'],
     creator: '@AlignedStake'
   },
