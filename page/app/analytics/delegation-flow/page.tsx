@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useMemo } from 'react';
 import { format, subDays } from 'date-fns';
+import { useRouter } from 'next/navigation';
 import {
   Card,
   CardContent,
@@ -30,6 +31,7 @@ import {
   Legend,
   ResponsiveContainer,
   ReferenceLine,
+  Cell,
 } from 'recharts';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow, TableFooter } from "@/components/ui/table";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -121,7 +123,15 @@ function formatAddress(address: string) {
 }
 
 function formatTokenAmount(amount: number) {
-  return amount.toFixed(2);
+  const absValue = Math.abs(amount);
+  const sign = amount < 0 ? '-' : '';
+  
+  if (absValue >= 1000000) {
+    return `${sign}${(absValue / 1000000).toFixed(2)}M`;
+  } else if (absValue >= 1000) {
+    return `${sign}${(absValue / 1000).toFixed(2)}K`;
+  }
+  return `${sign}${absValue.toFixed(2)}`;
 }
 
 const predefinedDateRanges = [
@@ -154,7 +164,13 @@ interface BucketStat {
   color: string;
 }
 
+interface ChartDataPoint {
+  date: string;
+  [validator: string]: string | number;
+}
+
 export default function DelegationFlowAnalytics() {
+  const router = useRouter();
   const [flowData, setFlowData] = useState<DelegationFlow[]>([]);
   const [stats, setStats] = useState<DelegationFlowStats>({
     totalDelegated: 0,
@@ -169,6 +185,7 @@ export default function DelegationFlowAnalytics() {
   const [sankeyData, setSankeyData] = useState<SankeyData>({ nodes: [], links: [] });
   const [bucketStats, setBucketStats] = useState<BucketStat[]>([]);
   const [topValidatorCount, setTopValidatorCount] = useState<number>(5);
+  const [activeValidators, setActiveValidators] = useState<Record<string, boolean>>({});
 
   // Process data for Gantt chart
   const processGanttData = (data: DelegationFlow[]) => {
@@ -215,7 +232,7 @@ export default function DelegationFlowAnalytics() {
     });
     
     // Sort by date
-    return chartData.sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+    return chartData.sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime()) as ChartDataPoint[];
   };
 
   // Format data for Sankey chart with size bucketing and performance optimizations
@@ -435,6 +452,31 @@ export default function DelegationFlowAnalytics() {
   const ganttData = processGanttData(flowData);
   const chartData = formatGanttChartData(flowData);
   const uniqueValidators = Array.from(new Set(flowData.map(flow => flow.validator)));
+  
+  // Create a mapping of validator names to their addresses
+  const validatorAddressMap = useMemo(() => {
+    const map: Record<string, string> = {};
+    flowData.forEach(flow => {
+      if (flow.validator && flow.validatorAddress) {
+        map[flow.validator] = flow.validatorAddress;
+      }
+    });
+    return map;
+  }, [flowData]);
+
+  // Updated function to navigate to a validator's page by address
+  const navigateToValidator = (validatorNameOrAddress: string, e?: React.MouseEvent) => {
+    // Stop propagation if event is provided
+    if (e) {
+      e.stopPropagation();
+    }
+    
+    // Check if we have the address in our map
+    const address = validatorAddressMap[validatorNameOrAddress] || validatorNameOrAddress;
+    
+    // Use Next.js router with the address, not the name
+    router.push(`/validator/${address}`);
+  };
 
   return (
     <div className="container py-10">
@@ -460,7 +502,7 @@ export default function DelegationFlowAnalytics() {
           </div>
         </div>
         
-        <div className="flex gap-4">
+        <div className="flex justify-end gap-4">
           <div className="space-y-2">
             <Label htmlFor="startDate">Start Date</Label>
             <Popover>
@@ -477,12 +519,13 @@ export default function DelegationFlowAnalytics() {
                   {startDate ? format(startDate, "PPP") : <span>Pick a date</span>}
                 </Button>
               </PopoverTrigger>
-              <PopoverContent className="w-auto p-0" align="start">
+              <PopoverContent className="w-auto p-0 bg-background border shadow-md" align="start">
                 <Calendar
                   mode="single"
                   selected={startDate}
                   onSelect={(date) => date && setStartDate(date)}
                   initialFocus
+                  className="bg-background text-foreground"
                 />
               </PopoverContent>
             </Popover>
@@ -504,12 +547,13 @@ export default function DelegationFlowAnalytics() {
                   {endDate ? format(endDate, "PPP") : <span>Pick a date</span>}
                 </Button>
               </PopoverTrigger>
-              <PopoverContent className="w-auto p-0" align="start">
+              <PopoverContent className="w-auto p-0 bg-background border shadow-md" align="start">
                 <Calendar
                   mode="single"
                   selected={endDate}
                   onSelect={(date) => date && setEndDate(date)}
                   initialFocus
+                  className="bg-background text-foreground"
                 />
               </PopoverContent>
             </Popover>
@@ -547,7 +591,7 @@ export default function DelegationFlowAnalytics() {
         
         <Card>
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium">Total Flows</CardTitle>
+            <CardTitle className="text-sm font-medium">Total Delegations</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{stats.totalFlows}</div>
@@ -557,8 +601,8 @@ export default function DelegationFlowAnalytics() {
       
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
         <TabsList className="mb-6">
-          <TabsTrigger value="chart">Stacked Bar Chart</TabsTrigger>
-          <TabsTrigger value="sankey">Sankey Diagram</TabsTrigger>
+          <TabsTrigger value="chart">Delegation Stats</TabsTrigger>
+          <TabsTrigger value="sankey">Delegations Flows</TabsTrigger>
           <TabsTrigger value="sizeDistribution">Size Distribution</TabsTrigger>
           <TabsTrigger value="table">Data Table</TabsTrigger>
         </TabsList>
@@ -582,25 +626,68 @@ export default function DelegationFlowAnalytics() {
                     data={chartData}
                     margin={{ top: 20, right: 30, left: 20, bottom: 5 }}
                   >
-                    <CartesianGrid strokeDasharray="3 3" />
                     <XAxis 
                       dataKey="date" 
                       label={{ value: 'Date', position: 'insideBottomRight', offset: -5 }}
                     />
                     <YAxis 
-                      label={{ value: 'Delegated STRK', angle: -90, position: 'insideLeft' }}
-                      tickFormatter={(value) => `${(value / 1000).toFixed(1)}K`}
+                      tickFormatter={(value) => value >= 1000000 ? `${(value / 1000000).toFixed(1)}M` : value >= 1000 ? `${(value / 1000).toFixed(1)}K` : value}
                     />
                     <RechartsTooltip 
-                      formatter={(value: number) => [`${formatTokenAmount(value)} STRK`, '']}
+                      formatter={(value: number, name: string) => [`${formatTokenAmount(value)} STRK`, name]}
                     />
-                    <Legend />
-                    {uniqueValidators.map((validator, index) => (
+                    <Legend 
+                      onClick={(data) => {
+                        const validator = data.dataKey as string;
+                        setActiveValidators(prev => {
+                          // Check if any validators are active
+                          const hasActive = Object.values(prev).some(isActive => isActive);
+                          // Check if this validator is not already active and others are
+                          const isNewValidatorActive = hasActive && !prev[validator];
+                          
+                          if (hasActive && !isNewValidatorActive) {
+                            // If some validators are active and this one is already active,
+                            // toggle it off
+                            const newActiveValidators = { ...prev };
+                            newActiveValidators[validator] = !prev[validator];
+                            
+                            // If all validators are now inactive, reset to show all
+                            if (!Object.values(newActiveValidators).some(isActive => isActive)) {
+                              return {};
+                            }
+                            
+                            return newActiveValidators;
+                          } else {
+                            // If no validators are active or this is a new active validator,
+                            // make only this one active
+                            const newActiveValidators: Record<string, boolean> = {};
+                            uniqueValidators.forEach(v => {
+                              newActiveValidators[v] = v === validator;
+                            });
+                            return newActiveValidators;
+                          }
+                        });
+                      }}
+                      wrapperStyle={{ cursor: 'pointer' }}
+                    />
+                    {uniqueValidators
+                      .filter(validator => {
+                        // If no validators are active (empty object), show all
+                        if (Object.keys(activeValidators).length === 0) return true;
+                        // Otherwise show only active validators
+                        return activeValidators[validator];
+                      })
+                      .map((validator, index) => (
                       <Bar 
                         key={validator}
                         dataKey={validator}
                         stackId="a"
                         fill={`hsl(${index * 30 % 360}, 70%, 50%)`}
+                        onClick={(data, index, e) => {
+                          // Use the validator address for navigation
+                          navigateToValidator(validator, e);
+                        }}
+                        cursor="pointer"
                       />
                     ))}
                   </BarChart>
@@ -612,12 +699,198 @@ export default function DelegationFlowAnalytics() {
               )}
             </CardContent>
           </Card>
+
+          {/* New interesting visualization under Delegation Flow by Validator */}
+          <Card className="mt-6">
+            <CardHeader>
+              <CardTitle>Validator Market Share Dynamics</CardTitle>
+              <CardDescription>
+                Showing delegation growth rates and market share changes for top validators
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="h-[450px]">
+              {isLoading ? (
+                <div className="flex items-center justify-center h-full">
+                  <p>Loading visualization...</p>
+                </div>
+              ) : chartData.length > 0 && chartData.length >= 2 ? (
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 h-full">
+                  {/* Market Share Pie Chart */}
+                  <div className="h-full">
+                    <h3 className="text-sm font-medium mb-2 text-center">Validator Market Share</h3>
+                    <ResponsiveContainer width="100%" height="90%">
+                      <BarChart
+                        layout="vertical"
+                        data={[...uniqueValidators].slice(0, 5).map(validator => {
+                          // Calculate total stake for this validator across all dates
+                          const totalStake = chartData.reduce((sum, day) => 
+                            sum + ((day[validator] as number) || 0), 0
+                          );
+                          return {
+                            validator,
+                            stake: totalStake,
+                            percentage: (totalStake / stats.totalDelegated * 100).toFixed(1),
+                            color: stringToColor(validator)
+                          };
+                        }).sort((a, b) => b.stake - a.stake)}
+                        margin={{ top: 20, right: 25, left: 5, bottom: 5 }}
+                      >
+                        <XAxis type="number" 
+                          tickFormatter={(value) => `${value.toFixed(1)}%`}
+                          domain={[0, 100]}
+                        />
+                        <YAxis type="category" dataKey="validator" width={100} />
+                        <RechartsTooltip 
+                          formatter={(value: number, name: string, props: any) => {
+                            const entry = props.payload;
+                            return [`${entry.percentage}% (${formatTokenAmount(entry.stake)} STRK)`, 'Market Share'];
+                          }}
+                        />
+                        <Bar 
+                          dataKey="percentage" 
+                          radius={[0, 4, 4, 0]}
+                          onClick={(data, index, e) => {
+                            if (data && data.validator) {
+                              // Use the validator address for navigation
+                              navigateToValidator(data.validator, e);
+                            }
+                          }}
+                          cursor="pointer"
+                        >
+                          {uniqueValidators.slice(0, 5).map((validator, index) => (
+                            <Cell key={`cell-${index}`} fill={stringToColor(validator)} />
+                          ))}
+                        </Bar>
+                      </BarChart>
+                    </ResponsiveContainer>
+                  </div>
+                  
+                  {/* Growth Rate Chart */}
+                  <div className="h-full">
+                    <h3 className="text-sm font-medium mb-2 text-center">Top 3 Winners & Losers (% Change)</h3>
+                    <ResponsiveContainer width="100%" height="90%">
+                      {chartData.length > 3 ? (
+                        <BarChart
+                          layout="vertical"
+                          data={(() => {
+                            // Sort dates chronologically
+                            const sortedDates = [...chartData].sort((a, b) => 
+                              new Date(a.date).getTime() - new Date(b.date).getTime()
+                            );
+                            
+                            // Get first and last dates in the period
+                            const firstDate = sortedDates[0];
+                            const lastDate = sortedDates[sortedDates.length - 1];
+                            
+                            // Calculate percentage changes
+                            const changes = uniqueValidators.map(validator => {
+                              const startStake = firstDate[validator] as number || 0;
+                              const endStake = lastDate[validator] as number || 0;
+                              
+                              // Calculate percentage change (handle case where startStake is 0)
+                              let percentChange = 0;
+                              if (startStake > 0) {
+                                percentChange = ((endStake - startStake) / startStake) * 100;
+                              } else if (endStake > 0) {
+                                // If starting from 0, set to 100% (or a capped value)
+                                percentChange = 100; // Could set to a higher number if desired
+                              }
+                              
+                              // Add absolute delta for tooltip
+                              const absoluteChange = endStake - startStake;
+                              
+                              return {
+                                validator,
+                                change: percentChange,
+                                absChange: Math.abs(percentChange),
+                                absoluteChange, // Store absolute change for tooltip
+                                startStake,
+                                endStake
+                              };
+                            }).filter(item => item.startStake > 0 || item.endStake > 0); // Filter out validators with no stake
+                            
+                            // Get top 3 winners and top 3 losers
+                            const winners = [...changes]
+                              .filter(item => item.change > 0)
+                              .sort((a, b) => b.change - a.change)
+                              .slice(0, 3);
+                              
+                            const losers = [...changes]
+                              .filter(item => item.change < 0)
+                              .sort((a, b) => a.change - b.change)
+                              .slice(0, 3);
+                              
+                            // Return combined and sorted data
+                            return [...winners, ...losers].sort((a, b) => b.change - a.change);
+                          })()}
+                          margin={{ top: 20, right: 30, left: 5, bottom: 5 }}
+                        >
+                          <XAxis 
+                            type="number" 
+                            tickFormatter={(value) => `${value.toFixed(1)}%`}
+                            domain={['dataMin', 'dataMax']}
+                          />
+                          <YAxis type="category" dataKey="validator" width={100} />
+                          <ReferenceLine x={0} stroke="#666" />
+                          <RechartsTooltip 
+                            formatter={(value: number, name: string, props: any) => {
+                              // Get full data from payload
+                              const data = props.payload;
+                              if (name === 'change') {
+                                return [
+                                  <span>
+                                    <strong>{value >= 0 ? '+' : ''}{value.toFixed(1)}%</strong><br/>
+                                    Change: {formatTokenAmount(data.absoluteChange)} STRK<br/>
+                                    From: {formatTokenAmount(data.startStake)} STRK<br/>
+                                    To: {formatTokenAmount(data.endStake)} STRK
+                                  </span>, 
+                                  'Stake Change'
+                                ];
+                              }
+                              return [value, name];
+                            }}
+                          />
+                          <Bar 
+                            dataKey="change" 
+                            radius={[0, 4, 4, 0]}
+                            onClick={(data, index, e) => {
+                              if (data && data.validator) {
+                                // Use the validator address for navigation
+                                navigateToValidator(data.validator, e);
+                              }
+                            }}
+                            cursor="pointer"
+                          >
+                            {uniqueValidators.slice(0, 6).map((validator, index) => (
+                              <Cell 
+                                key={`cell-${index}`}
+                                fill={stringToColor(validator)}
+                                fillOpacity={0.9}
+                              />
+                            ))}
+                          </Bar>
+                        </BarChart>
+                      ) : (
+                        <div className="flex items-center justify-center h-full">
+                          <p className="text-muted-foreground text-sm">Not enough historical data to calculate changes</p>
+                        </div>
+                      )}
+                    </ResponsiveContainer>
+                  </div>
+                </div>
+              ) : (
+                <div className="flex items-center justify-center h-full">
+                  <p>Not enough data available for the selected date range</p>
+                </div>
+              )}
+            </CardContent>
+          </Card>
         </TabsContent>
         
         <TabsContent value="sankey" className="space-y-6">
           <Card>
             <CardHeader>
-              <CardTitle>Delegation Flow</CardTitle>
+              <CardTitle>Delegations Flows</CardTitle>
               <div className="flex items-center justify-end mt-2">
                 <div className="flex items-center gap-2">
                   <Label htmlFor="topValidatorCount" className="text-sm whitespace-nowrap">
@@ -625,7 +898,7 @@ export default function DelegationFlowAnalytics() {
                   </Label>
                   <select
                     id="topValidatorCount"
-                    className="bg-background border border-input rounded-md h-9 px-3 text-sm"
+                    className="bg-background border border-input rounded-md h-9 pl-3 pr-6 text-sm"
                     value={topValidatorCount}
                     onChange={(e) => setTopValidatorCount(Number(e.target.value))}
                   >
@@ -816,9 +1089,9 @@ export default function DelegationFlowAnalytics() {
             </CardContent>
           </Card>
           
-          {/* Summary statistics table for size buckets */}
+          {/* Delegation Size Summary returned to delegation flows tab */}
           {bucketStats.length > 0 && (
-            <Card>
+            <Card className="mt-6">
               <CardHeader>
                 <CardTitle>Delegation Size Summary</CardTitle>
                 <CardDescription>
@@ -923,7 +1196,6 @@ export default function DelegationFlowAnalytics() {
                     data={bucketStats}
                     margin={{ top: 20, right: 30, left: 20, bottom: 5 }}
                   >
-                    <CartesianGrid strokeDasharray="3 3" />
                     <XAxis 
                       dataKey="label" 
                       label={{ value: 'Stake Size Category', position: 'insideBottomRight', offset: -5 }}
