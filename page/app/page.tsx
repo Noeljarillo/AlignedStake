@@ -445,35 +445,83 @@ const DelegationStats = () => {
   const [stats, setStats] = useState({
     totalUsers: 0,
     totalStaked: 0,
-    recentDelegations: [] as DelegationRecord[]
+    recentDelegations: [] as DelegationRecord[],
+    pagination: { currentPage: 1, totalPages: 1, pageSize: 10, totalCount: 0 }
   });
   const [isLoading, setIsLoading] = useState(true);
+  const [isSorting, setIsSorting] = useState(false);
+  const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(10);
+  const [sortBy, setSortBy] = useState('amount');  // Default sort by amount
+  const [sortOrder, setSortOrder] = useState('desc');  // Default descending (largest first)
+
+  const fetchStats = async () => {
+    try {
+      if (stats.recentDelegations.length > 0) {
+        setIsSorting(true);
+      } else {
+        setIsLoading(true);
+      }
+      
+      const response = await fetch(`/api/delegation-stats?page=${page}&pageSize=${pageSize}&sortBy=${sortBy}&sortOrder=${sortOrder}`);
+      if (response.ok) {
+        const data = await response.json();
+        setStats(data);
+      }
+    } catch (error) {
+      console.error('Error fetching delegation stats:', error);
+    } finally {
+      setIsLoading(false);
+      setIsSorting(false);
+    }
+  };
 
   useEffect(() => {
-    const fetchStats = async () => {
-      try {
-        setIsLoading(true);
-        const response = await fetch('/api/delegation-stats');
-        if (response.ok) {
-          const data = await response.json();
-          setStats(data);
-        }
-      } catch (error) {
-        console.error('Error fetching delegation stats:', error);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
     fetchStats();
-  }, []);
+  }, [page, pageSize, sortBy, sortOrder]);
+
+  const handleSort = (column: string) => {
+    if (sortBy === column) {
+      setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc');
+    } else {
+      setSortBy(column);
+      // Default order based on column type
+      if (column === 'timestamp') {
+        setSortOrder('desc'); // Most recent first
+      } else if (column === 'amount') {
+        setSortOrder('desc'); // Highest amount first
+      } else {
+        setSortOrder('asc');
+      }
+    }
+    setPage(1);
+  };
+
+  const handlePageChange = (newPage: number) => {
+    if (newPage > 0 && newPage <= stats.pagination.totalPages) {
+      setPage(newPage);
+    }
+  };
+
+  // Format tx hash by removing _main or _bottom suffixes for display
+  // but preserve them in the link URL
+  const formatTxHashDisplay = (txHash: string): string => {
+    // For display purposes, remove any _main or _bottom suffix
+    const baseHash = txHash.replace(/_main$|_bottom$/, '');
+    return `${baseHash.slice(0, 6)}...${baseHash.slice(-4)}`;
+  };
+
+  // Get the full link with the original hash including any suffix
+  const getTxLink = (txHash: string): string => {
+    return `https://voyager.online/tx/${txHash}`;
+  };
 
   return (
     <div className="mt-12 w-full bg-background rounded-lg border border-border overflow-hidden shadow-sm">
       <div className="p-6">
         <h2 className="text-2xl font-semibold mb-6">Aligned Delegation Stats</h2>
         
-        {isLoading ? (
+        {isLoading && stats.recentDelegations.length === 0 ? (
           <div className="flex justify-center py-8">
             <Loader2 className="w-10 h-10 text-primary animate-spin" />
           </div>
@@ -538,16 +586,68 @@ const DelegationStats = () => {
                 animate={{ opacity: 1 }}
                 transition={{ delay: 0.3 }}
               >
-                <h3 className="text-xl font-semibold mb-4">Recent Delegations</h3>
+                <div className="flex justify-between items-center mb-4">
+                  <h3 className="text-xl font-semibold">Recent Delegations</h3>
+                  
+                  {/* Page size selector */}
+                  <div className="flex items-center gap-2">
+                    <span className="text-sm text-muted-foreground">Show:</span>
+                    <select 
+                      value={pageSize}
+                      onChange={(e) => {
+                        setPageSize(Number(e.target.value));
+                        setPage(1);
+                      }}
+                      className="py-1 px-2 rounded border border-border bg-background text-sm"
+                    >
+                      <option value={5}>5</option>
+                      <option value={10}>10</option>
+                      <option value={20}>20</option>
+                      <option value={50}>50</option>
+                    </select>
+                  </div>
+                </div>
+                
                 <div className="overflow-hidden rounded-lg border border-border">
                   <div className="overflow-x-auto">
+                    {isSorting && (
+                      <div className="absolute inset-0 flex items-center justify-center bg-background/80 z-10">
+                        <Loader2 className="w-8 h-8 text-primary animate-spin" />
+                      </div>
+                    )}
                     <table className="w-full">
                       <thead className="bg-muted/50">
                         <tr>
-                          <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">Time</th>
-                          <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">Delegator</th>
-                          <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">Amount</th>
-                          <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">Tx Hash</th>
+                          <th 
+                            className="px-4 py-3 text-left text-sm font-medium text-muted-foreground cursor-pointer hover:text-foreground"
+                            onClick={() => handleSort('timestamp')}
+                          >
+                            <div className="flex items-center gap-1 hover:text-primary transition-colors">
+                              Time
+                              <ArrowUpDown className="h-3 w-3" />
+                            </div>
+                          </th>
+                          <th 
+                            className="px-4 py-3 text-left text-sm font-medium text-muted-foreground cursor-pointer hover:text-foreground"
+                            onClick={() => handleSort('delegator')}
+                          >
+                            <div className="flex items-center gap-1 hover:text-primary transition-colors">
+                              Delegator
+                              <ArrowUpDown className="h-3 w-3" />
+                            </div>
+                          </th>
+                          <th 
+                            className="px-4 py-3 text-left text-sm font-medium text-muted-foreground cursor-pointer hover:text-foreground"
+                            onClick={() => handleSort('amount')}
+                          >
+                            <div className="flex items-center gap-1 hover:text-primary transition-colors">
+                              Amount
+                              <ArrowUpDown className="h-3 w-3" />
+                            </div>
+                          </th>
+                          <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">
+                            Tx Hash
+                          </th>
                         </tr>
                       </thead>
                       <tbody className="divide-y divide-border">
@@ -577,12 +677,12 @@ const DelegationStats = () => {
                             </td>
                             <td className="px-4 py-3 text-sm">
                               <a 
-                                href={`https://voyager.online/tx/${delegation.txHash}`} 
+                                href={getTxLink(delegation.txHash)} 
                                 target="_blank" 
                                 rel="noopener noreferrer"
                                 className="hover:text-primary transition-colors"
                               >
-                                {delegation.txHash.slice(0, 6)}...{delegation.txHash.slice(-4)}
+                                {formatTxHashDisplay(delegation.txHash)}
                               </a>
                             </td>
                           </motion.tr>
@@ -590,6 +690,40 @@ const DelegationStats = () => {
                       </tbody>
                     </table>
                   </div>
+                  
+                  {/* Pagination controls - Update to match validators list style */}
+                  {stats.pagination.totalPages > 1 && (
+                    <div className="px-4 py-3 flex items-center justify-between border-t border-border bg-muted/50">
+                      <div className="text-sm text-muted-foreground">
+                        Showing <span className="font-medium">{((page - 1) * pageSize) + 1}-{Math.min(page * pageSize, stats.pagination.totalCount)}</span> of{' '}
+                        <span className="font-medium">{stats.pagination.totalCount}</span> delegations
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <Button
+                          onClick={() => handlePageChange(page - 1)}
+                          disabled={page === 1}
+                          variant="outline"
+                          size="icon"
+                          className="h-8 w-8"
+                        >
+                          <ChevronLeft className="h-4 w-4" />
+                        </Button>
+                        <span className="text-sm text-muted-foreground">
+                          Page <span className="font-medium">{page}</span> of{' '}
+                          <span className="font-medium">{stats.pagination.totalPages}</span>
+                        </span>
+                        <Button
+                          onClick={() => handlePageChange(page + 1)}
+                          disabled={page === stats.pagination.totalPages}
+                          variant="outline"
+                          size="icon"
+                          className="h-8 w-8"
+                        >
+                          <ChevronRight className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    </div>
+                  )}
                 </div>
               </motion.div>
             ) : (
@@ -761,7 +895,7 @@ const ValidatorList = ({ onSelectValidator }: ValidatorListProps) => {
       <div className="p-6 border-b border-border">
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
           <h2 className="text-xl font-semibold text-foreground">
-            {showBottom20 ? "Bottom 20 Validators" : "STRK Validators & Delegators"}
+            {showBottom20 ? "Bottom 20 Validators" : "STRK Validators"}
           </h2>
           
           <div className="flex flex-col sm:flex-row gap-3 w-full md:w-auto">

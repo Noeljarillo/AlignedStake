@@ -32,6 +32,9 @@ import {
   ResponsiveContainer,
   ReferenceLine,
   Cell,
+  PieChart,
+  Pie,
+  Sector
 } from 'recharts';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow, TableFooter } from "@/components/ui/table";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -480,7 +483,13 @@ export default function DelegationFlowAnalytics() {
 
   return (
     <div className="container py-10">
-      <h1 className="text-4xl font-bold mb-8">Delegation Flow Analytics</h1>
+      <div className="mb-8">
+        <h1 className="text-3xl font-bold mb-2">Staking Analytics: Delegation Flow</h1>
+        <p className="text-lg text-muted-foreground">
+          Comprehensive staking metrics and charts to visualize delegation flows between delegators and validators.
+          Track staking patterns, analyze validator performance, and identify key staking trends.
+        </p>
+      </div>
       
       <div className="mb-8 space-y-4">
         <div className="flex justify-between items-center">
@@ -765,114 +774,82 @@ export default function DelegationFlowAnalytics() {
                     </ResponsiveContainer>
                   </div>
                   
-                  {/* Growth Rate Chart */}
+                  {/* Delegation Received Chart */}
                   <div className="h-full">
-                    <h3 className="text-sm font-medium mb-2 text-center">Top 3 Winners & Losers (% Change)</h3>
+                    <h3 className="text-sm font-medium mb-2 text-center">Delegation Received</h3>
                     <ResponsiveContainer width="100%" height="90%">
-                      {chartData.length > 3 ? (
-                        <BarChart
-                          layout="vertical"
-                          data={(() => {
-                            // Sort dates chronologically
-                            const sortedDates = [...chartData].sort((a, b) => 
-                              new Date(a.date).getTime() - new Date(b.date).getTime()
-                            );
-                            
-                            // Get first and last dates in the period
-                            const firstDate = sortedDates[0];
-                            const lastDate = sortedDates[sortedDates.length - 1];
-                            
-                            // Calculate percentage changes
-                            const changes = uniqueValidators.map(validator => {
-                              const startStake = firstDate[validator] as number || 0;
-                              const endStake = lastDate[validator] as number || 0;
+                      {chartData.length > 0 ? (
+                        <PieChart>
+                          <Pie
+                            data={(() => {
+                              // Sort validators by total received stake
+                              const validatorTotalStake = uniqueValidators.map(validator => {
+                                // Calculate total stake for this validator across all dates
+                                const totalStake = chartData.reduce((sum, day) => 
+                                  sum + ((day[validator] as number) || 0), 0
+                                );
+                                return {
+                                  validator,
+                                  name: validator, // For nameKey compatibility
+                                  value: totalStake,
+                                  percentage: (totalStake / stats.totalDelegated * 100).toFixed(1),
+                                  fill: stringToColor(validator) // Use fill instead of color
+                                };
+                              }).sort((a, b) => b.value - a.value);
                               
-                              // Calculate percentage change (handle case where startStake is 0)
-                              let percentChange = 0;
-                              if (startStake > 0) {
-                                percentChange = ((endStake - startStake) / startStake) * 100;
-                              } else if (endStake > 0) {
-                                // If starting from 0, set to 100% (or a capped value)
-                                percentChange = 100; // Could set to a higher number if desired
+                              // Get top 5 validators
+                              const top5 = validatorTotalStake.slice(0, 5);
+                              
+                              // Calculate the "rest" as sum of all others
+                              const restTotalStake = validatorTotalStake.slice(5).reduce(
+                                (sum, item) => sum + item.value, 0
+                              );
+                              
+                              // Add the "rest" category if there are more than 5 validators
+                              const result = [...top5];
+                              if (validatorTotalStake.length > 5) {
+                                result.push({
+                                  validator: "Rest",
+                                  name: "Rest", // For nameKey compatibility
+                                  value: restTotalStake,
+                                  percentage: (restTotalStake / stats.totalDelegated * 100).toFixed(1),
+                                  fill: "#888888" // Gray color for "rest"
+                                });
                               }
                               
-                              // Add absolute delta for tooltip
-                              const absoluteChange = endStake - startStake;
-                              
-                              return {
-                                validator,
-                                change: percentChange,
-                                absChange: Math.abs(percentChange),
-                                absoluteChange, // Store absolute change for tooltip
-                                startStake,
-                                endStake
-                              };
-                            }).filter(item => item.startStake > 0 || item.endStake > 0); // Filter out validators with no stake
-                            
-                            // Get top 3 winners and top 3 losers
-                            const winners = [...changes]
-                              .filter(item => item.change > 0)
-                              .sort((a, b) => b.change - a.change)
-                              .slice(0, 3);
-                              
-                            const losers = [...changes]
-                              .filter(item => item.change < 0)
-                              .sort((a, b) => a.change - b.change)
-                              .slice(0, 3);
-                              
-                            // Return combined and sorted data
-                            return [...winners, ...losers].sort((a, b) => b.change - a.change);
-                          })()}
-                          margin={{ top: 20, right: 30, left: 5, bottom: 5 }}
-                        >
-                          <XAxis 
-                            type="number" 
-                            tickFormatter={(value) => `${value.toFixed(1)}%`}
-                            domain={['dataMin', 'dataMax']}
+                              return result;
+                            })()}
+                            cx="50%"
+                            cy="50%"
+                            labelLine={false}
+                            outerRadius={120}
+                            innerRadius={60}
+                            dataKey="value"
+                            nameKey="name"
+                            paddingAngle={2}
+                            label={false}
+                            isAnimationActive={false}
+                            onClick={(data) => {
+                              if (data && data.validator && data.validator !== "Rest") {
+                                // Use the validator address for navigation
+                                navigateToValidator(data.validator);
+                              }
+                            }}
                           />
-                          <YAxis type="category" dataKey="validator" width={100} />
-                          <ReferenceLine x={0} stroke="#666" />
                           <RechartsTooltip 
                             formatter={(value: number, name: string, props: any) => {
-                              // Get full data from payload
-                              const data = props.payload;
-                              if (name === 'change') {
-                                return [
-                                  <span>
-                                    <strong>{value >= 0 ? '+' : ''}{value.toFixed(1)}%</strong><br/>
-                                    Change: {formatTokenAmount(data.absoluteChange)} STRK<br/>
-                                    From: {formatTokenAmount(data.startStake)} STRK<br/>
-                                    To: {formatTokenAmount(data.endStake)} STRK
-                                  </span>, 
-                                  'Stake Change'
-                                ];
-                              }
-                              return [value, name];
+                              const entry = props.payload;
+                              return [
+                                `${entry.percentage}% (${formatTokenAmount(value)} STRK)`,
+                                entry.name
+                              ];
                             }}
                           />
-                          <Bar 
-                            dataKey="change" 
-                            radius={[0, 4, 4, 0]}
-                            onClick={(data, index, e) => {
-                              if (data && data.validator) {
-                                // Use the validator address for navigation
-                                navigateToValidator(data.validator, e);
-                              }
-                            }}
-                            cursor="pointer"
-                          >
-                            {uniqueValidators.slice(0, 6).map((validator, index) => (
-                              <Cell 
-                                key={`cell-${index}`}
-                                fill={stringToColor(validator)}
-                                fillOpacity={0.9}
-                              />
-                            ))}
-                          </Bar>
-                        </BarChart>
+                          <Legend />
+                        </PieChart>
                       ) : (
                         <div className="flex items-center justify-center h-full">
-                          <p className="text-muted-foreground text-sm">Not enough historical data to calculate changes</p>
+                          <p className="text-muted-foreground text-sm">Not enough data available</p>
                         </div>
                       )}
                     </ResponsiveContainer>

@@ -15,24 +15,24 @@ const analyticsFeatures = [
     isNew: true
   },
   {
-    title: "Validator Performance",
-    description: "Coming soon: Compare validator performance metrics and APR statistics",
+    title: "Validator Performance Metrics",
+    description: "Coming soon: Compare validator performance metrics, staking rewards, and APR statistics",
     icon: TrendingUp,
     href: "#",
     color: "bg-green-500",
     isComingSoon: true
   },
   {
-    title: "Staking Distribution",
-    description: "Coming soon: Analyze staking distribution and concentration among validators",
+    title: "Staking Distribution Charts",
+    description: "Coming soon: Analyze staking distribution and concentration among validators with interactive charts",
     icon: PieChart,
     href: "#",
     color: "bg-purple-500",
     isComingSoon: true
   },
   {
-    title: "Network Growth",
-    description: "Coming soon: View historical trends in staking participation and delegator growth",
+    title: "Staking Growth Trends",
+    description: "Coming soon: View historical trends and metrics on staking participation and delegator growth",
     icon: LineChart,
     href: "#",
     color: "bg-amber-500",
@@ -44,10 +44,10 @@ export default function AnalyticsIndex() {
   return (
     <div className="container py-10">
       <div className="text-center mb-12">
-        <h1 className="text-4xl font-bold mb-4">Staking Analytics</h1>
+        <h1 className="text-4xl font-bold mb-4">Staking Analytics & Metrics</h1>
         <p className="text-xl text-muted-foreground max-w-3xl mx-auto">
           Comprehensive analytics tools to visualize staking trends, delegation flows, 
-          and validator performance on the Starknet network.
+          validator performance metrics, and detailed charts on the Starknet network.
         </p>
       </div>
 
@@ -83,7 +83,7 @@ export default function AnalyticsIndex() {
               ) : (
                 <Link href={feature.href} className="w-full">
                   <Button className="w-full">
-                    Explore
+                    Explore Analytics
                     <ArrowRight className="ml-2 h-4 w-4" />
                   </Button>
                 </Link>

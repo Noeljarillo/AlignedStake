@@ -23,10 +23,10 @@ const websiteSchema = {
   "@context": "https://schema.org",
   "@type": "WebSite",
   "name": "AlignedStake",
-  "alternateName": ["Starknet Staking Dashboard", "STRK Staking Dashboard"],
+  "alternateName": ["Starknet Staking Dashboard", "STRK Staking Dashboard", "Starknet Staking Analytics"],
   "url": "https://www.aligned-stake.com/",
   "sameAs": ["https://www.starknet-stake.com/"],
-  "description": "The easiest way to stake STRK on Starknet. Find validators, track rewards, and learn how to stake STRK tokens safely.",
+  "description": "The easiest way to stake STRK on Starknet. Find validators, track rewards, view staking analytics and metrics, and learn how to stake STRK tokens safely.",
   "potentialAction": {
     "@type": "SearchAction",
     "target": "https://www.aligned-stake.com/search?q={search_term_string}",
