@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { Label } from "@/components/ui/label"
-import { Loader2, RefreshCw, Zap, ChevronDown, ChevronUp, Gift, Users, Landmark, Users2, Activity, Mail, MessageCircle, Twitter, ChevronLeft, ChevronRight, Search, Filter, ArrowUpDown, Check, AlertCircle, CheckCircle, ShieldCheck, Shield, Coins, BarChart3 } from "lucide-react"
+import { Loader2, RefreshCw, Zap, ChevronDown, ChevronUp, Gift, Users, Landmark, Users2, Activity, Mail, MessageCircle, Twitter, ChevronLeft, ChevronRight, Search, Filter, ArrowUpDown, Check, AlertCircle, CheckCircle, BarChart3, Coins, Lock, RotateCcw, Calendar, Hand, ShieldCheck, Shield } from "lucide-react"
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell } from "recharts"
 import { Contract, AccountInterface, RpcProvider } from "starknet"
 import { cairo } from "starknet"
@@ -2375,7 +2375,6 @@ export default function Home() {
                   <span className="text-xl font-semibold text-foreground group-hover:text-primary transition-colors">
                     Staking Dashboard
                   </span>
-                  {/* Small indicator icon next to title */}
                   <div className="text-muted-foreground group-hover:text-primary transition-colors">
                     {isStakeInfoOpen ? (
                       <ChevronUp className="h-4 w-4" />
@@ -2463,7 +2462,7 @@ export default function Home() {
               </div>
             </div>
             
-            {/* Make the content section scrollable */}
+
             <motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: isStakeInfoOpen ? 1 : 0 }}
@@ -2769,7 +2768,15 @@ export default function Home() {
           </CardHeader>
           <CardContent className="pb-3 pt-0">
             <div className="space-y-4">
-              {/* Center the Random Bottom 20 button */}
+              <div className="flex items-center gap-2 bg-muted/30 p-2 rounded-md border border-border">
+                <div className="flex-shrink-0 bg-primary/10 rounded-full p-1.5">
+                  <Hand className="h-4 w-4 text-primary" />
+                </div>
+                <p className="text-sm font-medium">
+                  Select primary validator from list, or use the random selection
+                </p>
+              </div>
+              
               <div className="flex justify-center">
                 <Button 
                   onClick={() => selectRandomDelegator(true)} 
@@ -3000,7 +3007,7 @@ export default function Home() {
                     animate={{ opacity: 1, y: 0 }}
                     className={`p-2.5 rounded-md shadow-md ${
                       stakeResult.includes('successful') 
-                        ? 'bg-green-500/20 border border-green-500/50 text-green-400' 
+                        ? 'bg-green-500/20 border border-green-500/50 text-green-500' 
                         : 'bg-red-500/20 border border-red-500/50 text-red-400'
                     }`}
                   >
@@ -3055,7 +3062,7 @@ export default function Home() {
                   </Button>
                 )}
                 
-                {/* Move "Show verified only" checkbox to the bottom */}
+
                 <div className="flex items-center justify-center space-x-2 pt-2 mt-1 border-t border-gray-700/50">
                   <input
                     type="checkbox"
@@ -3110,7 +3117,7 @@ export default function Home() {
         </div>
       )}
       <ContactInfo />
-      {/* SpeedInsights removed due to CSP issues */}
+
       <StructuredData />
     </div>
   )

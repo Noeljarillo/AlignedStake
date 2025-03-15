@@ -29,7 +29,6 @@ const nextConfig = {
     removeConsole: process.env.NODE_ENV === 'production',
   },
   reactStrictMode: true,
-  swcMinify: true,
 }
 
 mergeConfig(nextConfig, userConfig)
