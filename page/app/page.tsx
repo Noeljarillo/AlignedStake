@@ -2673,8 +2673,15 @@ export default function Home() {
         <Card className="lg:col-span-3 bg-background border-border">
           <CardHeader>
             <div className="space-y-8">
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+              <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
                 {[
+                  {
+                    title: "Total Delegators",
+                    value: validators.reduce((sum, validator) => sum + validator.totalDelegators, 0),
+                    tooltip: "Total number of unique delegators across all validators on the Starknet network.",
+                    icon: <Users className="w-5 h-5 text-blue-600 dark:text-blue-400" />,
+                    color: "bg-blue-500/10"
+                  },
                   {
                     title: "Zero Delegators",
                     value: stats.validatorsWithZeroStake,
