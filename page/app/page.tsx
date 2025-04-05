@@ -225,6 +225,7 @@ interface Stats {
   topTenStake: number;
   validatorsWithTwoPlus: number;
   totalActiveValidators: number;
+  uniqueDelegators: number;
 }
 
 interface StatCardProps {
@@ -1204,7 +1205,8 @@ export default function Home() {
     totalNetworkStake: 0,
     topTenStake: 0,
     validatorsWithTwoPlus: 0,
-    totalActiveValidators: 0
+    totalActiveValidators: 0,
+    uniqueDelegators: 0
   })
   const [isStakeInfoOpen, setIsStakeInfoOpen] = useState(false);
   const [userStakeInfo, setUserStakeInfo] = useState<UserStakeInfo>({
@@ -2677,7 +2679,7 @@ export default function Home() {
                 {[
                   {
                     title: "Total Delegators",
-                    value: validators.reduce((sum, validator) => sum + validator.totalDelegators, 0),
+                    value: stats.uniqueDelegators,
                     tooltip: "Total number of unique delegators across all validators on the Starknet network.",
                     icon: <Users className="w-5 h-5 text-blue-600 dark:text-blue-400" />,
                     color: "bg-blue-500/10"

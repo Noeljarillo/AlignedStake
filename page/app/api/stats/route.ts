@@ -138,6 +138,12 @@ export async function GET(request: Request) {
       WHERE totalStake > '0';
     `;
 
+    // Add query for unique delegators count
+    const uniqueDelegatorsQuery = `
+      SELECT COUNT(DISTINCT address)
+      FROM delegators;
+    `;
+
     // Execute all queries
     const [
       avgDelegatorsResult,
@@ -151,7 +157,8 @@ export async function GET(request: Request) {
       totalNetworkStakeResult,
       topTenStakeResult,
       validatorsWithTwoPlusResult,
-      totalActiveValidatorsResult
+      totalActiveValidatorsResult,
+      uniqueDelegatorsResult
     ] = await Promise.all([
       sql(avgDelegatorsTopTenQuery),
       sql(avgStakedPerStakerQuery),
@@ -164,7 +171,8 @@ export async function GET(request: Request) {
       sql(totalNetworkStakeQuery),
       sql(topTenStakeQuery),
       sql(validatorsWithTwoPlusQuery),
-      sql(totalActiveValidatorsQuery)
+      sql(totalActiveValidatorsQuery),
+      sql(uniqueDelegatorsQuery)
     ]);
 
     // Format the results
@@ -180,7 +188,8 @@ export async function GET(request: Request) {
       totalNetworkStake: Number(totalNetworkStakeResult[0]?.total_stake) || 0,
       topTenStake: Number(topTenStakeResult[0]?.top_ten_stake) || 0,
       validatorsWithTwoPlus: Number(validatorsWithTwoPlusResult[0]?.count) || 0,
-      totalActiveValidators: Number(totalActiveValidatorsResult[0]?.count) || 0
+      totalActiveValidators: Number(totalActiveValidatorsResult[0]?.count) || 0,
+      uniqueDelegators: Number(uniqueDelegatorsResult[0]?.count) || 0
     };
 
     return NextResponse.json(stats);
