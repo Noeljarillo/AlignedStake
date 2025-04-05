@@ -32,6 +32,7 @@ import { useToast } from "@/components/ui/use-toast"
 import { useRouter } from "next/navigation"
 import { Switch } from "@/components/ui/switch"
 import { formatTokenAmount } from "@/lib/utils"
+import { useWallet } from '@/app/components/WalletProvider'
 
 declare global {
   interface Window {
@@ -402,14 +403,14 @@ const ContactInfo = () => {
           </a>
           
           <a
-            href="https://twitter.com/0xN0el"
+            href="https://x.com/aligned_stake"
             target="_blank"
             rel="noopener noreferrer"
             className="flex items-center gap-2 text-gray-400 hover:text-blue-400 transition-colors duration-200"
             title="X (Twitter)"
           >
             <Twitter className="h-4 w-4" />
-            <span>@0xN0el</span>
+            <span>@Aligned_stake</span>
           </a>
         </div>
       </div>
@@ -1190,8 +1191,7 @@ export default function Home() {
   const [validators, setValidators] = useState<Validator[]>([])
   const [bottomValidators, setBottomValidators] = useState<Validator[]>([])
   const [verifiedOnly, setVerifiedOnly] = useState(true)
-  const [walletConnected, setWalletConnected] = useState(false)
-  const [account, setAccount] = useState<AccountInterface | null>(null)
+  const { walletConnected, account, connectWallet, disconnectWallet, isConnecting } = useWallet()
   const [stats, setStats] = useState<Stats>({
     avgDelegatorsTopTen: 0,
     avgStakedPerStaker: 0,
@@ -1214,7 +1214,6 @@ export default function Home() {
     delegations: [],
     unstakeIntents: []
   });
-  const [isConnecting, setIsConnecting] = useState(false);
   const [priceData, setPriceData] = useState<PriceData | null>(null);
 
   // Add this new state for the split delegation feature
@@ -1339,45 +1338,6 @@ export default function Home() {
       return "0";
     }
   };
-
-  const connectWallet = async () => {
-    try {
-      setIsConnecting(true);
-      
-      if (!window.starknet) {
-        throw new Error("Please install ArgentX, Braavos, or another Starknet wallet");
-      }
-
-      await window.starknet.enable();
-      
-      if (!window.starknet.isConnected) {
-        throw new Error("Failed to connect to wallet");
-      }
-      
-      const userAccount = window.starknet.account;
-      setAccount(userAccount);
-      setWalletConnected(true);
-      
-      // Track wallet connection event
-      track('Wallet Connected', { address: userAccount.address });
-      
-      // Fetch token balance after connecting
-      if (userAccount) {
-        const balance = await getTokenBalance();
-        setTokenBalance(balance);
-      }
-      
-      return userAccount;
-    } catch (error) {
-      console.error('Error connecting wallet:', error);
-      setStakeResult('Failed to connect wallet');
-      // Track failed wallet connection
-      track('Wallet Connection Failed', { error: (error as Error).message });
-      return null;
-    } finally {
-      setIsConnecting(false);
-    }
-  }
 
   const checkAllowance = async (poolAddress: string, amount: string): Promise<boolean> => {
     if (!account) return false;
@@ -2380,28 +2340,7 @@ export default function Home() {
     );
   };
 
-  // First, let's add a disconnectWallet function to the Home component
-
-  const disconnectWallet = () => {
-    // Reset wallet-related state
-    setWalletConnected(false);
-    setAccount(null);
-    setUserStakeInfo({
-      totalDelegated: 0,
-      availableRewards: 0,
-      lastClaimTime: '-',
-      delegations: [],
-      unstakeIntents: []
-    });
-    setIsStakeInfoOpen(false);
-    
-    // Track wallet disconnection event
-    track('Wallet Disconnected');
-
-    console.log('Wallet disconnected (app state reset)');
-  };
-
-  // Add this helper function to strip trailing zeros from decimal numbers
+  // Add this helper function to format the Unix timestamp to a readable date
   const formatAmount = (amount: string): string => {
     // Import the utility function from utils.ts
     const { formatTokenAmount } = require("@/lib/utils");
@@ -2422,16 +2361,6 @@ export default function Home() {
       mainAmount: formatAmount(mainAmount), 
       bottomAmount: formatAmount(bottomAmount)
     };
-  };
-
-  // Add this helper function to navigate to validator dashboard
-  const navigateToValidatorDashboard = (validator: any, e: React.MouseEvent) => {
-    e.stopPropagation();
-    if (validator && validator.address) {
-      router.push(`/validator/${validator.address}`);
-    } else if (validator && validator.poolAddress) {
-      router.push(`/validator/${validator.poolAddress}`);
-    }
   };
 
   // Add a function to set maximum available balance
@@ -2689,7 +2618,13 @@ export default function Home() {
                             <div>
                               <h3 
                                 className="font-semibold cursor-pointer hover:text-primary hover:underline"
-                                onClick={(e) => navigateToValidatorDashboard(validators, e)}
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  const validator = validators.find(v => v.poolAddress === delegation.poolAddress);
+                                  if (validator) {
+                                    router.push(`/validator/${validator.address}`);
+                                  }
+                                }}
                               >
                                 {delegation.validatorName}
                               </h3>

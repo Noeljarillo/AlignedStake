@@ -25,6 +25,7 @@ import {
   DialogTrigger
 } from "@/components/ui/dialog"
 import { formatTokenAmount } from "@/lib/utils"
+import { useWallet } from '../../components/WalletProvider';
 
 // Constants for blockchain interactions
 
@@ -179,10 +180,8 @@ export default function ValidatorDashboard() {
   const [error, setError] = useState<string | null>(null)
   const [activeTab, setActiveTab] = useState("overview")
   
-  // Staking state
-  const [walletConnected, setWalletConnected] = useState(false)
-  const [account, setAccount] = useState<any>(null)
-  const [isConnecting, setIsConnecting] = useState(false)
+  // Use wallet context instead of local state
+  const { walletConnected, account, connectWallet: contextConnectWallet, disconnectWallet: contextDisconnectWallet, isConnecting } = useWallet()
   const [stakeAmount, setStakeAmount] = useState("")
   const [isStaking, setIsStaking] = useState(false)
   const [stakeResult, setStakeResult] = useState("")
@@ -318,24 +317,10 @@ export default function ValidatorDashboard() {
     }
   };
 
-  // Update connectWallet to fetch token balance
+  // Update connectWallet to use context and fetch token balance
   const connectWallet = async () => {
     try {
-      setIsConnecting(true);
-      
-      if (!window.starknet) {
-        throw new Error("Please install ArgentX, Braavos, or another Starknet wallet");
-      }
-
-      await window.starknet.enable();
-      
-      if (!window.starknet.isConnected) {
-        throw new Error("Failed to connect to wallet");
-      }
-      
-      const userAccount = window.starknet.account;
-      setAccount(userAccount);
-      setWalletConnected(true);
+      const userAccount = await contextConnectWallet();
       
       // Fetch token balance after connecting
       if (userAccount) {
@@ -349,15 +334,12 @@ export default function ValidatorDashboard() {
       console.error('Error connecting wallet:', error);
       setStakeResult('Failed to connect wallet');
       return null;
-    } finally {
-      setIsConnecting(false);
     }
   }
 
   const disconnectWallet = () => {
     track('Wallet Disconnected');
-    setWalletConnected(false);
-    setAccount(null);
+    contextDisconnectWallet();
   };
 
   const checkAllowance = async (poolAddress: string, amount: string): Promise<boolean> => {
