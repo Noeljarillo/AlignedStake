@@ -41,7 +41,7 @@ export default function RootLayout({
   children: React.ReactNode
 }>) {
   return (
-    <html lang="en" className="dark" style={{ colorScheme: "dark" }}>
+    <html lang="en" suppressHydrationWarning>
       <head>
         {/* Google tag (gtag.js) */}
         <Script
@@ -67,13 +67,13 @@ export default function RootLayout({
       </head>
       <body className={`${inter.variable} ${poppins.variable}`}>
         <ThemeProvider
-          attribute="class"
+          attribute="data-theme"
           defaultTheme="dark"
-          enableSystem
+          enableSystem={false}
           disableTransitionOnChange
         >
           <WalletProvider>
-            <div className="relative min-h-screen enhanced-gradient bg-gray-900">
+            <div className="relative min-h-screen enhanced-gradient" style={{ backgroundColor: 'hsl(var(--background))' }}>
               <div className="absolute inset-0 bg-starknet-pattern opacity-20"></div>
               <div className="relative w-full max-w-[1920px] mx-auto px-4 sm:px-6 lg:px-8">
                 <MainNavigation />

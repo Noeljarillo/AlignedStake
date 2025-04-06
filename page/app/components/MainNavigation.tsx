@@ -21,6 +21,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { ThemeToggle } from "./ThemeToggle";
 
 const navigationItems = [
   {
@@ -61,11 +62,12 @@ export function MainNavigation() {
   return (
     <header className="py-4 mb-4 w-full">
       <div className="container flex items-center justify-between">
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-4">
           <Link href="/" className="flex items-center gap-2">
             <GitFork className="h-6 w-6 text-primary" />
             <span className="font-bold text-xl hidden sm:inline-block">AlignedStake</span>
           </Link>
+          <ThemeToggle />
         </div>
         
         {/* Desktop Navigation */}

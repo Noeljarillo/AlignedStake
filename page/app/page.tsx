@@ -33,6 +33,7 @@ import { useRouter } from "next/navigation"
 import { Switch } from "@/components/ui/switch"
 import { formatTokenAmount } from "@/lib/utils"
 import { useWallet } from '@/app/components/WalletProvider'
+import { MainPageThemeToggle } from "./components/MainPageThemeToggle"
 
 declare global {
   interface Window {
@@ -341,6 +342,7 @@ const CallToAction = ({ walletConnected }: {
               Every delegation strengthens the network. Be part of Starknet's decentralized future.
             </p>
           </div>
+          <MainPageThemeToggle />
         </div>
         
         <div className="flex flex-col sm:flex-row items-center gap-3">
@@ -367,81 +369,62 @@ const CallToAction = ({ walletConnected }: {
 
 const ContactInfo = () => {
   return (
-    <div className="w-full bg-gray-800/80 backdrop-blur-sm border-t border-gray-700/50 py-3 mt-8">
-      <div className="max-w-7xl mx-auto px-4 flex flex-col items-center justify-center gap-4 text-sm">
-        <div className="flex items-center justify-center gap-6 flex-wrap">
-          <Link href="/guide" className="text-gray-400 hover:text-blue-400 transition-colors duration-200">
-            Guides
-          </Link>
-          <Link href="/validator" className="text-gray-400 hover:text-blue-400 transition-colors duration-200">
-            Validators
-          </Link>
-          <Link href="/mission" className="text-gray-400 hover:text-blue-400 transition-colors duration-200">
-            Our Mission
-          </Link>
-        </div>
-        
-        <div className="flex items-center justify-center gap-6 flex-wrap">
-          <span className="text-blue-400 font-semibold">Talk with the Dev:</span>
-          <a
-            href="mailto:noel.jarillo@gmail.com"
-            className="flex items-center gap-2 text-gray-400 hover:text-blue-400 transition-colors duration-200"
-            title="Email"
-          >
-            <Mail className="h-4 w-4" />
-            <span>noel.jarillo@gmail.com</span>
-          </a>
-          
-          <a
-            href="https://t.me/satoshinakamoto420"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="flex items-center gap-2 text-gray-400 hover:text-blue-400 transition-colors duration-200"
-            title="Telegram"
-          >
-            <MessageCircle className="h-4 w-4" />
-            <span>@satoshinakamoto420</span>
-          </a>
-          
-          <a
-            href="https://x.com/aligned_stake"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="flex items-center gap-2 text-gray-400 hover:text-blue-400 transition-colors duration-200"
-            title="X (Twitter)"
-          >
-            <Twitter className="h-4 w-4" />
-            <span>@Aligned_stake</span>
-          </a>
-        </div>
+    <div className="glass-card p-4 sm:p-6">
+      <h3 className="text-lg font-semibold mb-4 text-foreground">Talk with Developers</h3>
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <Link
+          href="https://t.me/starknet_staking"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="flex items-center gap-2 p-3 rounded-lg bg-background/50 hover:bg-background/70 transition-colors"
+        >
+          <MessageCircle className="h-5 w-5 text-primary" />
+          <span className="text-foreground">Telegram Group</span>
+        </Link>
+        <Link
+          href="https://twitter.com/StarkNetStaking"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="flex items-center gap-2 p-3 rounded-lg bg-background/50 hover:bg-background/70 transition-colors"
+        >
+          <Twitter className="h-5 w-5 text-primary" />
+          <span className="text-foreground">Twitter</span>
+        </Link>
+        <Link
+          href="mailto:contact@starknet-staking.com"
+          className="flex items-center gap-2 p-3 rounded-lg bg-background/50 hover:bg-background/70 transition-colors"
+        >
+          <Mail className="h-5 w-5 text-primary" />
+          <span className="text-foreground">Email</span>
+        </Link>
       </div>
     </div>
-  );
-};
-
+  )
+}
 
 const VoyagerBanner = () => {
   return (
-    <a 
-      href="https://voyager.online/"
-      target="_blank"
-      rel="noopener noreferrer"
-      className="w-full bg-gray-900/80 backdrop-blur-sm border-b border-gray-700/50 py-2 block hover:bg-gray-800/80 transition-colors duration-200"
-    >
-      <div className="max-w-7xl mx-auto px-4 flex items-center justify-center gap-3">
-        <img 
-          src="/default.png" 
-          alt="Voyager Logo" 
-          className="w-6 h-6 rounded"
-        />
-        <span className="text-sm text-gray-300">
-          Data powered by <span className="text-blue-400 font-semibold">Voyager</span>
-        </span>
-      </div>
-    </a>
+    <div className="w-full bg-background/80 backdrop-blur-sm border-b border-border/50">
+      <Link 
+        href="https://voyager.online"
+        target="_blank"
+        rel="noopener noreferrer"
+        className="block py-2 hover:bg-background/70 transition-colors"
+      >
+        <div className="max-w-7xl mx-auto px-4 flex items-center justify-center gap-3">
+          <img 
+            src="/default.png" 
+            alt="Voyager Logo" 
+            className="w-6 h-6 rounded"
+          />
+          <span className="text-sm text-muted-foreground">
+            Data powered by <span className="text-primary font-semibold">Voyager</span>
+          </span>
+        </div>
+      </Link>
+    </div>
   );
 };
-
 
 const DelegationStats = () => {
   const [stats, setStats] = useState({
@@ -742,11 +725,9 @@ const DelegationStats = () => {
   );
 };
 
-
 interface ValidatorListProps {
   onSelectValidator: (validator: Validator) => void;
 }
-
 
 const ValidatorList = ({ onSelectValidator }: ValidatorListProps) => {
   const router = useRouter()
@@ -1182,6 +1163,41 @@ const ValidatorList = ({ onSelectValidator }: ValidatorListProps) => {
     </div>
   );
 };
+
+// Add StakingDashboard component
+const StakingDashboard = () => {
+  return (
+    <div className="glass-card p-4 sm:p-6">
+      <h3 className="text-lg font-semibold mb-4 text-foreground">Staking Dashboard</h3>
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <Link
+          href="/analytics"
+          className="flex items-center gap-2 p-3 rounded-lg bg-background/50 hover:bg-background/70 transition-colors"
+        >
+          <BarChart3 className="h-5 w-5 text-primary" />
+          <span className="text-foreground">View Analytics</span>
+        </Link>
+        <Link
+          href="/guide"
+          className="flex items-center gap-2 p-3 rounded-lg bg-background/50 hover:bg-background/70 transition-colors"
+        >
+          <Info className="h-5 w-5 text-primary" />
+          <span className="text-foreground">Staking Guide</span>
+        </Link>
+      </div>
+    </div>
+  )
+}
+
+// Fix StatCard component
+function StatCard({ title, value }: StatCardProps) {
+  return (
+    <div className="glass-card p-4">
+      <h3 className="text-sm text-muted-foreground">{title}</h3>
+      <p className="text-2xl font-semibold mt-1 text-foreground">{value}</p>
+    </div>
+  );
+}
 
 export default function Home() {
   const router = useRouter()
@@ -2203,7 +2219,7 @@ export default function Home() {
               {metric.icon}
             </div>
             <div>
-              <h4 className="text-sm font-medium text-muted-foreground">{metric.title}</h4>
+              <h4 className="text-sm font-medium text-muted-foreground min-h-[2.5rem]">{metric.title}</h4>
               <p className="text-2xl font-bold mt-1">{metric.value.toLocaleString()}</p>
             </div>
           </div>
@@ -2387,826 +2403,820 @@ export default function Home() {
   }, [walletConnected, account, isStakeInfoOpen]);
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-900 to-gray-800 flex flex-col items-center pt-0 px-0 pb-4">
-      <meta name="google-site-verification" content="BioBqMAm54m_zMizQ_YtbyFCgVe_BY9KGhn8j6K9KWg" />
-      <meta name="google-site-verification" content="oeiS9fDdug9-SnVdx1EA5diIss5QdkrqRoWn-nZesC0" />
-      <div className="w-full">
-        <VoyagerBanner />
-        <CallToAction 
-          walletConnected={walletConnected}
-        />
-      </div>
-      <div className="w-full sticky top-0 z-50">
-        <AnimatePresence>
-          <motion.div
-            initial={{ height: 0 }}
-            animate={{ height: isStakeInfoOpen ? '480px' : '64px' }}  // Changed from 400px
-            className="w-full bg-gray-800/50 backdrop-blur-sm border-b border-gray-700 mb-8 overflow-hidden"
-          >
-            <div className="w-full flex items-center justify-between h-16 px-4">
-              <div className="flex-1">
-                {!isStakeInfoOpen && walletConnected && (
-                  <div className="flex items-center">
-                    <div className="bg-gray-800/60 border border-gray-700/40 rounded-lg px-4 py-2 flex items-center gap-8">
-                      <div>
-                        <span className="text-xs text-gray-400 block">Total Delegated</span>
-                        <p className="text-sm font-medium text-white">{formatTokenAmount(userStakeInfo.totalDelegated)} STRK</p>
-                      </div>
-                      
-                      <div>
-                        <span className="text-xs text-gray-400 block">Available Rewards</span>
-                        <p className="text-sm font-medium text-white">{formatTokenAmount(userStakeInfo.availableRewards)} STRK</p>
-                      </div>
-                      
-                      <Button
-                        onClick={claimRewards}
-                        size="sm"
-                        variant="outline"
-                        className="border-gray-700 hover:bg-gray-700/50 text-white text-xs h-8"
-                        disabled={userStakeInfo.availableRewards <= 0 || processing}
-                      >
-                        {processing ? "Claiming..." : "Claim"}
-                      </Button>
-                    </div>
-                  </div>
-                )}
-              </div>
-              
-              <div 
-                className="flex-1 flex justify-center cursor-pointer group"
-                onClick={() => setIsStakeInfoOpen(!isStakeInfoOpen)}
+    <>
+      {/* Rest of the component */}
+      <main className="min-h-screen relative">
+        {/* Update background colors to use theme variables */}
+        <div className="absolute inset-0 bg-starknet-pattern opacity-20"></div>
+        <div className="relative">
+          <div className="w-full">
+            <VoyagerBanner />
+            <CallToAction 
+              walletConnected={walletConnected}
+            />
+          </div>
+          <div className="w-full sticky top-0 z-50">
+            <AnimatePresence>
+              <motion.div
+                initial={{ height: 0 }}
+                animate={{ height: isStakeInfoOpen ? '480px' : '64px' }}  // Changed from 400px
+                className="w-full bg-gray-800/50 backdrop-blur-sm border-b border-gray-700 mb-8 overflow-hidden"
               >
-                <div className="flex items-center gap-2">
-                  <span className="text-xl font-semibold text-foreground group-hover:text-primary transition-colors">
-                    Staking Dashboard
-                  </span>
-                  <div className="text-muted-foreground group-hover:text-primary transition-colors">
-                    {isStakeInfoOpen ? (
-                      <ChevronUp className="h-4 w-4" />
-                    ) : (
-                      <ChevronDown className="h-4 w-4" />
-                    )}
-                  </div>
-                </div>
-              </div>
-              
-              <div className="flex-1 flex justify-end items-center gap-3">
-                {walletConnected && account ? (
-                  <div className="flex items-center gap-2">
-                    <span className="text-sm text-gray-400 bg-gray-800 px-3 py-1 rounded-full border border-gray-700">
-                      {account.address.slice(0, 6)}...{account.address.slice(-4)}
-                    </span>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={disconnectWallet}
-                      className="text-gray-400 hover:text-red-400 hover:bg-gray-800/50"
-                    >
-                      <svg 
-                        xmlns="http://www.w3.org/2000/svg" 
-                        width="16" 
-                        height="16" 
-                        viewBox="0 0 24 24" 
-                        fill="none" 
-                        stroke="currentColor" 
-                        strokeWidth="2" 
-                        strokeLinecap="round" 
-                        strokeLinejoin="round" 
-                        className="mr-1"
-                      >
-                        <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
-                        <polyline points="16 17 21 12 16 7"></polyline>
-                        <line x1="21" y1="12" x2="9" y2="12"></line>
-                      </svg>
-                      Disconnect
-                    </Button>
-                    <div 
-                      className="cursor-pointer hover:bg-gray-700/50 p-1 rounded-full transition-colors"
-                      onClick={() => setIsStakeInfoOpen(!isStakeInfoOpen)}
-                    >
-                      {isStakeInfoOpen ? (
-                        <ChevronUp className="h-5 w-5 text-gray-400" />
-                      ) : (
-                        <ChevronDown className="h-5 w-5 text-gray-400" />
-                      )}
-                    </div>
-                  </div>
-                ) : (
-                  <div className="flex items-center gap-2">
-                    <Link href="/analytics">
-                      <Button 
-                        className="px-4"
-                        variant="secondary"
-                      >
-                        <div className="flex items-center gap-2">
-                          <BarChart3 className="h-4 w-4" />
-                          <span>Analytics</span>
-                        </div>
-                      </Button>
-                    </Link>
-                    <Button 
-                      className="px-6"
-                      onClick={connectWallet}
-                      disabled={isConnecting}
-                      variant="secondary"
-                    >
-                      {isConnecting ? (
-                        <div className="flex items-center gap-2">
-                          <Loader2 className="h-4 w-4 animate-spin" />
-                          <span>Connecting...</span>
-                        </div>
-                      ) : (
-                        <div className="flex items-center gap-2">
-                          <Landmark className="h-4 w-4" />
-                          <span>Connect Wallet</span>
-                        </div>
-                      )}
-                    </Button>
-                  </div>
-                )}
-              </div>
-            </div>
-            
-
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: isStakeInfoOpen ? 1 : 0 }}
-              className="px-4 pb-6 pt-2 h-[calc(480px-64px)] overflow-y-auto"  // Changed from 400px
-            >
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-5xl mx-auto">
-                <motion.div
-                  whileHover={{ scale: 1.02 }}
-                  className="bg-background p-6 rounded-lg border border-border shadow-sm flex flex-col justify-between"
-                >
-                  <div>
-                    <h4 className="text-sm font-medium text-muted-foreground mb-2">Total Delegated</h4>
-                    <p className="text-3xl font-bold">
-                      {formatTokenAmount(userStakeInfo.totalDelegated)} STRK
-                    </p>
-                  </div>
-                </motion.div>
-                
-                <motion.div
-                  whileHover={{ scale: 1.02 }}
-                  className="bg-background p-6 rounded-lg border border-border shadow-sm flex flex-col justify-between"
-                >
-                  <div>
-                    <h4 className="text-sm font-medium text-muted-foreground mb-2">Available Rewards</h4>
-                    <p className="text-3xl font-bold text-green-600 dark:text-green-400">
-                      {formatTokenAmount(userStakeInfo.availableRewards)} STRK
-                    </p>
-                  </div>
-                  <Button
-                    onClick={claimRewards}
-                    className="mt-4 bg-green-600 hover:bg-green-700 text-white w-full"
-                    disabled={userStakeInfo.availableRewards <= 0 || processing}
-                  >
-                    {processing ? (
-                      <>
-                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                        Claiming...
-                      </>
-                    ) : (
-                      <>
-                        <Gift className="mr-2 h-4 w-4" />
-                        Claim Rewards
-                      </>
-                    )}
-                  </Button>
-                </motion.div>
-                
-                <motion.div
-                  whileHover={{ scale: 1.02 }}
-                  className="md:col-span-1 bg-background p-6 rounded-lg border border-border shadow-sm"
-                >
-                  <h4 className="text-sm font-medium text-muted-foreground mb-2">Your Delegations</h4>
-                  <p className="text-3xl font-bold">
-                    {userStakeInfo.delegations.length} Validators
-                  </p>
-                </motion.div>
-
-                {userStakeInfo.delegations.length > 0 && (
-                  <div className="md:col-span-3">
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                      {userStakeInfo.delegations.map((delegation, index) => (
-                        <motion.div
-                          key={index}
-                          whileHover={{ scale: 1.02 }}
-                          className="bg-background p-6 rounded-lg border border-border shadow-sm"
-                        >
-                          <div className="flex items-center gap-4 mb-4">
-                            <div className="relative w-12 h-12">
-                              {validators.find(v => v.poolAddress === delegation.poolAddress)?.imgSrc ? (
-                                <img
-                                  src={validators.find(v => v.poolAddress === delegation.poolAddress)?.imgSrc || ''}
-                                  alt={delegation.validatorName}
-                                  className="w-12 h-12 rounded-full"
-                                />
-                              ) : (
-                                <div className="w-12 h-12 rounded-full bg-primary/20 flex items-center justify-center">
-                                  <span className="text-primary text-lg font-bold">
-                                    {delegation.validatorName.charAt(0)}
-                                  </span>
-                                </div>
-                              )}
-                              {validators.find(v => v.poolAddress === delegation.poolAddress)?.isVerified && (
-                                <div className="absolute -bottom-1 -right-1 bg-green-500 rounded-full p-1">
-                                  <svg className="w-3 h-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                                  </svg>
-                                </div>
-                              )}
-                            </div>
-                            <div>
-                              <h3 
-                                className="font-semibold cursor-pointer hover:text-primary hover:underline"
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  const validator = validators.find(v => v.poolAddress === delegation.poolAddress);
-                                  if (validator) {
-                                    router.push(`/validator/${validator.address}`);
-                                  }
-                                }}
-                              >
-                                {delegation.validatorName}
-                              </h3>
-                              <a
-                                href={`https://voyager.online/contract/${delegation.poolAddress}`}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="text-sm text-muted-foreground hover:text-primary"
-                              >
-                                {delegation.poolAddress.slice(0, 6)}...{delegation.poolAddress.slice(-4)}
-                              </a>
-                            </div>
+                <div className="w-full flex items-center justify-between h-16 px-4">
+                  <div className="flex-1">
+                    {!isStakeInfoOpen && walletConnected && (
+                      <div className="flex items-center">
+                        <div className="bg-gray-800/60 border border-gray-700/40 rounded-lg px-4 py-2 flex items-center gap-8">
+                          <div>
+                            <span className="text-xs text-gray-400 block">Total Delegated</span>
+                            <p className="text-sm font-medium text-white">{formatTokenAmount(userStakeInfo.totalDelegated)} STRK</p>
                           </div>
-                          <div className="space-y-2">
-                            <div className="flex justify-between items-center">
-                              <span className="text-muted-foreground">Delegated</span>
-                              <span className="font-medium">
-                                {formatTokenAmount(delegation.delegatedStake)} STRK
-                              </span>
-                            </div>
-                            <div className="flex justify-between items-center">
-                              <span className="text-muted-foreground">Pending Rewards</span>
-                              <span className="text-green-600 dark:text-green-400 font-medium">
-                                {formatTokenAmount(delegation.pendingRewards)} STRK
-                              </span>
-                            </div>
+                          
+                          <div>
+                            <span className="text-xs text-gray-400 block">Available Rewards</span>
+                            <p className="text-sm font-medium text-white">{formatTokenAmount(userStakeInfo.availableRewards)} STRK</p>
                           </div>
-                          <div className="mt-4 space-y-2">
-                            <UnstakeCountdownButton 
-                              delegation={delegation}
-                              onUnstake={signalUnstakeIntent}
-                            />
-                          </div>
-                        </motion.div>
-                      ))}
-                    </div>
-                  </div>
-                )}
-              </div>
-            </motion.div>
-          </motion.div>
-        </AnimatePresence>
-      </div>
-
-      <div className="w-full max-w-[98%] grid grid-cols-1 lg:grid-cols-4 gap-8 relative">
-        <Card className="lg:col-span-3 bg-background border-border">
-          <CardHeader>
-            <div className="space-y-8">
-              <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
-                {[
-                  {
-                    title: "Total Delegators",
-                    value: stats.uniqueDelegators,
-                    tooltip: "Total number of unique delegators across all validators on the Starknet network.",
-                    icon: <Users className="w-5 h-5 text-blue-600 dark:text-blue-400" />,
-                    color: "bg-blue-500/10"
-                  },
-                  {
-                    title: "Zero Delegators",
-                    value: stats.validatorsWithZeroStake,
-                    tooltip: "Number of validators that have not received any delegations yet. These validators are waiting for their first delegators to join.",
-                    icon: <Users className="w-5 h-5 text-red-600 dark:text-red-400" />,
-                    color: "bg-red-500/10"
-                  },
-                  {
-                    title: ">1M STRK Delegated",
-                    value: stats.validatorsOver1M,
-                    tooltip: "Number of validators that have received more than 1 million STRK in delegations. These are the largest validators by stake.",
-                    icon: <Landmark className="w-5 h-5 text-green-600 dark:text-green-400" />,
-                    color: "bg-green-500/10"
-                  },
-                  {
-                    title: "2+ Delegators",
-                    value: stats.validatorsWithTwoPlus,
-                    tooltip: "Number of validators that have two or more unique delegators. This indicates validators with a diverse delegation base.",
-                    icon: <Users2 className="w-5 h-5 text-primary" />,
-                    color: "bg-primary/10"
-                  },
-                  {
-                    title: "Active Validators",
-                    value: stats.totalActiveValidators,
-                    tooltip: "Total number of active validators on the Starknet network. These validators help secure and operate the network.",
-                    icon: <ShieldCheck className="w-5 h-5 text-emerald-600 dark:text-emerald-400" />,
-                    color: "bg-emerald-500/10"
-                  }
-                ].map((metric, i) => (
-                  <MetricCard key={i} metric={metric} />
-                ))}
-              </div>
-              <NetworkStatsHeader />
-              
-        
-              <ValidatorList onSelectValidator={setSelectedDelegator} />
-            </div>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-8">
-              <ComparisonMetrics />
-              
-              <DelegationStats />
-
-              <div className="bg-background rounded-lg border border-border p-6 shadow-sm mt-8">
-                <h3 className="text-xl font-semibold mb-4">Top 20 Validators</h3>
-                <div className="h-80 w-full">
-                  <ResponsiveContainer width="100%" height="100%">
-                    <BarChart 
-                      data={validators}
-                      onClick={(data) => {
-                        if (data && data.activePayload && data.activePayload[0]) {
-                          const validator = data.activePayload[0].payload;
-                          setSelectedDelegator(validator);
-                        }
-                      }}
-                    >
-                      <XAxis 
-                        dataKey={(data) => {
-                          const words = data.name.split(' ');
-                          if (words.length === 1) {
-                            return data.name;  // Return single word names as is
-                          }
-                          // For multi-word names, keep first word and abbreviate rest
-                          return `${words[0]} ${words.slice(1).map((word: string) => word[0]).join('')}`;
-                        }}
-                        tick={{ fill: "#9CA3AF" }}
-                        interval={0}
-                        angle={-45}
-                        textAnchor="end"
-                        height={80}
-                      />
-                      <YAxis 
-                        tick={{ fill: "#9CA3AF" }}
-                        tickFormatter={(value) => `${(value / 1000000).toFixed(1)}M`}
-                      />
-                      <Tooltip content={<CustomTooltip />} />
-                      <Bar 
-                        dataKey="delegatedStake" 
-                        fill="#3B82F6"
-                        radius={[4, 4, 0, 0]}
-                      >
-                        {validators.map((entry, index) => (
-                          <Cell 
-                            key={`cell-${index}`}
-                            fill={entry.isVerified ? "#3B82F6" : "#6B7280"}
-                          />
-                        ))}
-                      </Bar>
-                    </BarChart>
-                  </ResponsiveContainer>
-                </div>
-              </div>
-
-              <div className="bg-background rounded-lg border border-border p-6 shadow-sm mt-8">
-                <h3 className="text-xl font-semibold mb-4">Bottom 20 Validators</h3>
-                <div className="h-80 w-full">
-                  <ResponsiveContainer width="100%" height="100%">
-                    <BarChart 
-                      data={bottomValidators}
-                      onClick={(data) => {
-                        if (data && data.activePayload && data.activePayload[0]) {
-                          const validator = data.activePayload[0].payload;
-                          setSelectedDelegator(validator);
-                        }
-                      }}
-                    >
-                      <XAxis 
-                        dataKey={(data) => {
-                          const words = data.name.split(' ');
-                          if (words.length === 1) {
-                            return data.name;
-                          }
-                          return `${words[0]} ${words.slice(1).map((word: string) => word[0]).join('')}`;
-                        }}
-                        tick={{ fill: "#9CA3AF" }}
-                        interval={0}
-                        angle={-45}
-                        textAnchor="end"
-                        height={80}
-                      />
-                      <YAxis 
-                        tick={{ fill: "#9CA3AF" }}
-                        tickFormatter={(value) => {
-                          if (value >= 1000000) {
-                            return `${(value / 1000000).toFixed(1)}M`;
-                          } else if (value >= 1000) {
-                            return `${(value / 1000).toFixed(1)}K`;
-                          }
-                          return value.toFixed(0);
-                        }}
-                      />
-                      <Tooltip content={<CustomTooltip />} />
-                      <Bar 
-                        dataKey="delegatedStake" 
-                        fill="#9333EA"
-                      >
-                        {bottomValidators.map((entry, index) => (
-                          <Cell 
-                            key={`cell-${index}`}
-                            fill={entry.isVerified ? "#9333EA" : "#6B7280"}
-                          />
-                        ))}
-                      </Bar>
-                    </BarChart>
-                  </ResponsiveContainer>
-                </div>
-              </div>
-              
-              {/* Remove the ValidatorList from here */}
-              {/* <ValidatorList onSelectValidator={setSelectedDelegator} /> */}
-              
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card className="lg:col-span-1 bg-background border-border lg:sticky lg:top-24 h-fit shadow-sm">
-          <CardHeader className="text-center py-3" id="staking-component">
-            <CardTitle className="text-2xl font-bold">Stake STRK</CardTitle>
-          </CardHeader>
-          <CardContent className="pb-3 pt-0">
-            <div className="space-y-4">
-              <div className="flex items-center gap-2 bg-muted/30 p-2 rounded-md border border-border">
-                <div className="flex-shrink-0 bg-primary/10 rounded-full p-1.5">
-                  <Hand className="h-4 w-4 text-primary" />
-                </div>
-                <p className="text-sm font-medium">
-                  Select primary validator from list, or use the random selection
-                </p>
-              </div>
-              
-              <div className="flex justify-center">
-                <Button 
-                  onClick={() => selectRandomDelegator(true)} 
-                  className="text-sm py-1 h-8 w-full"
-                  size="sm"
-                >
-                  <RefreshCw className="mr-1 h-4 w-4" />
-                  Random Bottom 20
-                </Button>
-              </div>
-              
-              {selectedDelegator && (
-                <motion.div
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  className="p-2 border border-border rounded-md bg-muted/30"
-                >
-                  <div className="flex items-center gap-2">
-                    {selectedDelegator.imgSrc && (
-                      <img 
-                        src={selectedDelegator.imgSrc} 
-                        alt={selectedDelegator.name} 
-                        className="w-6 h-6 rounded-full"
-                      />
-                    )}
-                    <div>
-                      <p 
-                        className="font-semibold text-primary text-sm cursor-pointer hover:underline"
-                        onClick={() => router.push(`/validator/${selectedDelegator.address}`)}
-                      >
-                        {selectedDelegator.name}
-                        {selectedDelegator.isVerified && (
-                          <span className="ml-1 text-green-600 dark:text-green-400">✓</span>
-                        )}
-                      </p>
-                      <p className="text-xs text-muted-foreground">
-                        Stake: {formatTokenAmount(selectedDelegator.delegatedStake)} | 
-                        Delegators: {selectedDelegator.totalDelegators?.toLocaleString() || 'N/A'}
-                      </p>
-                    </div>
-                  </div>
-                </motion.div>
-              )}
-              
-              <form onSubmit={handleStake} className="space-y-3">
-                <div className="glass-panel p-3">
-                  <div className="mb-2">
-                    <Label htmlFor="stakeAmount" className="text-sm font-medium flex items-center gap-2">
-                      <Coins className="h-4 w-4 text-blue-400" />
-                      Stake Amount (STRK)
-                    </Label>
-                    <div className="relative mt-1">
-                      <Input
-                        id="stakeAmount"
-                        type="number"
-                        step="0.000000000000000001"
-                        min="0"
-                        placeholder="Enter amount to stake"
-                        value={stakeAmount}
-                        onChange={handleStakeAmountChange}
-                        required
-                        variant="modern"
-                        className="pr-16 h-10 text-base [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
-                      />
-                      <div className="absolute inset-y-0 right-0 flex items-center pr-3">
-                        <span className="text-sm text-gray-400">STRK</span>
+                          
+                          <Button
+                            onClick={claimRewards}
+                            size="sm"
+                            variant="outline"
+                            className="border-gray-700 hover:bg-gray-700/50 text-white text-xs h-8"
+                            disabled={userStakeInfo.availableRewards <= 0 || processing}
+                          >
+                            {processing ? "Claiming..." : "Claim"}
+                          </Button>
+                        </div>
                       </div>
-                    </div>
-                    {walletConnected && (
-                      <div className="flex justify-between mt-1 text-xs text-gray-400">
-                        <span>Balance: {formatTokenAmount(parseFloat(tokenBalance))} STRK</span>
-                        <Button 
-                          type="button" 
-                          variant="ghost" 
-                          size="sm" 
-                          className="h-6 px-2 text-blue-400 hover:text-blue-300"
-                          onClick={setMaxBalance}
-                        >
-                          MAX
-                        </Button>
-                      </div>
-                    )}
-                    {Number(stakeAmount) > 0 && (
-                      <p className="text-xs text-blue-400 mt-0.5 animate-pulse-slow">
-                        ≈ ${(Number(stakeAmount) * (priceData?.usdPrice || 0)).toFixed(2)} USD
-                      </p>
                     )}
                   </div>
                   
-                  <div className="flex items-center justify-between bg-gray-800/70 backdrop-blur-sm p-2 rounded-md border border-gray-700/50">
+                  <div 
+                    className="flex-1 flex justify-center cursor-pointer group"
+                    onClick={() => setIsStakeInfoOpen(!isStakeInfoOpen)}
+                  >
                     <div className="flex items-center gap-2">
-                      <div className="bg-purple-500/30 p-1 rounded-full">
-                        <Zap className="h-3.5 w-3.5 text-purple-400" />
-                      </div>
-                      <div>
-                        <label htmlFor="splitDelegation" className="text-sm font-medium text-white cursor-pointer">Split delegation (90/10)</label>
-                        <p className="text-xs text-gray-400">Support smaller validators</p>
+                      <span className="text-xl font-semibold text-foreground group-hover:text-primary transition-colors">
+                        Staking Dashboard
+                      </span>
+                      <div className="text-muted-foreground group-hover:text-primary transition-colors">
+                        {isStakeInfoOpen ? (
+                          <ChevronUp className="h-4 w-4" />
+                        ) : (
+                          <ChevronDown className="h-4 w-4" />
+                        )}
                       </div>
                     </div>
-                    <div className="relative inline-block w-10 h-5">
-                      <input
-                        type="checkbox"
-                        id="splitDelegation"
-                        checked={isSplitDelegation}
-                        onChange={(e) => {
-                          setIsSplitDelegation(e.target.checked);
-                          if (e.target.checked && !randomBottomValidator) {
-                            selectRandomBottomValidatorForSplit();
-                          }
-                        }}
-                        className="sr-only"
-                      />
-                      <label
-                        htmlFor="splitDelegation"
-                        className={`absolute cursor-pointer top-0 left-0 right-0 bottom-0 rounded-full transition-colors duration-200 ${
-                          isSplitDelegation ? 'bg-blue-600' : 'bg-gray-700'
-                        }`}
-                      >
-                        <span 
-                          className={`block absolute top-[2px] left-[2px] bottom-[2px] w-4 h-4 rounded-full bg-white transition-transform duration-200 ${
-                            isSplitDelegation ? 'transform translate-x-5' : ''
-                          }`}
-                        />
-                      </label>
-                    </div>
+                  </div>
+                  
+                  <div className="flex-1 flex justify-end items-center gap-3">
+                    {walletConnected && account ? (
+                      <div className="flex items-center gap-2">
+                        <span className="text-sm text-gray-400 bg-gray-800 px-3 py-1 rounded-full border border-gray-700">
+                          {account.address.slice(0, 6)}...{account.address.slice(-4)}
+                        </span>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={disconnectWallet}
+                          className="text-gray-400 hover:text-red-400 hover:bg-gray-800/50"
+                        >
+                          <svg 
+                            xmlns="http://www.w3.org/2000/svg" 
+                            width="16" 
+                            height="16" 
+                            viewBox="0 0 24 24" 
+                            fill="none" 
+                            stroke="currentColor" 
+                            strokeWidth="2" 
+                            strokeLinecap="round" 
+                            strokeLinejoin="round" 
+                            className="mr-1"
+                          >
+                            <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
+                            <polyline points="16 17 21 12 16 7"></polyline>
+                            <line x1="21" y1="12" x2="9" y2="12"></line>
+                          </svg>
+                          Disconnect
+                        </Button>
+                        <div 
+                          className="cursor-pointer hover:bg-gray-700/50 p-1 rounded-full transition-colors"
+                          onClick={() => setIsStakeInfoOpen(!isStakeInfoOpen)}
+                        >
+                          {isStakeInfoOpen ? (
+                            <ChevronUp className="h-5 w-5 text-gray-400" />
+                          ) : (
+                            <ChevronDown className="h-5 w-5 text-gray-400" />
+                          )}
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="flex items-center gap-2">
+                        <Link href="/analytics">
+                          <Button 
+                            className="px-4"
+                            variant="secondary"
+                          >
+                            <div className="flex items-center gap-2">
+                              <BarChart3 className="h-4 w-4" />
+                              <span>Analytics</span>
+                            </div>
+                          </Button>
+                        </Link>
+                        <Button 
+                          className="px-6"
+                          onClick={connectWallet}
+                          disabled={isConnecting}
+                          variant="secondary"
+                        >
+                          {isConnecting ? (
+                            <div className="flex items-center gap-2">
+                              <Loader2 className="h-4 w-4 animate-spin" />
+                              <span>Connecting...</span>
+                            </div>
+                          ) : (
+                            <div className="flex items-center gap-2">
+                              <Landmark className="h-4 w-4" />
+                              <span>Connect Wallet</span>
+                            </div>
+                          )}
+                        </Button>
+                      </div>
+                    )}
                   </div>
                 </div>
                 
-                {isSplitDelegation && stakeAmount && Number(stakeAmount) > 0 && (
-                  <motion.div
-                    initial={{ opacity: 0, height: 0 }}
-                    animate={{ opacity: 1, height: 'auto' }}
-                    exit={{ opacity: 0, height: 0 }}
-                    className="p-2.5 rounded-lg bg-gradient-to-br from-blue-900/30 to-indigo-900/30 border border-blue-700/50 backdrop-blur-sm"
-                  >
-                    <h4 className="text-xs font-medium text-blue-300 mb-2">Your delegation will be split:</h4>
-                    <div className="space-y-2">
-                      <div className="flex justify-between items-center p-1.5 bg-gray-800/60 rounded-md border border-gray-700/50">
-                        <div className="flex items-center gap-1.5">
-                          {selectedDelegator && (
-                            <div className="w-6 h-6 rounded-full bg-gradient-to-br from-blue-500/20 to-indigo-500/20 flex items-center justify-center overflow-hidden">
-                              {selectedDelegator.imgSrc ? (
-                                <img 
-                                  src={selectedDelegator.imgSrc} 
-                                  alt={selectedDelegator.name} 
-                                  className="w-6 h-6 rounded-full"
-                                />
-                              ) : (
-                                <span className="text-blue-400 text-xs font-bold">
-                                  {selectedDelegator.name.charAt(0)}
-                                </span>
-                              )}
-                            </div>
-                          )}
-                          <div>
-                            <span 
-                              className="text-white text-sm font-medium truncate max-w-[120px] cursor-pointer hover:text-blue-400 transition-colors"
-                              onClick={() => selectedDelegator && router.push(`/validator/${selectedDelegator.address}`)}
+
+                <motion.div
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: isStakeInfoOpen ? 1 : 0 }}
+                  className="px-4 pb-6 pt-2 h-[calc(480px-64px)] overflow-y-auto"  // Changed from 400px
+                >
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-5xl mx-auto">
+                    <motion.div
+                      whileHover={{ scale: 1.02 }}
+                      className="bg-background p-6 rounded-lg border border-border shadow-sm flex flex-col justify-between"
+                    >
+                      <div>
+                        <h4 className="text-sm font-medium text-muted-foreground mb-2">Total Delegated</h4>
+                        <p className="text-3xl font-bold">
+                          {formatTokenAmount(userStakeInfo.totalDelegated)} STRK
+                        </p>
+                      </div>
+                    </motion.div>
+                    
+                    <motion.div
+                      whileHover={{ scale: 1.02 }}
+                      className="bg-background p-6 rounded-lg border border-border shadow-sm flex flex-col justify-between"
+                    >
+                      <div>
+                        <h4 className="text-sm font-medium text-muted-foreground mb-2">Available Rewards</h4>
+                        <p className="text-3xl font-bold text-green-600 dark:text-green-400">
+                          {formatTokenAmount(userStakeInfo.availableRewards)} STRK
+                        </p>
+                      </div>
+                      <Button
+                        onClick={claimRewards}
+                        className="mt-4 bg-green-600 hover:bg-green-700 text-white w-full"
+                        disabled={userStakeInfo.availableRewards <= 0 || processing}
+                      >
+                        {processing ? (
+                          <>
+                            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                            Claiming...
+                          </>
+                        ) : (
+                          <>
+                            <Gift className="mr-2 h-4 w-4" />
+                            Claim Rewards
+                          </>
+                        )}
+                      </Button>
+                    </motion.div>
+                    
+                    <motion.div
+                      whileHover={{ scale: 1.02 }}
+                      className="md:col-span-1 bg-background p-6 rounded-lg border border-border shadow-sm"
+                    >
+                      <h4 className="text-sm font-medium text-muted-foreground mb-2">Your Delegations</h4>
+                      <p className="text-3xl font-bold">
+                        {userStakeInfo.delegations.length} Validators
+                      </p>
+                    </motion.div>
+
+                    {userStakeInfo.delegations.length > 0 && (
+                      <div className="md:col-span-3">
+                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                          {userStakeInfo.delegations.map((delegation, index) => (
+                            <motion.div
+                              key={index}
+                              whileHover={{ scale: 1.02 }}
+                              className="bg-background p-6 rounded-lg border border-border shadow-sm"
                             >
-                              {selectedDelegator?.name}
-                            </span>
-                            <p className="text-xs text-gray-400">Your selected validator</p>
-                          </div>
-                        </div>
-                        <div className="text-right">
-                          <span className="text-white text-sm font-semibold">{splitDelegationPreview.mainAmount} STRK</span>
-                          <p className="text-xs text-gray-400">90% of stake</p>
+                              <div className="flex items-center gap-4 mb-4">
+                                <div className="relative w-12 h-12">
+                                  {validators.find(v => v.poolAddress === delegation.poolAddress)?.imgSrc ? (
+                                    <img
+                                      src={validators.find(v => v.poolAddress === delegation.poolAddress)?.imgSrc || ''}
+                                      alt={delegation.validatorName}
+                                      className="w-12 h-12 rounded-full"
+                                    />
+                                  ) : (
+                                    <div className="w-12 h-12 rounded-full bg-primary/20 flex items-center justify-center">
+                                      <span className="text-primary text-lg font-bold">
+                                        {delegation.validatorName.charAt(0)}
+                                      </span>
+                                    </div>
+                                  )}
+                                  {validators.find(v => v.poolAddress === delegation.poolAddress)?.isVerified && (
+                                    <div className="absolute -bottom-1 -right-1 bg-green-500 rounded-full p-1">
+                                      <svg className="w-3 h-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                                      </svg>
+                                    </div>
+                                  )}
+                                </div>
+                                <div>
+                                  <h3 
+                                    className="font-semibold cursor-pointer hover:text-primary hover:underline"
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      const validator = validators.find(v => v.poolAddress === delegation.poolAddress);
+                                      if (validator) {
+                                        router.push(`/validator/${validator.address}`);
+                                      }
+                                    }}
+                                  >
+                                    {delegation.validatorName}
+                                  </h3>
+                                  <a
+                                    href={`https://voyager.online/contract/${delegation.poolAddress}`}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="text-sm text-muted-foreground hover:text-primary"
+                                  >
+                                    {delegation.poolAddress.slice(0, 6)}...{delegation.poolAddress.slice(-4)}
+                                  </a>
+                                </div>
+                              </div>
+                              <div className="space-y-2">
+                                <div className="flex justify-between items-center">
+                                  <span className="text-muted-foreground">Delegated</span>
+                                  <span className="font-medium">
+                                    {formatTokenAmount(delegation.delegatedStake)} STRK
+                                  </span>
+                                </div>
+                                <div className="flex justify-between items-center">
+                                  <span className="text-muted-foreground">Pending Rewards</span>
+                                  <span className="text-green-600 dark:text-green-400 font-medium">
+                                    {formatTokenAmount(delegation.pendingRewards)} STRK
+                                  </span>
+                                </div>
+                              </div>
+                              <div className="mt-4 space-y-2">
+                                <UnstakeCountdownButton 
+                                  delegation={delegation}
+                                  onUnstake={signalUnstakeIntent}
+                                />
+                              </div>
+                            </motion.div>
+                          ))}
                         </div>
                       </div>
-                      
-                      <div className="flex justify-between items-center p-1.5 bg-gray-800/60 rounded-md border border-gray-700/50">
-                        <div className="flex items-center gap-1.5">
-                          {randomBottomValidator ? (
-                            <div className="w-6 h-6 rounded-full bg-gradient-to-br from-purple-500/20 to-pink-500/20 flex items-center justify-center overflow-hidden">
-                              {randomBottomValidator.imgSrc ? (
-                                <img 
-                                  src={randomBottomValidator.imgSrc} 
-                                  alt={randomBottomValidator.name} 
-                                  className="w-6 h-6 rounded-full"
-                                />
-                              ) : (
-                                <span className="text-purple-400 text-xs font-bold">
-                                  {randomBottomValidator.name.charAt(0)}
-                                </span>
-                              )}
-                            </div>
-                          ) : (
-                            <div className="w-6 h-6 rounded-full bg-gray-700 animate-pulse"></div>
-                          )}
-                          <div>
-                            <span 
-                              className="text-white text-sm font-medium truncate max-w-[120px] cursor-pointer hover:text-purple-400 transition-colors"
-                              onClick={() => randomBottomValidator && router.push(`/validator/${randomBottomValidator.address}`)}
-                            >
-                              {randomBottomValidator?.name || 'Selecting...'}
-                            </span>
-                            <p className="text-xs text-gray-400">Smaller validator</p>
+                    )}
+                  </div>
+                </motion.div>
+              </motion.div>
+            </AnimatePresence>
+          </div>
+
+          <div className="w-full max-w-[98%] grid grid-cols-1 lg:grid-cols-4 gap-8 relative">
+            <Card className="lg:col-span-3 bg-background border-border">
+              <CardHeader>
+                <div className="space-y-8">
+                  <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
+                    {[
+                      {
+                        title: "Total Delegators",
+                        value: stats.uniqueDelegators,
+                        tooltip: "Total number of unique delegators across all validators on the Starknet network.",
+                        icon: <Users className="w-5 h-5 text-blue-600 dark:text-blue-400" />,
+                        color: "bg-blue-500/10"
+                      },
+                      {
+                        title: "Zero Delegators",
+                        value: stats.validatorsWithZeroStake,
+                        tooltip: "Number of validators that have not received any delegations yet. These validators are waiting for their first delegators to join.",
+                        icon: <Users className="w-5 h-5 text-red-600 dark:text-red-400" />,
+                        color: "bg-red-500/10"
+                      },
+                      {
+                        title: ">1M STRK Delegated",
+                        value: stats.validatorsOver1M,
+                        tooltip: "Number of validators that have received more than 1 million STRK in delegations. These are the largest validators by stake.",
+                        icon: <Landmark className="w-5 h-5 text-green-600 dark:text-green-400" />,
+                        color: "bg-green-500/10"
+                      },
+                      {
+                        title: "2+ Delegators",
+                        value: stats.validatorsWithTwoPlus,
+                        tooltip: "Number of validators that have two or more unique delegators. This indicates validators with a diverse delegation base.",
+                        icon: <Users2 className="w-5 h-5 text-primary" />,
+                        color: "bg-primary/10"
+                      },
+                      {
+                        title: "Active Validators",
+                        value: stats.totalActiveValidators,
+                        tooltip: "Total number of active validators on the Starknet network. These validators help secure and operate the network.",
+                        icon: <ShieldCheck className="w-5 h-5 text-emerald-600 dark:text-emerald-400" />,
+                        color: "bg-emerald-500/10"
+                      }
+                    ].map((metric, i) => (
+                      <MetricCard key={i} metric={metric} />
+                    ))}
+                  </div>
+                  <NetworkStatsHeader />
+                  
+            
+                  <ValidatorList onSelectValidator={setSelectedDelegator} />
+                </div>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-8">
+                  <ComparisonMetrics />
+                  
+                  <DelegationStats />
+
+                  <div className="bg-background rounded-lg border border-border p-6 shadow-sm mt-8">
+                    <h3 className="text-xl font-semibold mb-4">Top 20 Validators</h3>
+                    <div className="h-80 w-full">
+                      <ResponsiveContainer width="100%" height="100%">
+                        <BarChart 
+                          data={validators}
+                          onClick={(data) => {
+                            if (data && data.activePayload && data.activePayload[0]) {
+                              const validator = data.activePayload[0].payload;
+                              setSelectedDelegator(validator);
+                            }
+                          }}
+                        >
+                          <XAxis 
+                            dataKey={(data) => {
+                              const words = data.name.split(' ');
+                              if (words.length === 1) {
+                                return data.name;  // Return single word names as is
+                              }
+                              // For multi-word names, keep first word and abbreviate rest
+                              return `${words[0]} ${words.slice(1).map((word: string) => word[0]).join('')}`;
+                            }}
+                            tick={{ fill: "#9CA3AF" }}
+                            interval={0}
+                            angle={-45}
+                            textAnchor="end"
+                            height={80}
+                          />
+                          <YAxis 
+                            tick={{ fill: "#9CA3AF" }}
+                            tickFormatter={(value) => `${(value / 1000000).toFixed(1)}M`}
+                          />
+                          <Tooltip content={<CustomTooltip />} />
+                          <Bar 
+                            dataKey="delegatedStake" 
+                            fill="#3B82F6"
+                            radius={[4, 4, 0, 0]}
+                          >
+                            {validators.map((entry, index) => (
+                              <Cell 
+                                key={`cell-${index}`}
+                                fill={entry.isVerified ? "#3B82F6" : "#6B7280"}
+                              />
+                            ))}
+                          </Bar>
+                        </BarChart>
+                      </ResponsiveContainer>
+                    </div>
+                  </div>
+
+                  <div className="bg-background rounded-lg border border-border p-6 shadow-sm mt-8">
+                    <h3 className="text-xl font-semibold mb-4">Bottom 20 Validators</h3>
+                    <div className="h-80 w-full">
+                      <ResponsiveContainer width="100%" height="100%">
+                        <BarChart 
+                          data={bottomValidators}
+                          onClick={(data) => {
+                            if (data && data.activePayload && data.activePayload[0]) {
+                              const validator = data.activePayload[0].payload;
+                              setSelectedDelegator(validator);
+                            }
+                          }}
+                        >
+                          <XAxis 
+                            dataKey={(data) => {
+                              const words = data.name.split(' ');
+                              if (words.length === 1) {
+                                return data.name;
+                              }
+                              return `${words[0]} ${words.slice(1).map((word: string) => word[0]).join('')}`;
+                            }}
+                            tick={{ fill: "#9CA3AF" }}
+                            interval={0}
+                            angle={-45}
+                            textAnchor="end"
+                            height={80}
+                          />
+                          <YAxis 
+                            tick={{ fill: "#9CA3AF" }}
+                            tickFormatter={(value) => {
+                              if (value >= 1000000) {
+                                return `${(value / 1000000).toFixed(1)}M`;
+                              } else if (value >= 1000) {
+                                return `${(value / 1000).toFixed(1)}K`;
+                              }
+                              return value.toFixed(0);
+                            }}
+                          />
+                          <Tooltip content={<CustomTooltip />} />
+                          <Bar 
+                            dataKey="delegatedStake" 
+                            fill="#9333EA"
+                          >
+                            {bottomValidators.map((entry, index) => (
+                              <Cell 
+                                key={`cell-${index}`}
+                                fill={entry.isVerified ? "#9333EA" : "#6B7280"}
+                              />
+                            ))}
+                          </Bar>
+                        </BarChart>
+                      </ResponsiveContainer>
+                    </div>
+                  </div>
+                  
+                  
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card className="lg:col-span-1 bg-background border-border lg:sticky lg:top-24 h-fit shadow-sm">
+              <CardHeader className="text-center py-3" id="staking-component">
+                <CardTitle className="text-2xl font-bold">Stake STRK</CardTitle>
+              </CardHeader>
+              <CardContent className="pb-3 pt-0">
+                <div className="space-y-4">
+                  <div className="flex items-center gap-2 bg-muted/30 p-2 rounded-md border border-border">
+                    <div className="flex-shrink-0 bg-primary/10 rounded-full p-1.5">
+                      <Hand className="h-4 w-4 text-primary" />
+                    </div>
+                    <p className="text-sm font-medium">
+                      Select primary validator from list, or use the random selection
+                    </p>
+                  </div>
+                  
+                  <div className="flex justify-center">
+                    <Button 
+                      onClick={() => selectRandomDelegator(true)} 
+                      className="text-sm py-1 h-8 w-full"
+                      size="sm"
+                    >
+                      <RefreshCw className="mr-1 h-4 w-4" />
+                      Random Bottom 20
+                    </Button>
+                  </div>
+                  
+                  {selectedDelegator && (
+                    <motion.div
+                      initial={{ opacity: 0, y: 20 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      className="p-2 border border-border rounded-md bg-muted/30"
+                    >
+                      <div className="flex items-center gap-2">
+                        {selectedDelegator.imgSrc && (
+                          <img 
+                            src={selectedDelegator.imgSrc} 
+                            alt={selectedDelegator.name} 
+                            className="w-6 h-6 rounded-full"
+                          />
+                        )}
+                        <div>
+                          <p 
+                            className="font-semibold text-primary text-sm cursor-pointer hover:underline"
+                            onClick={() => router.push(`/validator/${selectedDelegator.address}`)}
+                          >
+                            {selectedDelegator.name}
+                            {selectedDelegator.isVerified && (
+                              <span className="ml-1 text-green-600 dark:text-green-400">✓</span>
+                            )}
+                          </p>
+                          <p className="text-xs text-muted-foreground">
+                            Stake: {formatTokenAmount(selectedDelegator.delegatedStake)} | 
+                            Delegators: {selectedDelegator.totalDelegators?.toLocaleString() || 'N/A'}
+                          </p>
+                        </div>
+                      </div>
+                    </motion.div>
+                  )}
+                  
+                  <form onSubmit={handleStake} className="space-y-3">
+                    <div className="glass-panel p-3">
+                      <div className="mb-2">
+                        <Label htmlFor="stakeAmount" className="text-sm font-medium flex items-center gap-2">
+                          <Coins className="h-4 w-4 text-blue-400" />
+                          Stake Amount (STRK)
+                        </Label>
+                        <div className="relative mt-1">
+                          <Input
+                            id="stakeAmount"
+                            type="number"
+                            step="0.000000000000000001"
+                            min="0"
+                            placeholder="Enter amount to stake"
+                            value={stakeAmount}
+                            onChange={handleStakeAmountChange}
+                            required
+                            variant="modern"
+                            className="pr-16 h-10 text-base [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                          />
+                          <div className="absolute inset-y-0 right-0 flex items-center pr-3">
+                            <span className="text-sm text-gray-400">STRK</span>
                           </div>
                         </div>
-                        <div className="text-right">
-                          <span className="text-white text-sm font-semibold">{splitDelegationPreview.bottomAmount} STRK</span>
-                          <p className="text-xs text-gray-400">10% of stake</p>
+                        {walletConnected && (
+                          <div className="flex justify-between mt-1 text-xs text-gray-400">
+                            <span>Balance: {formatTokenAmount(parseFloat(tokenBalance))} STRK</span>
+                            <Button 
+                              type="button" 
+                              variant="ghost" 
+                              size="sm" 
+                              className="h-6 px-2 text-blue-400 hover:text-blue-300"
+                              onClick={setMaxBalance}
+                            >
+                              MAX
+                            </Button>
+                          </div>
+                        )}
+                        {Number(stakeAmount) > 0 && (
+                          <p className="text-xs text-blue-400 mt-0.5 animate-pulse-slow">
+                            ≈ ${(Number(stakeAmount) * (priceData?.usdPrice || 0)).toFixed(2)} USD
+                          </p>
+                        )}
+                      </div>
+                      
+                      <div className="flex items-center justify-between bg-gray-800/70 backdrop-blur-sm p-2 rounded-md border border-gray-700/50">
+                        <div className="flex items-center gap-2">
+                          <div className="bg-purple-500/30 p-1 rounded-full">
+                            <Zap className="h-3.5 w-3.5 text-purple-400" />
+                          </div>
+                          <div>
+                            <label htmlFor="splitDelegation" className="text-sm font-medium text-white cursor-pointer">Split delegation (90/10)</label>
+                            <p className="text-xs text-gray-400">Support smaller validators</p>
+                          </div>
+                        </div>
+                        <div className="relative inline-block w-10 h-5">
+                          <input
+                            type="checkbox"
+                            id="splitDelegation"
+                            checked={isSplitDelegation}
+                            onChange={(e) => {
+                              setIsSplitDelegation(e.target.checked);
+                              if (e.target.checked && !randomBottomValidator) {
+                                selectRandomBottomValidatorForSplit();
+                              }
+                            }}
+                            className="sr-only"
+                          />
+                          <label
+                            htmlFor="splitDelegation"
+                            className={`absolute cursor-pointer top-0 left-0 right-0 bottom-0 rounded-full transition-colors duration-200 ${
+                              isSplitDelegation ? 'bg-blue-600' : 'bg-gray-700'
+                            }`}
+                          >
+                            <span 
+                              className={`block absolute top-[2px] left-[2px] bottom-[2px] w-4 h-4 rounded-full bg-white transition-transform duration-200 ${
+                                isSplitDelegation ? 'transform translate-x-5' : ''
+                              }`}
+                            />
+                          </label>
                         </div>
                       </div>
                     </div>
                     
-                    {randomBottomValidator && (
-                      <div className="mt-2">
-                        <Button
-                          type="button"
-                          onClick={selectRandomBottomValidatorForSplit}
-                          className="w-full bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white h-7 py-0 flex items-center justify-center whitespace-nowrap"
-                          size="sm"
-                        >
-                          <div className="flex items-center">
-                            <RefreshCw className="mr-1.5 h-3 w-3 flex-shrink-0" />
-                            <span>Change Bottom Validator</span>
+                    {isSplitDelegation && stakeAmount && Number(stakeAmount) > 0 && (
+                      <motion.div
+                        initial={{ opacity: 0, height: 0 }}
+                        animate={{ opacity: 1, height: 'auto' }}
+                        exit={{ opacity: 0, height: 0 }}
+                        className="p-2.5 rounded-lg bg-gradient-to-br from-blue-900/30 to-indigo-900/30 border border-blue-700/50 backdrop-blur-sm"
+                      >
+                        <h4 className="text-xs font-medium text-blue-300 mb-2">Your delegation will be split:</h4>
+                        <div className="space-y-2">
+                          <div className="flex justify-between items-center p-1.5 bg-gray-800/60 rounded-md border border-gray-700/50">
+                            <div className="flex items-center gap-1.5">
+                              {selectedDelegator && (
+                                <div className="w-6 h-6 rounded-full bg-gradient-to-br from-blue-500/20 to-indigo-500/20 flex items-center justify-center overflow-hidden">
+                                  {selectedDelegator.imgSrc ? (
+                                    <img 
+                                      src={selectedDelegator.imgSrc} 
+                                      alt={selectedDelegator.name} 
+                                      className="w-6 h-6 rounded-full"
+                                    />
+                                  ) : (
+                                    <span className="text-blue-400 text-xs font-bold">
+                                      {selectedDelegator.name.charAt(0)}
+                                    </span>
+                                  )}
+                                </div>
+                              )}
+                              <div>
+                                <span 
+                                  className="text-white text-sm font-medium truncate max-w-[120px] cursor-pointer hover:text-blue-400 transition-colors"
+                                  onClick={() => selectedDelegator && router.push(`/validator/${selectedDelegator.address}`)}
+                                >
+                                  {selectedDelegator?.name}
+                                </span>
+                                <p className="text-xs text-gray-400">Your selected validator</p>
+                              </div>
+                            </div>
+                            <div className="text-right">
+                              <span className="text-white text-sm font-semibold">{splitDelegationPreview.mainAmount} STRK</span>
+                              <p className="text-xs text-gray-400">90% of stake</p>
+                            </div>
                           </div>
-                        </Button>
-                      </div>
+                          
+                          <div className="flex justify-between items-center p-1.5 bg-gray-800/60 rounded-md border border-gray-700/50">
+                            <div className="flex items-center gap-1.5">
+                              {randomBottomValidator ? (
+                                <div className="w-6 h-6 rounded-full bg-gradient-to-br from-purple-500/20 to-pink-500/20 flex items-center justify-center overflow-hidden">
+                                  {randomBottomValidator.imgSrc ? (
+                                    <img 
+                                      src={randomBottomValidator.imgSrc} 
+                                      alt={randomBottomValidator.name} 
+                                      className="w-6 h-6 rounded-full"
+                                    />
+                                  ) : (
+                                    <span className="text-purple-400 text-xs font-bold">
+                                      {randomBottomValidator.name.charAt(0)}
+                                    </span>
+                                  )}
+                                </div>
+                              ) : (
+                                <div className="w-6 h-6 rounded-full bg-gray-700 animate-pulse"></div>
+                              )}
+                              <div>
+                                <span 
+                                  className="text-white text-sm font-medium truncate max-w-[120px] cursor-pointer hover:text-purple-400 transition-colors"
+                                  onClick={() => randomBottomValidator && router.push(`/validator/${randomBottomValidator.address}`)}
+                                >
+                                  {randomBottomValidator?.name || 'Selecting...'}
+                                </span>
+                                <p className="text-xs text-gray-400">Smaller validator</p>
+                              </div>
+                            </div>
+                            <div className="text-right">
+                              <span className="text-white text-sm font-semibold">{splitDelegationPreview.bottomAmount} STRK</span>
+                              <p className="text-xs text-gray-400">10% of stake</p>
+                            </div>
+                          </div>
+                        </div>
+                        
+                        {randomBottomValidator && (
+                          <div className="mt-2">
+                            <Button
+                              type="button"
+                              onClick={selectRandomBottomValidatorForSplit}
+                              className="w-full bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white h-7 py-0 flex items-center justify-center whitespace-nowrap"
+                              size="sm"
+                            >
+                              <div className="flex items-center">
+                                <RefreshCw className="mr-1.5 h-3 w-3 flex-shrink-0" />
+                                <span>Change Bottom Validator</span>
+                              </div>
+                            </Button>
+                          </div>
+                        )}
+                      </motion.div>
                     )}
-                  </motion.div>
-                )}
-                
-                {stakeResult && (
-                  <motion.div 
-                    initial={{ opacity: 0, y: 10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    className={`p-2.5 rounded-md shadow-md ${
-                      stakeResult.includes('successful') 
-                        ? 'bg-green-500/20 border border-green-500/50 text-green-500' 
-                        : 'bg-red-500/20 border border-red-500/50 text-red-400'
-                    }`}
+                    
+                    {stakeResult && (
+                      <motion.div 
+                        initial={{ opacity: 0, y: 10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        className={`p-2.5 rounded-md shadow-md ${
+                          stakeResult.includes('successful') 
+                            ? 'bg-green-500/20 border border-green-500/50 text-green-500' 
+                            : 'bg-red-500/20 border border-red-500/50 text-red-400'
+                        }`}
+                      >
+                        <div className="flex items-center">
+                          {stakeResult.includes('successful') 
+                            ? <CheckCircle className="h-4 w-4 mr-2 flex-shrink-0" /> 
+                            : <AlertCircle className="h-4 w-4 mr-2 flex-shrink-0" />
+                          }
+                          <p className="text-xs font-medium">{stakeResult}</p>
+                        </div>
+                      </motion.div>
+                    )}
+                    
+                    {!walletConnected ? (
+                      <Button 
+                        type="button" 
+                        onClick={connectWallet} 
+                        disabled={isConnecting}
+                        className="w-full h-10 text-base shadow-lg btn-gradient flex items-center justify-center whitespace-nowrap"
+                        variant="gradient"
+                      >
+                        {isConnecting ? (
+                          <div className="flex items-center">
+                            <Loader2 className="mr-2 h-4 w-4 animate-spin flex-shrink-0" />
+                            <span>Connecting Wallet...</span>
+                          </div>
+                        ) : (
+                          <div className="flex items-center">
+                            <Landmark className="mr-2 h-4 w-4 flex-shrink-0" />
+                            <span>Connect Wallet to Stake</span>
+                          </div>
+                        )}
+                      </Button>
+                    ) : (
+                      <Button 
+                        type="submit" 
+                        disabled={isStaking || !selectedDelegator || !stakeAmount || Number(stakeAmount) <= 0}
+                        className="w-full h-10 text-base shadow-lg btn-gradient flex items-center justify-center whitespace-nowrap"
+                        variant="gradient"
+                      >
+                        {isStaking ? (
+                          <div className="flex items-center">
+                            <Loader2 className="mr-2 h-4 w-4 animate-spin flex-shrink-0" />
+                            <span>Processing Stake...</span>
+                          </div>
+                        ) : (
+                          <div className="flex items-center overflow-hidden">
+                            <Zap className="mr-2 h-4 w-4 flex-shrink-0" />
+                            <span className="truncate">{`Stake with ${selectedDelegator?.name || 'Validator'}`}</span>
+                          </div>
+                        )}
+                      </Button>
+                    )}
+                    
+
+                    <div className="flex items-center justify-center space-x-2 pt-2 mt-1 border-t border-gray-700/50">
+                      <input
+                        type="checkbox"
+                        id="verifiedOnly"
+                        checked={verifiedOnly}
+                        onChange={(e) => setVerifiedOnly(e.target.checked)}
+                        className="h-4 w-4 rounded border-gray-600 text-blue-600 focus:ring-blue-500"
+                      />
+                      <Label htmlFor="verifiedOnly" className="text-gray-300 text-xs">
+                        Show verified validators only
+                      </Label>
+                    </div>
+                  </form>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+
+          {userStakeInfo.unstakeIntents.length > 0 && (
+            <div className="md:col-span-3 mt-6">
+              <h3 className="text-xl font-semibold mb-4">Pending Unstakes</h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                {userStakeInfo.unstakeIntents.map((intent, index) => (
+                  <motion.div
+                    key={index}
+                    className="bg-background p-6 rounded-lg border border-border shadow-sm"
                   >
-                    <div className="flex items-center">
-                      {stakeResult.includes('successful') 
-                        ? <CheckCircle className="h-4 w-4 mr-2 flex-shrink-0" /> 
-                        : <AlertCircle className="h-4 w-4 mr-2 flex-shrink-0" />
-                      }
-                      <p className="text-xs font-medium">{stakeResult}</p>
+                    <h4 className="font-semibold mb-2">{intent.validatorName}</h4>
+                    <div className="space-y-2">
+                      <div className="flex justify-between">
+                        <span className="text-muted-foreground">Amount</span>
+                        <span>{formatTokenAmount(intent.amount)} STRK</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-muted-foreground">Available in</span>
+                        <span>
+                          {Math.max(0, Math.ceil((intent.canClaimAt - Date.now()) / (1000 * 60 * 60 * 24)))} days
+                        </span>
+                      </div>
+                      <Button
+                        onClick={() => finalizeUnstake(intent)}
+                        className="w-full mt-2"
+                        disabled={Date.now() < intent.canClaimAt}
+                        variant={Date.now() < intent.canClaimAt ? "outline" : "default"}
+                      >
+                        {Date.now() < intent.canClaimAt ? 'Waiting Period' : 'Claim Unstaked Tokens'}
+                      </Button>
                     </div>
                   </motion.div>
-                )}
-                
-                {!walletConnected ? (
-                  <Button 
-                    type="button" 
-                    onClick={connectWallet} 
-                    disabled={isConnecting}
-                    className="w-full h-10 text-base shadow-lg btn-gradient flex items-center justify-center whitespace-nowrap"
-                    variant="gradient"
-                  >
-                    {isConnecting ? (
-                      <div className="flex items-center">
-                        <Loader2 className="mr-2 h-4 w-4 animate-spin flex-shrink-0" />
-                        <span>Connecting Wallet...</span>
-                      </div>
-                    ) : (
-                      <div className="flex items-center">
-                        <Landmark className="mr-2 h-4 w-4 flex-shrink-0" />
-                        <span>Connect Wallet to Stake</span>
-                      </div>
-                    )}
-                  </Button>
-                ) : (
-                  <Button 
-                    type="submit" 
-                    disabled={isStaking || !selectedDelegator || !stakeAmount || Number(stakeAmount) <= 0}
-                    className="w-full h-10 text-base shadow-lg btn-gradient flex items-center justify-center whitespace-nowrap"
-                    variant="gradient"
-                  >
-                    {isStaking ? (
-                      <div className="flex items-center">
-                        <Loader2 className="mr-2 h-4 w-4 animate-spin flex-shrink-0" />
-                        <span>Processing Stake...</span>
-                      </div>
-                    ) : (
-                      <div className="flex items-center overflow-hidden">
-                        <Zap className="mr-2 h-4 w-4 flex-shrink-0" />
-                        <span className="truncate">{`Stake with ${selectedDelegator?.name || 'Validator'}`}</span>
-                      </div>
-                    )}
-                  </Button>
-                )}
-                
-
-                <div className="flex items-center justify-center space-x-2 pt-2 mt-1 border-t border-gray-700/50">
-                  <input
-                    type="checkbox"
-                    id="verifiedOnly"
-                    checked={verifiedOnly}
-                    onChange={(e) => setVerifiedOnly(e.target.checked)}
-                    className="h-4 w-4 rounded border-gray-600 text-blue-600 focus:ring-blue-500"
-                  />
-                  <Label htmlFor="verifiedOnly" className="text-gray-300 text-xs">
-                    Show verified validators only
-                  </Label>
-                </div>
-              </form>
+                ))}
+              </div>
             </div>
-          </CardContent>
-        </Card>
-      </div>
+          )}
+          <ContactInfo />
 
-      {userStakeInfo.unstakeIntents.length > 0 && (
-        <div className="md:col-span-3 mt-6">
-          <h3 className="text-xl font-semibold mb-4">Pending Unstakes</h3>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {userStakeInfo.unstakeIntents.map((intent, index) => (
-              <motion.div
-                key={index}
-                className="bg-background p-6 rounded-lg border border-border shadow-sm"
-              >
-                <h4 className="font-semibold mb-2">{intent.validatorName}</h4>
-                <div className="space-y-2">
-                  <div className="flex justify-between">
-                    <span className="text-muted-foreground">Amount</span>
-                    <span>{formatTokenAmount(intent.amount)} STRK</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-muted-foreground">Available in</span>
-                    <span>
-                      {Math.max(0, Math.ceil((intent.canClaimAt - Date.now()) / (1000 * 60 * 60 * 24)))} days
-                    </span>
-                  </div>
-                  <Button
-                    onClick={() => finalizeUnstake(intent)}
-                    className="w-full mt-2"
-                    disabled={Date.now() < intent.canClaimAt}
-                    variant={Date.now() < intent.canClaimAt ? "outline" : "default"}
-                  >
-                    {Date.now() < intent.canClaimAt ? 'Waiting Period' : 'Claim Unstaked Tokens'}
-                  </Button>
-                </div>
-              </motion.div>
-            ))}
-          </div>
+          <StructuredData />
         </div>
-      )}
-      <ContactInfo />
-
-      <StructuredData />
-    </div>
-  )
-}
-
-function StatCard({ title, value }: StatCardProps) {
-  return (
-    <div className="bg-background p-4 rounded-lg border border-border shadow-sm">
-      <h4 className="text-lg font-semibold text-muted-foreground mb-2">{title}</h4>
-      <p className="text-2xl font-bold">{value}</p>
-    </div>
+      </main>
+    </>
   )
 }
 
