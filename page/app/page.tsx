@@ -317,50 +317,40 @@ const CallToAction = ({ walletConnected }: {
   walletConnected: boolean
 }) => {
   return (
-    <div className="w-full bg-background/80 backdrop-blur-sm border-b border-border p-4">
-      <div className="max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-between gap-4">
-        <div className="flex items-center gap-3">
-          <div className="bg-primary/10 p-2 rounded-lg">
-            <svg 
-              xmlns="http://www.w3.org/2000/svg" 
-              className="h-6 w-6 text-primary" 
-              fill="none" 
-              viewBox="0 0 24 24" 
-              stroke="currentColor"
-            >
-              <path 
-                strokeLinecap="round" 
-                strokeLinejoin="round" 
-                strokeWidth={2} 
-                d="M12 6v6m0 0v6m0-6h6m-6 0H6"
-              />
-            </svg>
-          </div>
-          <div>
-            <h2 className="text-xl font-semibold">Shape Starknet's Future</h2>
-            <p className="text-muted-foreground">
+    // Refined background, padding, and border
+    <div className="w-full bg-background/80 backdrop-blur-lg border-b border-border/60 p-4 shadow-sm"> 
+      <div className="max-w-7xl mx-auto flex flex-wrap items-center justify-between gap-4">
+        {/* Left side: Logo/Title and Description */}
+        <div className="flex items-center gap-4 flex-grow">
+          {/* AlignedStake Title */}
+          <h1 className="text-2xl font-bold text-primary whitespace-nowrap">AlignedStake</h1> 
+          <div className="hidden sm:block border-l border-border/60 h-8 mx-2"></div> {/* Divider */}
+          {/* Description */}
+          <div className="flex-grow">
+            <h2 className="text-md font-semibold text-foreground">Shape Starknet's Future</h2> 
+            <p className="text-sm text-muted-foreground hidden md:block"> 
               Every delegation strengthens the network. Be part of Starknet's decentralized future.
             </p>
           </div>
-          <MainPageThemeToggle />
         </div>
         
-        <div className="flex flex-col sm:flex-row items-center gap-3">
-          <Link
-            href="/guide"
-            className="text-primary hover:text-primary/80 transition-colors flex items-center gap-2 bg-primary/10 px-3 py-1.5 rounded-md"
-          >
-            <Info className="h-4 w-4" />
-            <span>New to staking? Read the guide</span>
-          </Link>
+        {/* Right side: Links and Theme Toggle */}
+        <div className="flex flex-shrink-0 items-center gap-3"> 
+          {/* Styled links as subtle buttons */}
+          <Button variant="ghost" size="sm" asChild className="h-8 text-xs text-muted-foreground hover:text-primary hover:bg-muted/50">
+            <Link href="/guide">
+              <Info className="h-3.5 w-3.5 mr-1" />
+              Guide
+            </Link>
+          </Button>
           
-          <Link
-            href="/mission"
-            className="text-primary hover:text-primary/80 transition-colors flex items-center gap-2 bg-primary/10 px-3 py-1.5 rounded-md"
-          >
-            <Shield className="h-4 w-4" />
-            <span>Learn about our mission</span>
-          </Link>
+          <Button variant="ghost" size="sm" asChild className="h-8 text-xs text-muted-foreground hover:text-primary hover:bg-muted/50">
+            <Link href="/mission">
+              <ShieldCheck className="h-3.5 w-3.5 mr-1" /> {/* Changed Icon */}
+              Mission
+            </Link>
+          </Button>
+          <MainPageThemeToggle />
         </div>
       </div>
     </div>
@@ -373,7 +363,7 @@ const ContactInfo = () => {
       <h3 className="text-lg font-semibold mb-4 text-foreground">Talk with Developers</h3>
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <Link
-          href="https://t.me/starknet_staking"
+          href="https://t.me/satoshinakamoto420"
           target="_blank"
           rel="noopener noreferrer"
           className="flex items-center gap-2 p-3 rounded-lg bg-background/50 hover:bg-background/70 transition-colors"
@@ -382,7 +372,7 @@ const ContactInfo = () => {
           <span className="text-foreground">Telegram Group</span>
         </Link>
         <Link
-          href="https://twitter.com/StarkNetStaking"
+          href="https://x.com/aligned_stake"
           target="_blank"
           rel="noopener noreferrer"
           className="flex items-center gap-2 p-3 rounded-lg bg-background/50 hover:bg-background/70 transition-colors"
@@ -391,7 +381,7 @@ const ContactInfo = () => {
           <span className="text-foreground">Twitter</span>
         </Link>
         <Link
-          href="mailto:contact@starknet-staking.com"
+          href="mailto:noel.jarillo@gmail.com"
           className="flex items-center gap-2 p-3 rounded-lg bg-background/50 hover:bg-background/70 transition-colors"
         >
           <Mail className="h-5 w-5 text-primary" />
@@ -404,21 +394,21 @@ const ContactInfo = () => {
 
 const VoyagerBanner = () => {
   return (
-    <div className="w-full bg-background/80 backdrop-blur-sm border-b border-border/50">
+    <div className="w-full bg-muted/30 border-b border-border/30"> {/* Subtle background and border */}
       <Link 
         href="https://voyager.online"
         target="_blank"
         rel="noopener noreferrer"
-        className="block py-2 hover:bg-background/70 transition-colors"
+        className="block py-1.5 hover:bg-muted/50 transition-colors" // Reduced padding
       >
-        <div className="max-w-7xl mx-auto px-4 flex items-center justify-center gap-3">
+        <div className="max-w-7xl mx-auto px-4 flex items-center justify-center gap-2"> {/* Reduced gap */}
           <img 
             src="/default.png" 
             alt="Voyager Logo" 
-            className="w-6 h-6 rounded"
+            className="w-5 h-5 rounded" // Slightly smaller logo
           />
-          <span className="text-sm text-muted-foreground">
-            Data powered by <span className="text-primary font-semibold">Voyager</span>
+          <span className="text-xs text-muted-foreground"> {/* Smaller text */}
+            Data powered by <span className="text-primary font-medium">Voyager</span>
           </span>
         </div>
       </Link>
@@ -890,7 +880,7 @@ const ValidatorList = ({ onSelectValidator }: ValidatorListProps) => {
                 placeholder="Search validators..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full bg-background border border-input rounded-md py-2 pl-10 pr-4 text-foreground placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:border-transparent"
+                className="w-full bg-background border border-input rounded-md py-2 pl-10 pr-4 text-foreground placeholder:text-muted-foreground"
               />
               <Search className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
               <button type="submit" className="sr-only">Search</button>
@@ -1784,7 +1774,7 @@ export default function Home() {
     if (active && payload && payload.length) {
       const validator = payload[0].payload;
       return (
-        <div className="bg-gray-900 border border-gray-700 p-3 rounded-lg shadow-xl">
+        <div className="bg-background/95 backdrop-blur-sm border border-border rounded-lg shadow-xl">
           <div className="flex items-center gap-2 mb-2">
             {validator.imgSrc && (
               <img 
@@ -1793,15 +1783,15 @@ export default function Home() {
                 className="w-6 h-6 rounded-full"
               />
             )}
-            <span className="font-semibold text-blue-400">
+            <span className="font-semibold text-foreground">
               {validator.name}
               {validator.isVerified && (
                 <span className="ml-1 text-green-400">✓</span>
               )}
             </span>
           </div>
-          <div className="text-sm text-gray-300">
-            <p>Address: <a href={`https://voyager.online/validator/${validator.address}`} target="_blank" rel="noopener noreferrer" className="text-blue-400 hover:underline">{validator.address.slice(0, 8)}...{validator.address.slice(-6)}</a></p>
+          <div className="text-sm text-muted-foreground">
+            <p>Address: <a href={`https://voyager.online/validator/${validator.address}`} target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">{validator.address.slice(0, 8)}...{validator.address.slice(-6)}</a></p>
             <p>Delegated Stake: {formatTokenAmount(validator.delegatedStake)} STRK</p>
             <p>Total Delegators: {validator.totalDelegators?.toLocaleString() || 'N/A'}</p>
           </div>
@@ -2419,67 +2409,77 @@ export default function Home() {
             <AnimatePresence>
               <motion.div
                 initial={{ height: 0 }}
-                animate={{ height: isStakeInfoOpen ? '480px' : '64px' }}  // Changed from 400px
-                className="w-full bg-gray-800/50 backdrop-blur-sm border-b border-gray-700 mb-8 overflow-hidden"
+                // Adjust height slightly if needed for content
+                animate={{ height: isStakeInfoOpen ? '500px' : '64px' }} 
+                className="w-full bg-background/70 backdrop-blur-lg border-b border-border mb-8 overflow-hidden shadow-md"
               >
+                {/* Header Bar (Always Visible) */}
                 <div className="w-full flex items-center justify-between h-16 px-4">
-                  <div className="flex-1">
+                  {/* Left: Collapsed Stats (if connected) */}
+                  <div className="flex-1 flex items-center justify-start">
                     {!isStakeInfoOpen && walletConnected && (
-                      <div className="flex items-center">
-                        <div className="bg-gray-800/60 border border-gray-700/40 rounded-lg px-4 py-2 flex items-center gap-8">
-                          <div>
-                            <span className="text-xs text-gray-400 block">Total Delegated</span>
-                            <p className="text-sm font-medium text-white">{formatTokenAmount(userStakeInfo.totalDelegated)} STRK</p>
-                          </div>
-                          
-                          <div>
-                            <span className="text-xs text-gray-400 block">Available Rewards</span>
-                            <p className="text-sm font-medium text-white">{formatTokenAmount(userStakeInfo.availableRewards)} STRK</p>
-                          </div>
-                          
-                          <Button
-                            onClick={claimRewards}
-                            size="sm"
-                            variant="outline"
-                            className="border-gray-700 hover:bg-gray-700/50 text-white text-xs h-8"
-                            disabled={userStakeInfo.availableRewards <= 0 || processing}
-                          >
-                            {processing ? "Claiming..." : "Claim"}
-                          </Button>
+                      <motion.div 
+                        initial={{ opacity: 0, x: -10 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        transition={{ delay: 0.2 }}
+                        className="flex items-center gap-4 bg-background/50 border border-border/40 rounded-lg px-3 py-1.5"
+                      >
+                        <div className="text-center">
+                          <span className="text-xs text-muted-foreground block">Delegated</span>
+                          <p className="text-sm font-medium text-foreground">{formatTokenAmount(userStakeInfo.totalDelegated)} STRK</p>
                         </div>
-                      </div>
+                        <div className="border-l border-border/40 h-6"></div>
+                        <div className="text-center">
+                          <span className="text-xs text-muted-foreground block">Rewards</span>
+                          <p className="text-sm font-medium text-green-500">{formatTokenAmount(userStakeInfo.availableRewards)} STRK</p>
+                        </div>
+                        <Button
+                          onClick={(e) => { e.stopPropagation(); claimRewards(); }}
+                          size="sm"
+                          variant="ghost"
+                          className="border-l border-border/40 rounded-none pl-3 text-primary hover:text-primary/80 text-xs h-7"
+                          disabled={userStakeInfo.availableRewards <= 0 || processing}
+                        >
+                          {processing ? <Loader2 className="h-3 w-3 animate-spin"/> : <Gift className="h-4 w-4"/>}
+                        </Button>
+                      </motion.div>
                     )}
                   </div>
                   
+                  {/* Center: Title and Toggle */}
                   <div 
-                    className="flex-1 flex justify-center cursor-pointer group"
+                    className="flex-1 flex justify-center cursor-pointer group items-center"
                     onClick={() => setIsStakeInfoOpen(!isStakeInfoOpen)}
                   >
-                    <div className="flex items-center gap-2">
-                      <span className="text-xl font-semibold text-foreground group-hover:text-primary transition-colors">
-                        Staking Dashboard
-                      </span>
-                      <div className="text-muted-foreground group-hover:text-primary transition-colors">
-                        {isStakeInfoOpen ? (
-                          <ChevronUp className="h-4 w-4" />
-                        ) : (
-                          <ChevronDown className="h-4 w-4" />
-                        )}
-                      </div>
+                    <h3 className="text-lg font-semibold text-foreground group-hover:text-primary transition-colors whitespace-nowrap">
+                      AlignedStake Dashboard
+                    </h3>
+                    <div className="ml-2 text-muted-foreground group-hover:text-primary transition-colors">
+                      {isStakeInfoOpen ? (
+                        <ChevronUp className="h-5 w-5" />
+                      ) : (
+                        <ChevronDown className="h-5 w-5" />
+                      )}
                     </div>
                   </div>
                   
+                  {/* Right: Connection Status & Balance */}
                   <div className="flex-1 flex justify-end items-center gap-3">
                     {walletConnected && account ? (
-                      <div className="flex items-center gap-2">
-                        <span className="text-sm text-gray-400 bg-gray-800 px-3 py-1 rounded-full border border-gray-700">
+                      <div className="flex items-center gap-2 bg-background/50 border border-border/40 rounded-lg px-3 py-1.5">
+                        <div className="text-right">
+                          <span className="text-xs text-muted-foreground block">Balance</span>
+                          <p className="text-sm font-medium text-foreground">{formatTokenAmount(parseFloat(tokenBalance))} STRK</p>
+                        </div>
+                        <div className="border-l border-border/40 h-6"></div>
+                        <span className="text-sm text-muted-foreground bg-background/50 px-2 py-0.5 rounded">
                           {account.address.slice(0, 6)}...{account.address.slice(-4)}
                         </span>
                         <Button
                           variant="ghost"
-                          size="sm"
-                          onClick={disconnectWallet}
-                          className="text-gray-400 hover:text-red-400 hover:bg-gray-800/50"
+                          size="icon"
+                          onClick={(e) => { e.stopPropagation(); disconnectWallet(); }}
+                          className="text-muted-foreground hover:text-red-500 hover:bg-destructive/10 h-7 w-7"
                         >
                           <svg 
                             xmlns="http://www.w3.org/2000/svg" 
@@ -2490,55 +2490,43 @@ export default function Home() {
                             stroke="currentColor" 
                             strokeWidth="2" 
                             strokeLinecap="round" 
-                            strokeLinejoin="round" 
-                            className="mr-1"
+                            strokeLinejoin="round"
                           >
                             <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
                             <polyline points="16 17 21 12 16 7"></polyline>
                             <line x1="21" y1="12" x2="9" y2="12"></line>
                           </svg>
-                          Disconnect
                         </Button>
-                        <div 
-                          className="cursor-pointer hover:bg-gray-700/50 p-1 rounded-full transition-colors"
-                          onClick={() => setIsStakeInfoOpen(!isStakeInfoOpen)}
-                        >
-                          {isStakeInfoOpen ? (
-                            <ChevronUp className="h-5 w-5 text-gray-400" />
-                          ) : (
-                            <ChevronDown className="h-5 w-5 text-gray-400" />
-                          )}
-                        </div>
                       </div>
                     ) : (
                       <div className="flex items-center gap-2">
+                        {/* Keep Analytics Button Small */} 
                         <Link href="/analytics">
                           <Button 
-                            className="px-4"
-                            variant="secondary"
+                            variant="outline"
+                            size="sm" 
+                            className="h-8 text-xs" 
                           >
-                            <div className="flex items-center gap-2">
-                              <BarChart3 className="h-4 w-4" />
-                              <span>Analytics</span>
-                            </div>
+                             <BarChart3 className="h-3.5 w-3.5 mr-1" />
+                             Analytics
                           </Button>
                         </Link>
                         <Button 
-                          className="px-6"
+                          className="px-4 h-9 text-sm" // Slightly smaller connect button
                           onClick={connectWallet}
                           disabled={isConnecting}
-                          variant="secondary"
+                          variant="default" // Changed to default primary button
                         >
                           {isConnecting ? (
-                            <div className="flex items-center gap-2">
-                              <Loader2 className="h-4 w-4 animate-spin" />
-                              <span>Connecting...</span>
-                            </div>
+                            <>
+                              <Loader2 className="h-4 w-4 mr-1.5 animate-spin" />
+                              Connecting...
+                            </>
                           ) : (
-                            <div className="flex items-center gap-2">
-                              <Landmark className="h-4 w-4" />
-                              <span>Connect Wallet</span>
-                            </div>
+                            <>
+                              <Landmark className="h-4 w-4 mr-1.5" />
+                              Connect Wallet
+                            </>
                           )}
                         </Button>
                       </div>
@@ -2546,145 +2534,201 @@ export default function Home() {
                   </div>
                 </div>
                 
-
+                {/* Expandable Content Area */}
                 <motion.div
                   initial={{ opacity: 0 }}
                   animate={{ opacity: isStakeInfoOpen ? 1 : 0 }}
-                  className="px-4 pb-6 pt-2 h-[calc(480px-64px)] overflow-y-auto"  // Changed from 400px
+                  // Increased height calculation to match animate height
+                  className="px-4 pb-6 pt-2 h-[calc(500px-64px)] overflow-y-auto scrollbar-thin scrollbar-thumb-border scrollbar-track-transparent"
                 >
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-5xl mx-auto">
-                    <motion.div
-                      whileHover={{ scale: 1.02 }}
-                      className="bg-background p-6 rounded-lg border border-border shadow-sm flex flex-col justify-between"
-                    >
-                      <div>
-                        <h4 className="text-sm font-medium text-muted-foreground mb-2">Total Delegated</h4>
-                        <p className="text-3xl font-bold">
+                  {/* Check if wallet is connected before showing dashboard content */}
+                  {walletConnected && account ? (
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4 max-w-6xl mx-auto"> {/* Slightly wider max-width */}
+                      {/* Stat Cards */}
+                      <motion.div
+                        initial={{ opacity: 0, y: 10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: 0.1 }}
+                        className="bg-background/60 p-4 rounded-lg border border-border/50 shadow-sm"
+                      >
+                        <h4 className="text-sm font-medium text-muted-foreground mb-1">Total Delegated</h4>
+                        <p className="text-2xl font-bold">
                           {formatTokenAmount(userStakeInfo.totalDelegated)} STRK
                         </p>
-                      </div>
-                    </motion.div>
-                    
-                    <motion.div
-                      whileHover={{ scale: 1.02 }}
-                      className="bg-background p-6 rounded-lg border border-border shadow-sm flex flex-col justify-between"
-                    >
-                      <div>
-                        <h4 className="text-sm font-medium text-muted-foreground mb-2">Available Rewards</h4>
-                        <p className="text-3xl font-bold text-green-600 dark:text-green-400">
-                          {formatTokenAmount(userStakeInfo.availableRewards)} STRK
-                        </p>
-                      </div>
-                      <Button
-                        onClick={claimRewards}
-                        className="mt-4 bg-green-600 hover:bg-green-700 text-white w-full"
-                        disabled={userStakeInfo.availableRewards <= 0 || processing}
+                      </motion.div>
+                      
+                      <motion.div
+                        initial={{ opacity: 0, y: 10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: 0.15 }}
+                        className="bg-background/60 p-4 rounded-lg border border-border/50 shadow-sm"
                       >
-                        {processing ? (
+                        <div className="flex justify-between items-start">
+                          <div>
+                            <h4 className="text-sm font-medium text-muted-foreground mb-1">Available Rewards</h4>
+                            <p className="text-2xl font-bold text-green-500">
+                              {formatTokenAmount(userStakeInfo.availableRewards)} STRK
+                            </p>
+                          </div>
+                          <Button
+                            onClick={claimRewards}
+                            size="sm"
+                            className="mt-1 bg-green-600 hover:bg-green-700 text-white h-8"
+                            disabled={userStakeInfo.availableRewards <= 0 || processing}
+                          >
+                            {processing ? (
+                              <Loader2 className="h-4 w-4 animate-spin" />
+                            ) : (
+                              <Gift className="h-4 w-4" />
+                            )}
+                          </Button>
+                        </div>
+                      </motion.div>
+                      
+                      <motion.div
+                        initial={{ opacity: 0, y: 10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: 0.2 }}
+                        className="bg-background/60 p-4 rounded-lg border border-border/50 shadow-sm"
+                      >
+                        <h4 className="text-sm font-medium text-muted-foreground mb-1">Your Delegations</h4>
+                        <p className="text-2xl font-bold">
+                          {userStakeInfo.delegations.length} Validator{userStakeInfo.delegations.length !== 1 ? 's' : ''}
+                        </p>
+                      </motion.div>
+
+                      {/* Delegation List */}
+                      {userStakeInfo.delegations.length > 0 && (
+                        <div className="md:col-span-3 mt-2">
+                          <h3 className="text-base font-semibold mb-2 text-foreground">Delegated Validators</h3>
+                          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+                            {userStakeInfo.delegations.map((delegation, index) => (
+                              <motion.div
+                                key={index}
+                                initial={{ opacity: 0, y: 10 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                transition={{ delay: 0.25 + index * 0.05 }}
+                                className="bg-background/60 p-4 rounded-lg border border-border/50 shadow-sm"
+                              >
+                                <div className="flex items-center gap-3 mb-3">
+                                  <div className="relative w-10 h-10 flex-shrink-0">
+                                    {/* Simplified Validator Image/Icon Handling */}
+                                    <ValidatorIcon validator={validators.find(v => v.poolAddress === delegation.poolAddress)} name={delegation.validatorName} size="10"/>
+                                  </div>
+                                  <div>
+                                    <h4 
+                                      className="font-semibold text-sm cursor-pointer hover:text-primary hover:underline truncate"
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        const validator = validators.find(v => v.poolAddress === delegation.poolAddress);
+                                        if (validator) {
+                                          router.push(`/validator/${validator.address}`);
+                                        }
+                                      }}
+                                    >
+                                      {delegation.validatorName}
+                                    </h4>
+                                    <a
+                                      href={`https://voyager.online/contract/${delegation.poolAddress}`}
+                                      target="_blank"
+                                      rel="noopener noreferrer"
+                                      className="text-xs text-muted-foreground hover:text-primary"
+                                    >
+                                      {delegation.poolAddress.slice(0, 6)}...{delegation.poolAddress.slice(-4)}
+                                    </a>
+                                  </div>
+                                </div>
+                                <div className="space-y-1.5 text-sm">
+                                  <div className="flex justify-between items-center">
+                                    <span className="text-muted-foreground text-xs">Delegated</span>
+                                    <span className="font-medium">
+                                      {formatTokenAmount(delegation.delegatedStake)} STRK
+                                    </span>
+                                  </div>
+                                  <div className="flex justify-between items-center">
+                                    <span className="text-muted-foreground text-xs">Rewards</span>
+                                    <span className="text-green-500 font-medium">
+                                      {formatTokenAmount(delegation.pendingRewards)} STRK
+                                    </span>
+                                  </div>
+                                </div>
+                                <div className="mt-3">
+                                  <UnstakeCountdownButton 
+                                    delegation={delegation}
+                                    onUnstake={signalUnstakeIntent}
+                                  />
+                                </div>
+                              </motion.div>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+                      
+                      {/* Pending Unstakes Section */}
+                      {userStakeInfo.unstakeIntents.length > 0 && (
+                        <div className="md:col-span-3 mt-4">
+                          <h3 className="text-base font-semibold mb-2 text-foreground">Pending Unstakes</h3>
+                          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+                            {userStakeInfo.unstakeIntents.map((intent, index) => (
+                              <motion.div
+                                key={`unstake-${index}`}
+                                initial={{ opacity: 0, y: 10 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                transition={{ delay: 0.3 + index * 0.05 }}
+                                className="bg-background/60 p-4 rounded-lg border border-border/50 shadow-sm"
+                              >
+                                <h4 className="font-semibold text-sm mb-2">{intent.validatorName}</h4>
+                                <div className="space-y-1.5 text-sm">
+                                  <div className="flex justify-between">
+                                    <span className="text-muted-foreground text-xs">Amount</span>
+                                    <span className="font-medium">{formatTokenAmount(intent.amount)} STRK</span>
+                                  </div>
+                                  <div className="flex justify-between">
+                                    <span className="text-muted-foreground text-xs">Available In</span>
+                                    <span>
+                                      {Math.max(0, Math.ceil((intent.canClaimAt - Date.now()) / (1000 * 60 * 60 * 24)))} days
+                                    </span>
+                                  </div>
+                                  <Button
+                                    onClick={() => finalizeUnstake(intent)}
+                                    className="w-full mt-2 h-8 text-xs"
+                                    disabled={Date.now() < intent.canClaimAt}
+                                    variant={Date.now() < intent.canClaimAt ? "secondary" : "default"} // Changed variant
+                                  >
+                                    {Date.now() < intent.canClaimAt ? 'Waiting Period' : 'Claim Unstaked'}
+                                  </Button>
+                                </div>
+                              </motion.div>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  ) : (
+                    // Placeholder when wallet is not connected
+                    <div className="flex flex-col items-center justify-center h-full text-center text-muted-foreground p-10">
+                      <Lock className="w-12 h-12 mb-4"/>
+                      <h3 className="text-lg font-semibold mb-2">Connect Your Wallet</h3>
+                      <p className="max-w-xs">Connect your Starknet wallet to view your staking details, manage delegations, and claim rewards.</p>
+                      <Button 
+                        className="mt-6 px-6 h-9 text-sm"
+                        onClick={connectWallet}
+                        disabled={isConnecting}
+                      >
+                        {isConnecting ? (
                           <>
-                            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                            Claiming...
+                            <Loader2 className="h-4 w-4 mr-1.5 animate-spin" />
+                            Connecting...
                           </>
                         ) : (
                           <>
-                            <Gift className="mr-2 h-4 w-4" />
-                            Claim Rewards
+                            <Landmark className="h-4 w-4 mr-1.5" />
+                            Connect Wallet
                           </>
                         )}
                       </Button>
-                    </motion.div>
-                    
-                    <motion.div
-                      whileHover={{ scale: 1.02 }}
-                      className="md:col-span-1 bg-background p-6 rounded-lg border border-border shadow-sm"
-                    >
-                      <h4 className="text-sm font-medium text-muted-foreground mb-2">Your Delegations</h4>
-                      <p className="text-3xl font-bold">
-                        {userStakeInfo.delegations.length} Validators
-                      </p>
-                    </motion.div>
-
-                    {userStakeInfo.delegations.length > 0 && (
-                      <div className="md:col-span-3">
-                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                          {userStakeInfo.delegations.map((delegation, index) => (
-                            <motion.div
-                              key={index}
-                              whileHover={{ scale: 1.02 }}
-                              className="bg-background p-6 rounded-lg border border-border shadow-sm"
-                            >
-                              <div className="flex items-center gap-4 mb-4">
-                                <div className="relative w-12 h-12">
-                                  {validators.find(v => v.poolAddress === delegation.poolAddress)?.imgSrc ? (
-                                    <img
-                                      src={validators.find(v => v.poolAddress === delegation.poolAddress)?.imgSrc || ''}
-                                      alt={delegation.validatorName}
-                                      className="w-12 h-12 rounded-full"
-                                    />
-                                  ) : (
-                                    <div className="w-12 h-12 rounded-full bg-primary/20 flex items-center justify-center">
-                                      <span className="text-primary text-lg font-bold">
-                                        {delegation.validatorName.charAt(0)}
-                                      </span>
-                                    </div>
-                                  )}
-                                  {validators.find(v => v.poolAddress === delegation.poolAddress)?.isVerified && (
-                                    <div className="absolute -bottom-1 -right-1 bg-green-500 rounded-full p-1">
-                                      <svg className="w-3 h-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                                      </svg>
-                                    </div>
-                                  )}
-                                </div>
-                                <div>
-                                  <h3 
-                                    className="font-semibold cursor-pointer hover:text-primary hover:underline"
-                                    onClick={(e) => {
-                                      e.stopPropagation();
-                                      const validator = validators.find(v => v.poolAddress === delegation.poolAddress);
-                                      if (validator) {
-                                        router.push(`/validator/${validator.address}`);
-                                      }
-                                    }}
-                                  >
-                                    {delegation.validatorName}
-                                  </h3>
-                                  <a
-                                    href={`https://voyager.online/contract/${delegation.poolAddress}`}
-                                    target="_blank"
-                                    rel="noopener noreferrer"
-                                    className="text-sm text-muted-foreground hover:text-primary"
-                                  >
-                                    {delegation.poolAddress.slice(0, 6)}...{delegation.poolAddress.slice(-4)}
-                                  </a>
-                                </div>
-                              </div>
-                              <div className="space-y-2">
-                                <div className="flex justify-between items-center">
-                                  <span className="text-muted-foreground">Delegated</span>
-                                  <span className="font-medium">
-                                    {formatTokenAmount(delegation.delegatedStake)} STRK
-                                  </span>
-                                </div>
-                                <div className="flex justify-between items-center">
-                                  <span className="text-muted-foreground">Pending Rewards</span>
-                                  <span className="text-green-600 dark:text-green-400 font-medium">
-                                    {formatTokenAmount(delegation.pendingRewards)} STRK
-                                  </span>
-                                </div>
-                              </div>
-                              <div className="mt-4 space-y-2">
-                                <UnstakeCountdownButton 
-                                  delegation={delegation}
-                                  onUnstake={signalUnstakeIntent}
-                                />
-                              </div>
-                            </motion.div>
-                          ))}
-                        </div>
-                      </div>
-                    )}
-                  </div>
+                    </div>
+                  )}
                 </motion.div>
               </motion.div>
             </AnimatePresence>
@@ -2857,17 +2901,17 @@ export default function Home() {
               </CardContent>
             </Card>
 
-            <Card className="lg:col-span-1 bg-background border-border lg:sticky lg:top-24 h-fit shadow-sm">
-              <CardHeader className="text-center py-3" id="staking-component">
-                <CardTitle className="text-2xl font-bold">Stake STRK</CardTitle>
+            <Card className="lg:col-span-1 bg-background/95 backdrop-blur-sm border-border lg:sticky lg:top-24 h-fit shadow-sm">
+              <CardHeader className="text-center py-3 border-b border-border" id="staking-component">
+                <CardTitle className="text-2xl font-bold text-foreground">Stake STRK</CardTitle>
               </CardHeader>
               <CardContent className="pb-3 pt-0">
                 <div className="space-y-4">
-                  <div className="flex items-center gap-2 bg-muted/30 p-2 rounded-md border border-border">
+                  <div className="flex items-center gap-2 bg-background/80 backdrop-blur-sm border border-border rounded-lg p-4">
                     <div className="flex-shrink-0 bg-primary/10 rounded-full p-1.5">
                       <Hand className="h-4 w-4 text-primary" />
                     </div>
-                    <p className="text-sm font-medium">
+                    <p className="text-sm font-medium text-foreground">
                       Select primary validator from list, or use the random selection
                     </p>
                   </div>
@@ -2887,7 +2931,7 @@ export default function Home() {
                     <motion.div
                       initial={{ opacity: 0, y: 20 }}
                       animate={{ opacity: 1, y: 0 }}
-                      className="p-2 border border-border rounded-md bg-muted/30"
+                      className="p-2 border border-border rounded-md bg-background/80 backdrop-blur-sm"
                     >
                       <div className="flex items-center gap-2">
                         {selectedDelegator.imgSrc && (
@@ -2917,37 +2961,32 @@ export default function Home() {
                   )}
                   
                   <form onSubmit={handleStake} className="space-y-3">
-                    <div className="glass-panel p-3">
+                    <div className="bg-background/80 backdrop-blur-sm border border-border rounded-lg p-4">
                       <div className="mb-2">
-                        <Label htmlFor="stakeAmount" className="text-sm font-medium flex items-center gap-2">
-                          <Coins className="h-4 w-4 text-blue-400" />
+                        <Label htmlFor="stake-amount" className="text-foreground">
                           Stake Amount (STRK)
                         </Label>
-                        <div className="relative mt-1">
+                        <div className="relative mt-1.5">
                           <Input
-                            id="stakeAmount"
-                            type="number"
-                            step="0.000000000000000001"
-                            min="0"
+                            id="stake-amount"
+                            type="text"
                             placeholder="Enter amount to stake"
                             value={stakeAmount}
                             onChange={handleStakeAmountChange}
-                            required
-                            variant="modern"
-                            className="pr-16 h-10 text-base [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                            className="bg-background border-border text-foreground placeholder:text-muted-foreground"
                           />
-                          <div className="absolute inset-y-0 right-0 flex items-center pr-3">
-                            <span className="text-sm text-gray-400">STRK</span>
+                          <div className="absolute inset-y-0 right-3 flex items-center pointer-events-none">
+                            <span className="text-muted-foreground">STRK</span>
                           </div>
                         </div>
                         {walletConnected && (
-                          <div className="flex justify-between mt-1 text-xs text-gray-400">
+                          <div className="flex justify-between mt-1 text-xs text-muted-foreground">
                             <span>Balance: {formatTokenAmount(parseFloat(tokenBalance))} STRK</span>
                             <Button 
                               type="button" 
                               variant="ghost" 
                               size="sm" 
-                              className="h-6 px-2 text-blue-400 hover:text-blue-300"
+                              className="h-6 px-2 text-primary hover:text-primary/80"
                               onClick={setMaxBalance}
                             >
                               MAX
@@ -2961,42 +3000,26 @@ export default function Home() {
                         )}
                       </div>
                       
-                      <div className="flex items-center justify-between bg-gray-800/70 backdrop-blur-sm p-2 rounded-md border border-gray-700/50">
+                      <div className="flex items-center justify-between bg-background/80 backdrop-blur-sm p-2 rounded-md border border-border">
                         <div className="flex items-center gap-2">
-                          <div className="bg-purple-500/30 p-1 rounded-full">
-                            <Zap className="h-3.5 w-3.5 text-purple-400" />
+                          <div className="bg-primary/20 p-1 rounded-full">
+                            <Zap className="h-3.5 w-3.5 text-primary" />
                           </div>
                           <div>
-                            <label htmlFor="splitDelegation" className="text-sm font-medium text-white cursor-pointer">Split delegation (90/10)</label>
-                            <p className="text-xs text-gray-400">Support smaller validators</p>
+                            <label htmlFor="splitDelegation" className="text-sm font-medium text-foreground cursor-pointer">Split delegation (90/10)</label>
+                            <p className="text-xs text-muted-foreground">Support smaller validators</p>
                           </div>
                         </div>
-                        <div className="relative inline-block w-10 h-5">
-                          <input
-                            type="checkbox"
-                            id="splitDelegation"
-                            checked={isSplitDelegation}
-                            onChange={(e) => {
-                              setIsSplitDelegation(e.target.checked);
-                              if (e.target.checked && !randomBottomValidator) {
-                                selectRandomBottomValidatorForSplit();
-                              }
-                            }}
-                            className="sr-only"
-                          />
-                          <label
-                            htmlFor="splitDelegation"
-                            className={`absolute cursor-pointer top-0 left-0 right-0 bottom-0 rounded-full transition-colors duration-200 ${
-                              isSplitDelegation ? 'bg-blue-600' : 'bg-gray-700'
-                            }`}
-                          >
-                            <span 
-                              className={`block absolute top-[2px] left-[2px] bottom-[2px] w-4 h-4 rounded-full bg-white transition-transform duration-200 ${
-                                isSplitDelegation ? 'transform translate-x-5' : ''
-                              }`}
-                            />
-                          </label>
-                        </div>
+                        <Switch
+                          id="splitDelegation"
+                          checked={isSplitDelegation}
+                          onCheckedChange={(checked) => {
+                            setIsSplitDelegation(checked);
+                            if (checked && !randomBottomValidator) {
+                              selectRandomBottomValidatorForSplit();
+                            }
+                          }}
+                        />
                       </div>
                     </div>
                     
@@ -3009,7 +3032,7 @@ export default function Home() {
                       >
                         <h4 className="text-xs font-medium text-blue-300 mb-2">Your delegation will be split:</h4>
                         <div className="space-y-2">
-                          <div className="flex justify-between items-center p-1.5 bg-gray-800/60 rounded-md border border-gray-700/50">
+                          <div className="flex justify-between items-center p-1.5 bg-background/80 backdrop-blur-sm rounded-md border border-border">
                             <div className="flex items-center gap-1.5">
                               {selectedDelegator && (
                                 <div className="w-6 h-6 rounded-full bg-gradient-to-br from-blue-500/20 to-indigo-500/20 flex items-center justify-center overflow-hidden">
@@ -3028,21 +3051,21 @@ export default function Home() {
                               )}
                               <div>
                                 <span 
-                                  className="text-white text-sm font-medium truncate max-w-[120px] cursor-pointer hover:text-blue-400 transition-colors"
+                                  className="text-foreground text-sm font-medium truncate max-w-[120px] cursor-pointer hover:text-blue-400 transition-colors"
                                   onClick={() => selectedDelegator && router.push(`/validator/${selectedDelegator.address}`)}
                                 >
                                   {selectedDelegator?.name}
                                 </span>
-                                <p className="text-xs text-gray-400">Your selected validator</p>
+                                <p className="text-xs text-muted-foreground">Your selected validator</p>
                               </div>
                             </div>
                             <div className="text-right">
-                              <span className="text-white text-sm font-semibold">{splitDelegationPreview.mainAmount} STRK</span>
-                              <p className="text-xs text-gray-400">90% of stake</p>
+                              <span className="text-foreground text-sm font-semibold">{splitDelegationPreview.mainAmount} STRK</span>
+                              <p className="text-xs text-muted-foreground">90% of stake</p>
                             </div>
                           </div>
                           
-                          <div className="flex justify-between items-center p-1.5 bg-gray-800/60 rounded-md border border-gray-700/50">
+                          <div className="flex justify-between items-center p-1.5 bg-background/80 backdrop-blur-sm rounded-md border border-border">
                             <div className="flex items-center gap-1.5">
                               {randomBottomValidator ? (
                                 <div className="w-6 h-6 rounded-full bg-gradient-to-br from-purple-500/20 to-pink-500/20 flex items-center justify-center overflow-hidden">
@@ -3059,21 +3082,21 @@ export default function Home() {
                                   )}
                                 </div>
                               ) : (
-                                <div className="w-6 h-6 rounded-full bg-gray-700 animate-pulse"></div>
+                                <div className="w-6 h-6 rounded-full bg-border animate-pulse"></div>
                               )}
                               <div>
                                 <span 
-                                  className="text-white text-sm font-medium truncate max-w-[120px] cursor-pointer hover:text-purple-400 transition-colors"
+                                  className="text-foreground text-sm font-medium truncate max-w-[120px] cursor-pointer hover:text-purple-400 transition-colors"
                                   onClick={() => randomBottomValidator && router.push(`/validator/${randomBottomValidator.address}`)}
                                 >
                                   {randomBottomValidator?.name || 'Selecting...'}
                                 </span>
-                                <p className="text-xs text-gray-400">Smaller validator</p>
+                                <p className="text-xs text-muted-foreground">Smaller validator</p>
                               </div>
                             </div>
                             <div className="text-right">
-                              <span className="text-white text-sm font-semibold">{splitDelegationPreview.bottomAmount} STRK</span>
-                              <p className="text-xs text-gray-400">10% of stake</p>
+                              <span className="text-foreground text-sm font-semibold">{splitDelegationPreview.bottomAmount} STRK</span>
+                              <p className="text-xs text-muted-foreground">10% of stake</p>
                             </div>
                           </div>
                         </div>
@@ -3157,16 +3180,15 @@ export default function Home() {
                       </Button>
                     )}
                     
-
-                    <div className="flex items-center justify-center space-x-2 pt-2 mt-1 border-t border-gray-700/50">
+                    <div className="flex items-center justify-center space-x-2 pt-2 mt-1 border-t border-border">
                       <input
                         type="checkbox"
                         id="verifiedOnly"
                         checked={verifiedOnly}
                         onChange={(e) => setVerifiedOnly(e.target.checked)}
-                        className="h-4 w-4 rounded border-gray-600 text-blue-600 focus:ring-blue-500"
+                        className="h-4 w-4 rounded border-border text-blue-600 focus:ring-blue-500"
                       />
-                      <Label htmlFor="verifiedOnly" className="text-gray-300 text-xs">
+                      <Label htmlFor="verifiedOnly" className="text-muted-foreground text-xs">
                         Show verified validators only
                       </Label>
                     </div>
@@ -3219,5 +3241,45 @@ export default function Home() {
     </>
   )
 }
+
+// Add a helper component for consistent validator icons
+const ValidatorIcon = ({ validator, name, size = "10" }: { 
+  validator: Validator | undefined | null, 
+  name: string, 
+  size?: string 
+}) => {
+  const iconSizeClass = `w-${size} h-${size}`; // e.g., w-10 h-10
+  const textSizeClass = size === "10" ? "text-lg" : size === "6" ? "text-xs" : "text-base"; // Adjust text size based on icon size
+  
+  return (
+    <div className={`${iconSizeClass} rounded-full bg-primary/20 flex items-center justify-center flex-shrink-0 relative overflow-hidden border border-border/50`}>
+      {validator?.imgSrc ? (
+        <img
+          src={validator.imgSrc}
+          alt={name}
+          className={`${iconSizeClass} rounded-full object-contain`}
+          onError={(e) => (e.currentTarget.style.display = 'none')} // Hide img on error
+        />
+      ) : (
+        <span className={`text-primary font-bold ${textSizeClass}`}>
+          {name.charAt(0).toUpperCase()}
+        </span>
+      )}
+      {/* Show placeholder if image failed */}
+      {!validator?.imgSrc && (
+        <span className={`absolute inset-0 flex items-center justify-center text-primary font-bold ${textSizeClass}`}>
+          {name.charAt(0).toUpperCase()}
+        </span>
+      )}
+      {validator?.isVerified && (
+        <div className="absolute -bottom-1 -right-1 bg-green-500 rounded-full p-0.5 border border-background">
+          <svg className="w-2 h-2 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+          </svg>
+        </div>
+      )}
+    </div>
+  );
+};
 
 
